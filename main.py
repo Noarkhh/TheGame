@@ -60,32 +60,31 @@ class Cursor(pg.sprite.Sprite):
 
 
 class Ghost(pg.sprite.Sprite):
-    def __init__(self, x, y, surf):
+    def __init__(self, xy, surf):
         super().__init__()
         self.surf = surf
         self.surf.set_alpha(128)
-        self.position = [x, y]
-        self.rect = surf.get_rect(top=(TILE_SIZE * y), left=(TILE_SIZE * x))
+        self.position = [xy[0], xy[1]]
+        self.rect = surf.get_rect(top=(TILE_SIZE * xy[1]), left=(TILE_SIZE * xy[0]))
 
-    def update(self, x, y):
-        self.position[0] = x
-        self.position[1] = y
-        self.rect.x = x * TILE_SIZE
-        self.rect.y = y * TILE_SIZE
+    def update(self, xy):
+        self.position = xy
+        self.rect.x = xy[0] * TILE_SIZE
+        self.rect.y = xy[1] * TILE_SIZE
 
 
 class Structure(pg.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, xy):
         super().__init__()
         self.surf = pg.Surface((60, 60))
         self.surf.fill((0, 0, 0))
-        self.position = [x, y]
-        self.rect = self.surf.get_rect(top=(TILE_SIZE * y), left=(TILE_SIZE * x))
+        self.position = [xy[0], xy[1]]
+        self.rect = self.surf.get_rect(top=(TILE_SIZE * xy[1]), left=(TILE_SIZE * xy[0]))
 
 
 class House(Structure):
-    def __init__(self, x, y):
-        super().__init__(x, y)
+    def __init__(self, xy):
+        super().__init__(xy)
         self.surf = pg.image.load("assets/hut1.png").convert()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.taxed = False
@@ -98,8 +97,8 @@ class House(Structure):
 
 
 class Tower(Structure):
-    def __init__(self, x, y):
-        super().__init__(x, y)
+    def __init__(self, xy):
+        super().__init__(xy)
         self.surf = pg.image.load("assets/tower.png").convert()
         self.surf.set_colorkey((0, 0, 0), RLEACCEL)
 
@@ -114,6 +113,7 @@ if __name__ == "__main__":
     pg.mixer.init()
     boom_se = pg.mixer.Sound("assets/boom sound effect.ogg")
     bruh_se = pg.mixer.Sound("assets/bruh sound effect.ogg")
+    violin_se = pg.mixer.Sound("assets/violin screech sound effect.ogg")
 
     screen = pg.display.set_mode([1080, 720])
     cursor = Cursor()
@@ -140,13 +140,14 @@ if __name__ == "__main__":
             if event.type == KEYDOWN:
 
                 if event.key in key_structure_dict:  # picking up a chosen structure
-                    cursor.holding = key_structure_dict[event.key](0, 0)
-                    structure_ghost = Ghost(cursor.position[0], cursor.position[1], cursor.holding.surf)
+                    cursor.holding = key_structure_dict[event.key]([0, 0])
+                    structure_ghost = Ghost(cursor.position, cursor.holding.surf)
+                    violin_se.play()
 
                 if event.key == K_SPACE:  # placing down held structure
                     if isinstance(cursor.holding, Structure):
                         if game_board[cursor.position[0]][cursor.position[1]] not in structures:
-                            new_structure = type(cursor.holding)(cursor.position[0], cursor.position[1])
+                            new_structure = type(cursor.holding)(cursor.position)
                             structure_group_dict[type(cursor.holding)].add(new_structure)
                             structures.add(new_structure)
                             all_sprites.add(new_structure)
@@ -163,7 +164,7 @@ if __name__ == "__main__":
         for entity in structures:
             screen.blit(entity.surf, entity.rect)
         if cursor.holding is not None:
-            structure_ghost.update(cursor.position[0], cursor.position[1])
+            structure_ghost.update(cursor.position)
             screen.blit(structure_ghost.surf, structure_ghost.rect)
         screen.blit(cursor.surf, cursor.rect)
 
