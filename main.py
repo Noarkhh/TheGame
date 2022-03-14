@@ -64,7 +64,7 @@ class Ghost(pg.sprite.Sprite):
         super().__init__()
         self.surf = surf
         self.surf.set_alpha(128)
-        self.position = [xy[0], xy[1]]
+        self.position = xy
         self.rect = surf.get_rect(top=(TILE_SIZE * xy[1]), left=(TILE_SIZE * xy[0]))
 
     def update(self, xy):
@@ -78,7 +78,7 @@ class Structure(pg.sprite.Sprite):
         super().__init__()
         self.surf = pg.Surface((60, 60))
         self.surf.fill((0, 0, 0))
-        self.position = [xy[0], xy[1]]
+        self.position = xy
         self.rect = self.surf.get_rect(top=(TILE_SIZE * xy[1]), left=(TILE_SIZE * xy[0]))
 
 
@@ -103,11 +103,6 @@ class Tower(Structure):
         self.surf.set_colorkey((0, 0, 0), RLEACCEL)
 
 
-def render_background():
-    background = pg.image.load("assets/background.png").convert()
-    screen.blit(background, (0, 0))
-
-
 if __name__ == "__main__":
     pg.init()
     pg.mixer.init()
@@ -118,7 +113,8 @@ if __name__ == "__main__":
     screen = pg.display.set_mode([1080, 720])
     cursor = Cursor()
     game_board = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
-    print(game_board)
+
+    background = pg.image.load("assets/background.png").convert()
     houses = pg.sprite.Group()
     towers = pg.sprite.Group()
     structures = pg.sprite.Group()
@@ -154,15 +150,18 @@ if __name__ == "__main__":
                             game_board[new_structure.position[0]][new_structure.position[1]] = new_structure
                             boom_se.play()
                             cursor.holding = None
-                        else: bruh_se.play()
+                        else:
+                            bruh_se.play()
                 if event.key == K_ESCAPE:
                     running = False
 
         pressed_keys = pg.key.get_pressed()
+
         cursor.update(pressed_keys)
-        render_background()
+        screen.blit(background, (0, 0))
         for entity in structures:
             screen.blit(entity.surf, entity.rect)
+
         if cursor.holding is not None:
             structure_ghost.update(cursor.position)
             screen.blit(structure_ghost.surf, structure_ghost.rect)
