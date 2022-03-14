@@ -1,0 +1,218 @@
+import pygame as pg
+from pygame.locals import (RLEACCEL,
+                           K_UP,
+                           K_DOWN,
+                           K_LEFT,
+                           K_RIGHT,
+                           K_SPACE,
+                           KEYDOWN,
+                           QUIT,
+                           K_ESCAPE,
+                           K_t,
+                           K_h)
+
+HEIGHT_TILES = 12
+WIDTH_TILES = 18
+TILE_SIZE = 60
+
+
+class Cursor(pg.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.windup = [0 for _ in range(4)]
+        self.cooldown = [0 for _ in range(4)]
+        self.surf = pg.image.load("assets/cursor2.png").convert()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.rect = self.surf.get_rect()
+        self.position = [0, 0]
+        self.holding = None
+
+    def update(self, pressed_keys):
+        cooltime = 10
+        key_list = [True if pressed_keys[key] else False for key in (K_UP, K_DOWN, K_LEFT, K_RIGHT)]
+        iter_list = [(key, sign, xy) for key, sign, xy in zip(key_list, (-1, 1, -1, 1), (1, 1, 0, 0))]
+        for i, elem in enumerate(iter_list):
+            if elem[0]:
+                if self.cooldown[i] <= self.windup[i]:
+                    if self.windup[i] < cooltime: self.windup[i] += 4
+                    self.position[elem[2]] += elem[1]
+                    self.cooldown[i] = cooltime
+            else:
+                self.windup[i] = 0
+                self.cooldown[i] = 0
+        # if pressed_keys[K_DOWN]:
+        #     if self.windup[1] < cooltime - 1: self.windup[1] += 1
+        #     if self.cooldown[1] <= self.windup[1]:
+        #         self.position[1] += 1
+        #         self.cooldown[1] = cooltime
+        # else:
+        #     self.windup[1] = 0
+        #     self.cooldown[1] = 0
+        # if pressed_keys[K_LEFT] and self.cooldown[2] in (0, 7):
+        #     self.position[0] -= 1
+        #     self.cooldown[2] = cooltime
+        # if pressed_keys[K_RIGHT] and self.cooldown[3] in (0, 7):
+        #     self.position[0] += 1
+        #     self.cooldown[3] = cooltime
+
+        if self.position[0] < 0:
+            self.position[0] = 0
+            bruh_se.play()
+        if self.position[0] > WIDTH_TILES - 1:
+            self.position[0] = WIDTH_TILES - 1
+            bruh_se.play()
+        if self.position[1] < 0:
+            self.position[1] = 0
+            bruh_se.play()
+        if self.position[1] > HEIGHT_TILES - 1:
+            self.position[1] = HEIGHT_TILES - 1
+            bruh_se.play()
+
+        self.cooldown = [x - 1 if x > 0 else 0 for x in self.cooldown]
+        self.rect.x = self.position[0] * TILE_SIZE
+        self.rect.y = self.position[1] * TILE_SIZE
+
+        # if self.holding is not None:
+        #     self.surf.set_alpha(128)
+        #     cursor_tmp = pg.image.load("assets/cursor2.png").convert()
+        #     cursor_tmp.set_colorkey((255, 255, 255), RLEACCEL)
+        #     self.surf.blit(cursor_tmp, (0, 0))
+            # self.surf.blit(self.holding.surf, self.holding.rect)
+
+
+class Ghost(pg.sprite.Sprite):
+    def __init__(self, x, y, surf):
+        super().__init__()
+        self.surf = surf
+        self.surf.set_alpha(128)
+        self.position = [x, y]
+        self.rect = surf.get_rect(top=(TILE_SIZE * y), left=(TILE_SIZE * x))
+
+    def update(self, x, y):
+        self.position[0] = x
+        self.position[1] = y
+        self.rect.x = x * TILE_SIZE
+        self.rect.y = y * TILE_SIZE
+
+
+class Structure(pg.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.surf = pg.Surface((60, 60))
+        self.surf.fill((0, 0, 0))
+        self.position = [x, y]
+        self.rect = self.surf.get_rect(top=(TILE_SIZE * y), left=(TILE_SIZE * x))
+
+
+class House(Structure):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.surf = pg.image.load("assets/hut1.png").convert()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        # self.position = [x, y]
+        # self.rect = self.surf.get_rect(top=(60 * y), left=(60 * x))
+        self.taxed = False
+        self.debt = 10
+
+    def tax(self):
+        pg.draw.circle(self.surf, (255, max(355 - 10 * self.debt, 0), 0), (30, 30), self.debt)
+        self.debt += 5
+        self.taxed = True
+
+
+class Tower(Structure):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.surf = pg.image.load("assets/tower.png").convert()
+        self.surf.set_colorkey((0, 0, 0), RLEACCEL)
+
+
+def render_background():
+    background = pg.image.load("assets/background.png").convert()
+    screen.blit(background, (0, 0))
+
+
+if __name__ == "__main__":
+    pg.init()
+    pg.mixer.init()
+    boom_se = pg.mixer.Sound("assets/boom sound effect.ogg")
+    bruh_se = pg.mixer.Sound("assets/bruh sound effect.ogg")
+
+    screen = pg.display.set_mode([1080, 720])
+    cursor = Cursor()
+    game_board = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+    print(game_board)
+    houses = pg.sprite.Group()
+    towers = pg.sprite.Group()
+    structures = pg.sprite.Group()
+    all_sprites = pg.sprite.Group()
+    all_sprites.add(cursor)
+
+    clock = pg.time.Clock()
+    key_structure_dict = {K_h: House, K_t: Tower}
+    structure_group_dict = {House: houses, Tower: towers}
+
+    running = True
+    # ------ MAIN LOOP -------
+    while running:
+
+        # checking events
+        for event in pg.event.get():
+            if event.type == QUIT:
+                running = False
+            if event.type == KEYDOWN:
+                # if event.key == K_h:  # placing a new house or taxing existing one
+                #     cursor.holding = House(0, 0)
+                #     cursor.holding.surf.set_alpha(100)
+                #     cursor.surf.blit(cursor.holding.surf, cursor.holding.rect)
+
+                if event.key in key_structure_dict:  # picking up a chosen structure
+                    cursor.holding = key_structure_dict[event.key](0, 0)
+                    structure_ghost = Ghost(cursor.position[0], cursor.position[1], cursor.holding.surf)
+
+                    # cursor.holding.surf.set_alpha(100)
+                    # cursor.surf.blit(cursor.holding.surf, cursor.holding.rect)
+
+                if event.key == K_SPACE:  # placing down held structure
+                    # if isinstance(cursor.holding, House):
+                    #     if game_board[cursor.position[0]][cursor.position[1]] in houses:
+                    #         game_board[cursor.position[0]][cursor.position[1]].tax()
+                    #     elif game_board[cursor.position[0]][cursor.position[1]] not in structures:
+                    #         new_house = House(cursor.position[0], cursor.position[1])
+                    #         houses.add(new_house)
+                    #         structures.add(new_house)
+                    #         all_sprites.add(new_house)
+                    #         # boom_se.play()
+                    #         game_board[new_house.position[0]][new_house.position[1]] = new_house
+
+                            # cursor.holding = None
+                            # cursor.surf = pg.image.load("assets/cursor2.png").convert()
+                            # cursor.surf.set_colorkey((255, 255, 255), RLEACCEL)
+                    if isinstance(cursor.holding, Structure):
+                        if game_board[cursor.position[0]][cursor.position[1]] not in structures:
+                            new_structure = type(cursor.holding)(cursor.position[0], cursor.position[1])
+                            structure_group_dict[type(cursor.holding)].add(new_structure)
+                            structures.add(new_structure)
+                            all_sprites.add(new_structure)
+                            game_board[new_structure.position[0]][new_structure.position[1]] = new_structure
+                            boom_se.play()
+                            cursor.holding = None
+                            # cursor.surf = pg.image.load("assets/cursor2.png").convert()
+                            # cursor.surf.set_colorkey((255, 255, 255), RLEACCEL)
+                        else: bruh_se.play()
+                if event.key == K_ESCAPE:
+                    running = False
+
+        pressed_keys = pg.key.get_pressed()
+        cursor.update(pressed_keys)
+        render_background()
+        for entity in structures:
+            screen.blit(entity.surf, entity.rect)
+        if cursor.holding is not None:
+            structure_ghost.update(cursor.position[0], cursor.position[1])
+            screen.blit(structure_ghost.surf, structure_ghost.rect)
+        screen.blit(cursor.surf, cursor.rect)
+
+        pg.display.flip()
+        clock.tick(20)
+    pg.quit()
