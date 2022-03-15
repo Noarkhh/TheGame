@@ -116,7 +116,7 @@ class Road(Structure):
 
     def update_edges(self, direction, roads_list):
         self.neighbours.add(direction)
-        print(self.neighbours)
+        # print(self.neighbours)
 
         def assign_value(direct):
             if direct == 'N': return 0
@@ -129,15 +129,22 @@ class Road(Structure):
         self.surf = roads_list[directions]
 
 
-def fill_roads_list(roads_list):
+def fill_roads_list():
     directory = os.listdir("assets/roads")
     dir_cut = []
+    directions_list = [('0',), ('N',), ('E',), ('S',), ('W',), ('N', 'E'), ('E', 'S'), ('S', 'W'), ('N', 'W'),
+                       ('N', 'S'), ('E', 'W'), ('N', 'E', 'S'), ('E', 'S', 'W'),
+                       ('N', 'S', 'W'), ('N', 'E', 'W'), ('N', 'E', 'S', 'W')]
+    roads_list = {directions_list[i]: pg.Surface((60, 60)) for i in range(16)}
+
     for name in directory:
         dir_cut.append(tuple(name[4:-4]))
 
     for file, name in zip(directory, dir_cut):
         roads_list[name] = pg.transform.scale(pg.image.load("assets/roads/" + file).convert(), (60, 60))
         roads_list[name].set_colorkey((255, 255, 255), RLEACCEL)
+
+    return roads_list
 
 
 if __name__ == "__main__":
@@ -151,12 +158,9 @@ if __name__ == "__main__":
     cursor = Cursor()
     game_board = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
-    directions_list = [('0',), ('N',), ('E',), ('S',), ('W',), ('N', 'E'), ('E', 'S'), ('S', 'W'), ('N', 'W'),
-                       ('N', 'S'), ('E', 'W'), ('N', 'E', 'S'), ('E', 'S', 'W'),
-                       ('N', 'S', 'W'), ('N', 'E', 'W'), ('N', 'E', 'S', 'W')]
-    roads_list = {directions_list[i]: pg.Surface((60, 60)) for i in range(16)}
+
     # print(directions_list)
-    fill_roads_list(roads_list)
+    roads_list = fill_roads_list()
 
     background = pg.image.load("assets/background.png").convert()
     houses = pg.sprite.Group()
