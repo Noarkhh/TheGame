@@ -147,6 +147,28 @@ def fill_roads_list():
     return roads_list
 
 
+def place_structure():
+    if isinstance(cursor.holding, Structure):
+        if game_board[cursor.position[0]][cursor.position[1]] not in structures:
+            new_structure = type(cursor.holding)(cursor.position)
+            structure_group_dict[type(cursor.holding)].add(new_structure)
+            structures.add(new_structure)
+            all_sprites.add(new_structure)
+            game_board[new_structure.position[0]][new_structure.position[1]] = new_structure
+            boom_se.play()
+            if isinstance(new_structure, Road):
+                for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
+                                                        (0, -1, 0, 1), (1, 0, -1, 0)):
+                    if isinstance(game_board[cursor.position[0] + x][cursor.position[1] + y], Road):
+                        game_board[cursor.position[0] + x][cursor.position[1] + y].update_edges(direction, roads_list)
+                        new_structure.update_edges(direction_rev, roads_list)
+            # else:
+            #     cursor.holding = None
+        else:
+            bruh_se.play()
+    return
+
+
 if __name__ == "__main__":
     pg.init()
     pg.mixer.init()
@@ -163,6 +185,8 @@ if __name__ == "__main__":
     roads_list = fill_roads_list()
 
     background = pg.image.load("assets/background.png").convert()
+    pg.display.set_caption("Twierdza: Zawodzie")
+
     houses = pg.sprite.Group()
     towers = pg.sprite.Group()
     roads = pg.sprite.Group()
@@ -173,7 +197,6 @@ if __name__ == "__main__":
     clock = pg.time.Clock()
     key_structure_dict = {K_h: House, K_t: Tower, K_r: Road}
     structure_group_dict = {House: houses, Tower: towers, Road: roads}
-    # i = 0
     running = True
     # ------ MAIN LOOP -------
     while running:
@@ -188,29 +211,12 @@ if __name__ == "__main__":
                     cursor.holding = key_structure_dict[event.key]([0, 0])
                     structure_ghost = Ghost(cursor.position, cursor.holding.surf)
                     violin_se.play()
+
                 if event.key == K_n:
                     cursor.holding = None
-                if event.key == K_SPACE:  # placing down held structure
-                    if isinstance(cursor.holding, Structure):
-                        if game_board[cursor.position[0]][cursor.position[1]] not in structures:
-                            new_structure = type(cursor.holding)(cursor.position)
-                            structure_group_dict[type(cursor.holding)].add(new_structure)
-                            structures.add(new_structure)
-                            all_sprites.add(new_structure)
-                            game_board[new_structure.position[0]][new_structure.position[1]] = new_structure
-                            boom_se.play()
 
-                            if isinstance(new_structure, Road):
-                                for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
-                                                          (0, -1, 0, 1), (1, 0, -1, 0)):
-                                    if isinstance(game_board[cursor.position[0] + x][cursor.position[1] + y], Road):
-                                        game_board[cursor.position[0] + x][cursor.position[1] + y].\
-                                                   update_edges(direction, roads_list)
-                                        new_structure.update_edges(direction_rev, roads_list)
-                            else:
-                                cursor.holding = None
-                        else:
-                            bruh_se.play()
+                if event.key == K_SPACE:  # placing down held structure
+                    place_structure()
 
                 if event.key == K_ESCAPE:
                     running = False
@@ -226,9 +232,6 @@ if __name__ == "__main__":
             structure_ghost.update(cursor.position)
             screen.blit(structure_ghost.surf, structure_ghost.rect)
         screen.blit(cursor.surf, cursor.rect)
-
-        # screen.blit(roads_list[directions_list[i]], (180, 180))
-        # i += 1
 
         pg.display.flip()
         clock.tick(TICK_RATE)
