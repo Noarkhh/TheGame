@@ -14,9 +14,10 @@ from pygame.locals import (RLEACCEL,
                            K_r,
                            K_n)
 
-HEIGHT_TILES = 12
-WIDTH_TILES = 18
-TILE_SIZE = 60
+LAYOUT = pg.image.load("assets/layout2.png")
+HEIGHT_TILES = LAYOUT.get_height()
+WIDTH_TILES = LAYOUT.get_width()
+TILE_S = 30
 TICK_RATE = 20
 
 
@@ -25,11 +26,11 @@ class Cursor(pg.sprite.Sprite):
         super().__init__()
         self.windup = [0 for _ in range(4)]
         self.cooldown = [0 for _ in range(4)]
-        self.surf = pg.image.load("assets/cursor3.png").convert()
+        self.surf = pg.transform.scale(pg.image.load("assets/cursor3.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
-        self.position = [0, 0]
-        self.holding = None
+        self.pos = [0, 0]
+        self.hold = None
 
     def update(self, pressed_keys):
         cooltime = 10
@@ -39,28 +40,28 @@ class Cursor(pg.sprite.Sprite):
             if elem[0]:
                 if self.cooldown[i] <= self.windup[i]:
                     if self.windup[i] < cooltime: self.windup[i] += 4
-                    self.position[elem[2]] += elem[1]
+                    self.pos[elem[2]] += elem[1]
                     self.cooldown[i] = cooltime
             else:
                 self.windup[i] = 0
                 self.cooldown[i] = 0
 
-        if self.position[0] < 0:
-            self.position[0] = 0
+        if self.pos[0] < 0:
+            self.pos[0] = 0
             bruh_se.play()
-        if self.position[0] > WIDTH_TILES - 1:
-            self.position[0] = WIDTH_TILES - 1
+        if self.pos[0] > WIDTH_TILES - 1:
+            self.pos[0] = WIDTH_TILES - 1
             bruh_se.play()
-        if self.position[1] < 0:
-            self.position[1] = 0
+        if self.pos[1] < 0:
+            self.pos[1] = 0
             bruh_se.play()
-        if self.position[1] > HEIGHT_TILES - 1:
-            self.position[1] = HEIGHT_TILES - 1
+        if self.pos[1] > HEIGHT_TILES - 1:
+            self.pos[1] = HEIGHT_TILES - 1
             bruh_se.play()
 
         self.cooldown = [x - 1 if x > 0 else 0 for x in self.cooldown]
-        self.rect.x = self.position[0] * TILE_SIZE
-        self.rect.y = self.position[1] * TILE_SIZE
+        self.rect.x = self.pos[0] * TILE_S
+        self.rect.y = self.pos[1] * TILE_S
 
 
 class Ghost(pg.sprite.Sprite):
@@ -69,12 +70,17 @@ class Ghost(pg.sprite.Sprite):
         self.surf = surf
         self.surf.set_alpha(128)
         self.position = xy
-        self.rect = surf.get_rect(top=(TILE_SIZE * xy[1]), left=(TILE_SIZE * xy[0]))
+        self.rect = surf.get_rect(top=(TILE_S * xy[1]), left=(TILE_S * xy[0]))
 
     def update(self, xy):
         self.position = xy
-        self.rect.x = xy[0] * TILE_SIZE
-        self.rect.y = xy[1] * TILE_SIZE
+        self.rect.x = xy[0] * TILE_S
+        self.rect.y = xy[1] * TILE_S
+
+
+class Tile(pg.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
 
 
 class Structure(pg.sprite.Sprite):
@@ -82,14 +88,14 @@ class Structure(pg.sprite.Sprite):
         super().__init__()
         self.surf = pg.Surface((60, 60))
         self.surf.fill((0, 0, 0))
-        self.position = xy
-        self.rect = self.surf.get_rect(top=(TILE_SIZE * xy[1]), left=(TILE_SIZE * xy[0]))
+        self.pos = xy
+        self.rect = self.surf.get_rect(top=(TILE_S * xy[1]), left=(TILE_S * xy[0]))
 
 
 class House(Structure):
     def __init__(self, xy):
         super().__init__(xy)
-        self.surf = pg.image.load("assets/hut1.png").convert()
+        self.surf = pg.transform.scale(pg.image.load("assets/hut1.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.taxed = False
         self.debt = 10
@@ -103,7 +109,7 @@ class House(Structure):
 class Tower(Structure):
     def __init__(self, xy):
         super().__init__(xy)
-        self.surf = pg.image.load("assets/tower.png").convert()
+        self.surf = pg.transform.scale(pg.image.load("assets/tower.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((0, 0, 0), RLEACCEL)
 
 
@@ -111,11 +117,12 @@ class Road(Structure):
     def __init__(self, xy):
         super().__init__(xy)
         self.neighbours = set()
-        self.surf = pg.transform.scale(pg.image.load("assets/roads/road0.png").convert(), (60, 60))
+        self.surf = pg.transform.scale(pg.image.load("assets/roads/road0.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
     def update_edges(self, direction, roads_list):
         self.neighbours.add(direction)
+
         # print(self.neighbours)
 
         def assign_value(direct):
@@ -141,32 +148,59 @@ def fill_roads_list():
         dir_cut.append(tuple(name[4:-4]))
 
     for file, name in zip(directory, dir_cut):
-        roads_list[name] = pg.transform.scale(pg.image.load("assets/roads/" + file).convert(), (60, 60))
+        roads_list[name] = pg.transform.scale(pg.image.load("assets/roads/" + file).convert(), (TILE_S, TILE_S))
         roads_list[name].set_colorkey((255, 255, 255), RLEACCEL)
 
     return roads_list
 
 
+def pos_oob(x, y):
+    if x < 0: return True
+    if x > WIDTH_TILES - 1: return True
+    if y < 0: return True
+    if y > HEIGHT_TILES - 1: return True
+    return False
+
+
 def place_structure():
-    if isinstance(cursor.holding, Structure):
-        if game_board[cursor.position[0]][cursor.position[1]] not in structures:
-            new_structure = type(cursor.holding)(cursor.position)
-            structure_group_dict[type(cursor.holding)].add(new_structure)
+    if isinstance(cursor.hold, Structure):
+        if structure_map[cursor.pos[0]][cursor.pos[1]] not in structures \
+                and tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea":
+            new_structure = type(cursor.hold)(cursor.pos)
+            structure_group_dict[type(cursor.hold)].add(new_structure)
             structures.add(new_structure)
             all_sprites.add(new_structure)
-            game_board[new_structure.position[0]][new_structure.position[1]] = new_structure
+            structure_map[new_structure.pos[0]][new_structure.pos[1]] = new_structure
             boom_se.play()
             if isinstance(new_structure, Road):
                 for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
-                                                        (0, -1, 0, 1), (1, 0, -1, 0)):
-                    if isinstance(game_board[cursor.position[0] + x][cursor.position[1] + y], Road):
-                        game_board[cursor.position[0] + x][cursor.position[1] + y].update_edges(direction, roads_list)
+                                                          (0, -1, 0, 1), (1, 0, -1, 0)):
+                    if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) \
+                            and isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Road):
+                        structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, roads_list)
                         new_structure.update_edges(direction_rev, roads_list)
             # else:
             #     cursor.holding = None
         else:
             bruh_se.play()
     return
+
+
+def generate_map():
+    color_to_type = {(0, 255, 0, 255): "grassland", (0, 0, 255, 255): "sea"}
+    tile_dict = {"grassland": pg.transform.scale(pg.image.load("assets/tiles/grassland_tile.png").convert(),
+                                                 (TILE_S, TILE_S)),
+                 "sea": pg.transform.scale(pg.image.load("assets/tiles/sea_tile.png").convert(),
+                                           (TILE_S, TILE_S))}
+    background = pg.Surface((WIDTH_TILES * TILE_S, HEIGHT_TILES * TILE_S))
+    tile_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+
+    for i in range(WIDTH_TILES):
+        for j in range(HEIGHT_TILES):
+            tile_color = tuple(LAYOUT.get_at((i, j)))
+            background.blit(tile_dict[color_to_type[tile_color]], (i * TILE_S, j * TILE_S))
+            tile_map[i][j] = color_to_type[tile_color]
+    return background, tile_map
 
 
 if __name__ == "__main__":
@@ -176,15 +210,14 @@ if __name__ == "__main__":
     bruh_se = pg.mixer.Sound("assets/bruh sound effect.ogg")
     violin_se = pg.mixer.Sound("assets/violin screech sound effect.ogg")
 
-    screen = pg.display.set_mode([1080, 720])
+    screen = pg.display.set_mode([WIDTH_TILES * TILE_S, HEIGHT_TILES * TILE_S])
     cursor = Cursor()
-    game_board = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+    structure_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
-
-    # print(directions_list)
     roads_list = fill_roads_list()
 
-    background = pg.image.load("assets/background.png").convert()
+    background = generate_map()[0]
+    tile_type_map = generate_map()[1]
     pg.display.set_caption("Twierdza: Zawodzie")
 
     houses = pg.sprite.Group()
@@ -208,12 +241,12 @@ if __name__ == "__main__":
             if event.type == KEYDOWN:
 
                 if event.key in key_structure_dict:  # picking up a chosen structure
-                    cursor.holding = key_structure_dict[event.key]([0, 0])
-                    structure_ghost = Ghost(cursor.position, cursor.holding.surf)
+                    cursor.hold = key_structure_dict[event.key]([0, 0])
+                    structure_ghost = Ghost(cursor.pos, cursor.hold.surf)
                     violin_se.play()
 
                 if event.key == K_n:
-                    cursor.holding = None
+                    cursor.hold = None
 
                 if event.key == K_SPACE:  # placing down held structure
                     place_structure()
@@ -228,8 +261,8 @@ if __name__ == "__main__":
         for entity in structures:
             screen.blit(entity.surf, entity.rect)
 
-        if cursor.holding is not None:
-            structure_ghost.update(cursor.position)
+        if cursor.hold is not None:
+            structure_ghost.update(cursor.pos)
             screen.blit(structure_ghost.surf, structure_ghost.rect)
         screen.blit(cursor.surf, cursor.rect)
 
