@@ -1,5 +1,6 @@
 import pygame as pg
 import os
+from random import randint
 from pygame.locals import (RLEACCEL,
                            K_UP,
                            K_DOWN,
@@ -12,12 +13,13 @@ from pygame.locals import (RLEACCEL,
                            K_t,
                            K_h,
                            K_r,
-                           K_n)
+                           K_n,
+                           K_x)
 
 LAYOUT = pg.image.load("assets/layout2.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
-TILE_S = 30
+TILE_S = 45
 WIDTH_PIXELS = WIDTH_TILES * TILE_S
 HEIGHT_PIXELS = HEIGHT_TILES * TILE_S
 TICK_RATE = 20
@@ -25,24 +27,27 @@ TICK_RATE = 20
 
 class Statistics:
     def __init__(self):
-        self.stat_window = pg.Surface((200, 120))
+        self.font_size = 40
+        self.stat_window = pg.Surface((self.font_size * 20, self.font_size * 10))
         self.stat_window.fill((0, 0, 0))
-        self.font = pg.font.SysFont('consolas', 26)
+        self.font = pg.font.SysFont('consolas', self.font_size)
         self.rect = self.stat_window.get_rect(bottom=HEIGHT_PIXELS - 2, right=WIDTH_PIXELS - 4)
 
     def update_stats(self, xy, structure_map, tile_type_map):
+        def blit_stat(stat):
+            nonlocal stat_height
+            stat_surf = self.font.render(stat, False, (255, 255, 255), (0, 0, 0))
+            stat_rect = stat_surf.get_rect(bottom=self.stat_window.get_height() - stat_height,
+                                           right=self.stat_window.get_width())
+            self.stat_window.blit(stat_surf, stat_rect)
+            stat_height += self.font_size + 4
+
         self.stat_window.fill((0, 0, 0))
         stat_height = 0
+
         if isinstance(structure_map[xy[0]][xy[1]], Structure):
-            struct_stat_surf = self.font.render(str(type(structure_map[xy[0]][xy[1]])),
-                                                True, (255, 255, 255), (0, 0, 0))
-            stat_rect = struct_stat_surf.get_rect(bottom=120, right=200)
-            self.stat_window.blit(struct_stat_surf, stat_rect)
-            # stat_rect.move_ip(0, 30)
-            stat_height += 30
-        tile_stat_surf = self.font.render(tile_type_map[xy[0]][xy[1]], True, (255, 255, 255), (0, 0, 0))
-        stat_rect = tile_stat_surf.get_rect(bottom=120 - stat_height, right=200)
-        self.stat_window.blit(tile_stat_surf, stat_rect)
+            blit_stat(str(type(structure_map[xy[0]][xy[1]]))[17:-2])
+        blit_stat(tile_type_map[xy[0]][xy[1]])
         self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
 
 
@@ -70,19 +75,21 @@ class Cursor(pg.sprite.Sprite):
             else:
                 self.windup[i] = 0
                 self.cooldown[i] = 0
-
+        bruh = False
         if self.pos[0] < 0:
             self.pos[0] = 0
-            bruh_se.play()
+            bruh = True
         if self.pos[0] > WIDTH_TILES - 1:
             self.pos[0] = WIDTH_TILES - 1
-            bruh_se.play()
+            bruh = True
         if self.pos[1] < 0:
             self.pos[1] = 0
-            bruh_se.play()
+            bruh = True
         if self.pos[1] > HEIGHT_TILES - 1:
             self.pos[1] = HEIGHT_TILES - 1
-            bruh_se.play()
+            bruh = True
+        if bruh:
+            sounds["Insult" + str(randint(1, 20))].play()
 
         self.cooldown = [x - 1 if x > 0 else 0 for x in self.cooldown]
         self.rect.x = self.pos[0] * TILE_S
@@ -145,10 +152,11 @@ class Road(Structure):
         self.surf = pg.transform.scale(pg.image.load("assets/roads/road0.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
-    def update_edges(self, direction, roads_list):
-        self.neighbours.add(direction)
-
-        # print(self.neighbours)
+    def update_edges(self, direction, roads_list, add):
+        if add:
+            self.neighbours.add(direction)
+        elif direction in self.neighbours:
+            self.neighbours.remove(direction)
 
         def assign_value(direct):
             if direct == 'N': return 0
@@ -157,7 +165,8 @@ class Road(Structure):
             if direct == 'W': return 3
 
         directions = tuple(sorted(self.neighbours, key=assign_value))
-
+        if not directions:
+            directions = ('0',)
         self.surf = roads_list[directions]
 
 
@@ -195,20 +204,32 @@ def place_structure():
             structure_group_dict[type(cursor.hold)].add(new_structure)
             structures.add(new_structure)
             all_sprites.add(new_structure)
-            structure_map[new_structure.pos[0]][new_structure.pos[1]] = new_structure
-            boom_se.play()
+            structure_map[cursor.pos[0]][cursor.pos[1]] = new_structure
+            # boom_se.play()
+            sounds["drawbridge_control"].play()
             if isinstance(new_structure, Road):
                 for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
                                                           (0, -1, 0, 1), (1, 0, -1, 0)):
                     if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) \
                             and isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Road):
-                        structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, roads_list)
-                        new_structure.update_edges(direction_rev, roads_list)
+                        structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, roads_list, True)
+                        new_structure.update_edges(direction_rev, roads_list, True)
             # else:
             #     cursor.holding = None
-        else:
-            bruh_se.play()
+        elif not space_hold:
+            sounds["Placement_Warning16"].play()
     return
+
+
+def remove_structure():
+    if structure_map[cursor.pos[0]][cursor.pos[1]] in structures:
+        structure_map[cursor.pos[0]][cursor.pos[1]].kill()
+        structure_map[cursor.pos[0]][cursor.pos[1]] = 0
+        sounds["buildingwreck_01"].play()
+        for direction, x, y in zip(('N', 'E', 'S', 'W'), (0, -1, 0, 1), (1, 0, -1, 0)):
+            if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) \
+                    and isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Road):
+                structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, roads_list, False)
 
 
 def generate_map():
@@ -228,12 +249,19 @@ def generate_map():
     return background, tile_map
 
 
+def load_sounds():
+    directory = os.listdir("assets/fx")
+    sounds = {file[:-4]: pg.mixer.Sound("assets/fx/" + file) for file in directory}
+    for sound in sounds.values():
+        sound.set_volume(0.25)
+    return sounds
+
+
 if __name__ == "__main__":
     pg.init()
     pg.mixer.init()
-    boom_se = pg.mixer.Sound("assets/boom sound effect.ogg")
-    bruh_se = pg.mixer.Sound("assets/bruh sound effect.ogg")
-    violin_se = pg.mixer.Sound("assets/violin screech sound effect.ogg")
+
+    sounds = load_sounds()
 
     screen = pg.display.set_mode([WIDTH_PIXELS, HEIGHT_PIXELS])
     cursor = Cursor()
@@ -260,6 +288,7 @@ if __name__ == "__main__":
     # ------ MAIN LOOP -------
     while running:
 
+        pressed_keys = pg.key.get_pressed()
         # checking events
         for event in pg.event.get():
             if event.type == QUIT:
@@ -269,18 +298,23 @@ if __name__ == "__main__":
                 if event.key in key_structure_dict:  # picking up a chosen structure
                     cursor.hold = key_structure_dict[event.key]([0, 0])
                     structure_ghost = Ghost(cursor.pos, cursor.hold.surf)
-                    violin_se.play()
+                    sounds["menusl_" + str(randint(1, 3)) ].play()
+                    # violin_se.play()
 
                 if event.key == K_n:
                     cursor.hold = None
 
-                if event.key == K_SPACE:  # placing down held structure
-                    place_structure()
-
                 if event.key == K_ESCAPE:
                     running = False
 
-        pressed_keys = pg.key.get_pressed()
+        if pressed_keys[K_SPACE]:  # placing down held structure
+            place_structure()
+            space_hold = True
+        else:
+            space_hold = False
+
+        if pressed_keys[K_x]:  # removing a structure
+            remove_structure()
 
         cursor.update(pressed_keys)
         screen.blit(background, (0, 0))
@@ -290,9 +324,12 @@ if __name__ == "__main__":
         if cursor.hold is not None:
             structure_ghost.update(cursor.pos)
             screen.blit(structure_ghost.surf, structure_ghost.rect)
+
         screen.blit(cursor.surf, cursor.rect)
         statistics.update_stats(cursor.pos, structure_map, tile_type_map)
         screen.blit(statistics.stat_window, statistics.rect)
+
+        if randint(1, 100000) == 1: sounds["Random_Events13"].play()
         pg.display.flip()
         clock.tick(TICK_RATE)
     pg.quit()
