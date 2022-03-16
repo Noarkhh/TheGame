@@ -18,7 +18,32 @@ LAYOUT = pg.image.load("assets/layout2.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
 TILE_S = 30
+WIDTH_PIXELS = WIDTH_TILES * TILE_S
+HEIGHT_PIXELS = HEIGHT_TILES * TILE_S
 TICK_RATE = 20
+
+
+class Statistics:
+    def __init__(self):
+        self.stat_window = pg.Surface((200, 120))
+        self.stat_window.fill((0, 0, 0))
+        self.font = pg.font.SysFont('consolas', 26)
+        self.rect = self.stat_window.get_rect(bottom=HEIGHT_PIXELS - 2, right=WIDTH_PIXELS - 4)
+
+    def update_stats(self, xy, structure_map, tile_type_map):
+        self.stat_window.fill((0, 0, 0))
+        stat_height = 0
+        if isinstance(structure_map[xy[0]][xy[1]], Structure):
+            struct_stat_surf = self.font.render(str(type(structure_map[xy[0]][xy[1]])),
+                                                True, (255, 255, 255), (0, 0, 0))
+            stat_rect = struct_stat_surf.get_rect(bottom=120, right=200)
+            self.stat_window.blit(struct_stat_surf, stat_rect)
+            # stat_rect.move_ip(0, 30)
+            stat_height += 30
+        tile_stat_surf = self.font.render(tile_type_map[xy[0]][xy[1]], True, (255, 255, 255), (0, 0, 0))
+        stat_rect = tile_stat_surf.get_rect(bottom=120 - stat_height, right=200)
+        self.stat_window.blit(tile_stat_surf, stat_rect)
+        self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
 
 
 class Cursor(pg.sprite.Sprite):
@@ -195,11 +220,11 @@ def generate_map():
     background = pg.Surface((WIDTH_TILES * TILE_S, HEIGHT_TILES * TILE_S))
     tile_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
-    for i in range(WIDTH_TILES):
-        for j in range(HEIGHT_TILES):
-            tile_color = tuple(LAYOUT.get_at((i, j)))
-            background.blit(tile_dict[color_to_type[tile_color]], (i * TILE_S, j * TILE_S))
-            tile_map[i][j] = color_to_type[tile_color]
+    for x in range(WIDTH_TILES):
+        for y in range(HEIGHT_TILES):
+            tile_color = tuple(LAYOUT.get_at((x, y)))
+            background.blit(tile_dict[color_to_type[tile_color]], (x * TILE_S, y * TILE_S))
+            tile_map[x][y] = color_to_type[tile_color]
     return background, tile_map
 
 
@@ -210,8 +235,9 @@ if __name__ == "__main__":
     bruh_se = pg.mixer.Sound("assets/bruh sound effect.ogg")
     violin_se = pg.mixer.Sound("assets/violin screech sound effect.ogg")
 
-    screen = pg.display.set_mode([WIDTH_TILES * TILE_S, HEIGHT_TILES * TILE_S])
+    screen = pg.display.set_mode([WIDTH_PIXELS, HEIGHT_PIXELS])
     cursor = Cursor()
+    statistics = Statistics()
     structure_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
     roads_list = fill_roads_list()
@@ -265,7 +291,8 @@ if __name__ == "__main__":
             structure_ghost.update(cursor.pos)
             screen.blit(structure_ghost.surf, structure_ghost.rect)
         screen.blit(cursor.surf, cursor.rect)
-
+        statistics.update_stats(cursor.pos, structure_map, tile_type_map)
+        screen.blit(statistics.stat_window, statistics.rect)
         pg.display.flip()
         clock.tick(TICK_RATE)
     pg.quit()
