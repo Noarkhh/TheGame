@@ -19,7 +19,7 @@ from pygame.locals import (RLEACCEL,
 LAYOUT = pg.image.load("assets/layout2.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
-TILE_S = 45
+TILE_S = 30
 WIDTH_PIXELS = WIDTH_TILES * TILE_S
 HEIGHT_PIXELS = HEIGHT_TILES * TILE_S
 TICK_RATE = 20
@@ -250,18 +250,27 @@ def generate_map():
 
 
 def load_sounds():
-    directory = os.listdir("assets/fx")
-    sounds = {file[:-4]: pg.mixer.Sound("assets/fx/" + file) for file in directory}
-    for sound in sounds.values():
+    fx_dir = os.listdir("assets/fx")
+    soundtrack_dir = os.listdir("assets/soundtrack")
+    sounds = {file[:-4]: pg.mixer.Sound("assets/fx/" + file) for file in fx_dir}
+    tracks = [pg.mixer.Sound("assets/soundtrack/" + file) for file in soundtrack_dir]
+    for sound, track in zip(sounds.values(), tracks):
         sound.set_volume(0.25)
-    return sounds
+        track.set_volume(0.20)
+    return sounds, tracks
+
+
+def play_soundtrack():
+    if not soundtrack_channel.get_busy():
+        soundtrack_channel.play(tracks[randint(0, 13)])
 
 
 if __name__ == "__main__":
     pg.init()
     pg.mixer.init()
 
-    sounds = load_sounds()
+    sounds, tracks = load_sounds()
+    soundtrack_channel = pg.mixer.Channel(5)
 
     screen = pg.display.set_mode([WIDTH_PIXELS, HEIGHT_PIXELS])
     cursor = Cursor()
@@ -270,8 +279,8 @@ if __name__ == "__main__":
 
     roads_list = fill_roads_list()
 
-    background = generate_map()[0]
-    tile_type_map = generate_map()[1]
+    background, tile_type_map = generate_map()
+
     pg.display.set_caption("Twierdza: Zawodzie")
 
     houses = pg.sprite.Group()
@@ -329,6 +338,7 @@ if __name__ == "__main__":
         statistics.update_stats(cursor.pos, structure_map, tile_type_map)
         screen.blit(statistics.stat_window, statistics.rect)
 
+        play_soundtrack()
         if randint(1, 100000) == 1: sounds["Random_Events13"].play()
         pg.display.flip()
         clock.tick(TICK_RATE)
