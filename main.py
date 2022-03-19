@@ -223,7 +223,9 @@ def place_structure(prev_pos):
                 #         new_structure.update_edges(direction_rev, roads_list, True)
         elif not isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Road) and not place_hold:
             speech_channel.play(sounds["Placement_Warning16"])
-        if isinstance(cursor.hold, Road) and prev_pos != tuple(cursor.pos) and place_hold:
+        if isinstance(cursor.hold, Road) and prev_pos != tuple(cursor.pos) and place_hold and\
+                isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Road) and\
+                isinstance(structure_map[prev_pos[0]][prev_pos[1]], Road):
             change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
             pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
             structure_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], roads_list, True)
@@ -269,9 +271,9 @@ def load_sounds():
     sounds = {file[:-4]: pg.mixer.Sound("assets/fx/" + file) for file in fx_dir}
     tracks = [pg.mixer.Sound("assets/soundtrack/" + file) for file in soundtrack_dir]
     for track in tracks:
-        track.set_volume(0.20)
+        track.set_volume(0.4)
     for sound in sounds.values():
-        sound.set_volume(0.4)
+        sound.set_volume(0.7)
 
     return sounds, tracks
 
@@ -305,6 +307,7 @@ if __name__ == "__main__":
     roads = pg.sprite.Group()
     structures = pg.sprite.Group()
     all_sprites = pg.sprite.Group()
+
     all_sprites.add(cursor)
 
     clock = pg.time.Clock()
