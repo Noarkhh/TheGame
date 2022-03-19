@@ -14,7 +14,8 @@ from pygame.locals import (RLEACCEL,
                            K_h,
                            K_r,
                            K_n,
-                           K_x)
+                           K_x,
+                           K_w)
 
 MOUSE_STEERING = False
 LAYOUT = pg.image.load("assets/layout3.png")
@@ -153,14 +154,12 @@ class Tower(Structure):
         self.surf.set_colorkey((0, 0, 0), RLEACCEL)
 
 
-class Road(Structure):
+class Snapper(Structure):
     def __init__(self, xy):
         super().__init__(xy)
         self.neighbours = set()
-        self.surf = pg.transform.scale(pg.image.load("assets/roads/road0.png").convert(), (TILE_S, TILE_S))
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
-    def update_edges(self, direction, roads_list, add):
+    def update_edges(self, direction, add):
         if add:
             self.neighbours.add(direction)
         elif direction in self.neighbours:
@@ -175,25 +174,44 @@ class Road(Structure):
         directions = tuple(sorted(self.neighbours, key=assign_value))
         if not directions:
             directions = ('0',)
-        self.surf = roads_list[directions]
+        self.surf = self.snapper_dict[directions]
 
 
-def fill_roads_list():
-    directory = os.listdir("assets/roads")
-    dir_cut = []
+class Road(Snapper):
+    def __init__(self, xy):
+        super().__init__(xy)
+        self.snapper_dict = fill_snappers_dicts()[0]
+        self.surf = pg.transform.scale(pg.image.load("assets/roads/road0.png").convert(), (TILE_S, TILE_S))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+
+class Wall(Snapper):
+    def __init__(self, xy):
+        super().__init__(xy)
+        self.snapper_dict = fill_snappers_dicts()[1]
+        self.surf = pg.transform.scale(pg.image.load("assets/walls/wall0.png").convert(), (TILE_S, TILE_S))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+
+def fill_snappers_dicts():
     directions_list = [('0',), ('N',), ('E',), ('S',), ('W',), ('N', 'E'), ('E', 'S'), ('S', 'W'), ('N', 'W'),
                        ('N', 'S'), ('E', 'W'), ('N', 'E', 'S'), ('E', 'S', 'W'),
                        ('N', 'S', 'W'), ('N', 'E', 'W'), ('N', 'E', 'S', 'W')]
-    roads_list = {directions_list[i]: pg.Surface((60, 60)) for i in range(16)}
+    roads_dict = {directions_list[i]: pg.Surface((60, 60)) for i in range(16)}
+    walls_dict = {directions_list[i]: pg.Surface((60, 60)) for i in range(16)}
 
-    for name in directory:
-        dir_cut.append(tuple(name[4:-4]))
+    for snapper_dict, snapper_dir in ((roads_dict, "assets/roads"), (walls_dict, "assets/walls")):
+        directory = os.listdir(snapper_dir)
+        dir_cut = []
 
-    for file, name in zip(directory, dir_cut):
-        roads_list[name] = pg.transform.scale(pg.image.load("assets/roads/" + file).convert(), (TILE_S, TILE_S))
-        roads_list[name].set_colorkey((255, 255, 255), RLEACCEL)
+        for name in directory:
+            dir_cut.append(tuple(name[4:-4]))
 
-    return roads_list
+        for file, name in zip(directory, dir_cut):
+            snapper_dict[name] = pg.transform.scale(pg.image.load(snapper_dir + "/" + file).convert(), (TILE_S, TILE_S))
+            snapper_dict[name].set_colorkey((255, 255, 255), RLEACCEL)
+        print(snapper_dict)
+    return roads_dict, walls_dict
 
 
 def pos_oob(x, y):
@@ -215,22 +233,24 @@ def place_structure(prev_pos):
             all_sprites.add(new_structure)
             structure_map[cursor.pos[0]][cursor.pos[1]] = new_structure
             built = True
-                # for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
-                #                                           (0, -1, 0, 1), (1, 0, -1, 0)):
-                #     if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) \
-                #             and isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Road):
-                #         structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, roads_list, True)
-                #         new_structure.update_edges(direction_rev, roads_list, True)
-        elif not isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Road) and not place_hold:
+            # for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
+            #                                           (0, -1, 0, 1), (1, 0, -1, 0)):
+            #     if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) \
+            #             and isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper):
+            #         structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, roads_dict, True)
+            #         new_structure.update_edges(direction_rev, roads_dict, True)
+        elif not isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Snapper) and not place_hold:
             speech_channel.play(sounds["Placement_Warning16"])
-        if isinstance(cursor.hold, Road) and prev_pos != tuple(cursor.pos) and place_hold and\
-                isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Road) and\
-                isinstance(structure_map[prev_pos[0]][prev_pos[1]], Road):
+        if isinstance(cursor.hold, Snapper) and prev_pos != tuple(cursor.pos) and place_hold and \
+                isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Snapper) and \
+                isinstance(structure_map[prev_pos[0]][prev_pos[1]], Snapper) and \
+                type(structure_map[cursor.pos[0]][cursor.pos[1]]) == type(structure_map[prev_pos[0]][prev_pos[1]]):
+
             change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
             pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
-            structure_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], roads_list, True)
+            structure_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
             structure_map[cursor.pos[0] - change[0]][cursor.pos[1] - change[1]]. \
-                update_edges(pos_change_dict[change][1], roads_list, True)
+                update_edges(pos_change_dict[change][1], True)
             built = True
         if built:
             sounds["drawbridge_control"].play()
@@ -244,8 +264,8 @@ def remove_structure():
         sounds["buildingwreck_01"].play()
         for direction, x, y in zip(('N', 'E', 'S', 'W'), (0, -1, 0, 1), (1, 0, -1, 0)):
             if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) \
-                    and isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Road):
-                structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, roads_list, False)
+                    and isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper):
+                structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, roads_dict, False)
 
 
 def generate_map():
@@ -296,7 +316,7 @@ if __name__ == "__main__":
     statistics = Statistics()
     structure_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
-    roads_list = fill_roads_list()
+    roads_dict, walls_dict = fill_snappers_dicts()
     prev_pos = (0, 0)
     background, tile_type_map = generate_map()
 
@@ -305,14 +325,15 @@ if __name__ == "__main__":
     houses = pg.sprite.Group()
     towers = pg.sprite.Group()
     roads = pg.sprite.Group()
+    walls = pg.sprite.Group()
     structures = pg.sprite.Group()
     all_sprites = pg.sprite.Group()
 
     all_sprites.add(cursor)
 
     clock = pg.time.Clock()
-    key_structure_dict = {K_h: House, K_t: Tower, K_r: Road}
-    structure_group_dict = {House: houses, Tower: towers, Road: roads}
+    key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall}
+    structure_group_dict = {House: houses, Tower: towers, Road: roads, Wall: walls}
     running = True
     # ------ MAIN LOOP -------
     while running:
@@ -327,7 +348,7 @@ if __name__ == "__main__":
                 if event.key in key_structure_dict:  # picking up a chosen structure
                     cursor.hold = key_structure_dict[event.key]([0, 0])
                     structure_ghost = Ghost(cursor.pos, cursor.hold.surf)
-                    sounds["menusl_" + str(randint(1, 3)) ].play()
+                    sounds["menusl_" + str(randint(1, 3))].play()
                     # violin_se.play()
 
                 if event.key == K_n:
