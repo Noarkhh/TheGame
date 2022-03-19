@@ -16,18 +16,19 @@ from pygame.locals import (RLEACCEL,
                            K_n,
                            K_x)
 
+MOUSE_STEERING = True
 LAYOUT = pg.image.load("assets/layout2.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
-TILE_S = 30
+TILE_S = 45
 WIDTH_PIXELS = WIDTH_TILES * TILE_S
 HEIGHT_PIXELS = HEIGHT_TILES * TILE_S
-TICK_RATE = 20
+TICK_RATE = 30
 
 
 class Statistics:
     def __init__(self):
-        self.font_size = 40
+        self.font_size = 24
         self.stat_window = pg.Surface((self.font_size * 20, self.font_size * 10))
         self.stat_window.fill((0, 0, 0))
         self.font = pg.font.SysFont('consolas', self.font_size)
@@ -43,11 +44,12 @@ class Statistics:
             stat_height += self.font_size + 4
 
         self.stat_window.fill((0, 0, 0))
-        stat_height = 0
+        stat_height = 4
 
         if isinstance(structure_map[xy[0]][xy[1]], Structure):
             blit_stat(str(type(structure_map[xy[0]][xy[1]]))[17:-2])
         blit_stat(tile_type_map[xy[0]][xy[1]])
+        blit_stat(str(xy))
         self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
 
 
@@ -62,7 +64,7 @@ class Cursor(pg.sprite.Sprite):
         self.pos = [0, 0]
         self.hold = None
 
-    def update(self, pressed_keys):
+    def update_arrows(self, pressed_keys):
         cooltime = 10
         key_list = [True if pressed_keys[key] else False for key in (K_UP, K_DOWN, K_LEFT, K_RIGHT)]
         iter_list = [(key, sign, xy) for key, sign, xy in zip(key_list, (-1, 1, -1, 1), (1, 1, 0, 0))]
@@ -89,9 +91,15 @@ class Cursor(pg.sprite.Sprite):
             self.pos[1] = HEIGHT_TILES - 1
             bruh = True
         if bruh:
-            sounds["Insult" + str(randint(1, 20))].play()
+            speech_channel.play(sounds["Insult" + str(randint(1, 20))])
 
         self.cooldown = [x - 1 if x > 0 else 0 for x in self.cooldown]
+        self.rect.x = self.pos[0] * TILE_S
+        self.rect.y = self.pos[1] * TILE_S
+
+    def update_mouse(self, xy):
+        self.pos[0] = xy[0] // TILE_S
+        self.pos[1] = xy[1] // TILE_S
         self.rect.x = self.pos[0] * TILE_S
         self.rect.y = self.pos[1] * TILE_S
 
@@ -216,8 +224,8 @@ def place_structure():
                         new_structure.update_edges(direction_rev, roads_list, True)
             # else:
             #     cursor.holding = None
-        elif not space_hold:
-            sounds["Placement_Warning16"].play()
+        elif not place_hold:
+            speech_channel.play(sounds["Placement_Warning16"])
     return
 
 
@@ -254,9 +262,11 @@ def load_sounds():
     soundtrack_dir = os.listdir("assets/soundtrack")
     sounds = {file[:-4]: pg.mixer.Sound("assets/fx/" + file) for file in fx_dir}
     tracks = [pg.mixer.Sound("assets/soundtrack/" + file) for file in soundtrack_dir]
-    for sound, track in zip(sounds.values(), tracks):
-        sound.set_volume(0.25)
+    for track in tracks:
         track.set_volume(0.20)
+    for sound in sounds.values():
+        sound.set_volume(0.4)
+
     return sounds, tracks
 
 
@@ -271,6 +281,7 @@ if __name__ == "__main__":
 
     sounds, tracks = load_sounds()
     soundtrack_channel = pg.mixer.Channel(5)
+    speech_channel = pg.mixer.Channel(3)
 
     screen = pg.display.set_mode([WIDTH_PIXELS, HEIGHT_PIXELS])
     cursor = Cursor()
@@ -316,16 +327,21 @@ if __name__ == "__main__":
                 if event.key == K_ESCAPE:
                     running = False
 
-        if pressed_keys[K_SPACE]:  # placing down held structure
+                # if event.key == pg.:
+                #     place_structure()
+
+        if pressed_keys[K_SPACE] or pg.mouse.get_pressed(num_buttons=3)[0]:  # placing down held structure
             place_structure()
-            space_hold = True
+            place_hold = True
         else:
-            space_hold = False
+            place_hold = False
 
         if pressed_keys[K_x]:  # removing a structure
             remove_structure()
-
-        cursor.update(pressed_keys)
+        if MOUSE_STEERING:
+            cursor.update_mouse(pg.mouse.get_pos())
+        else:
+            cursor.update_arrows(pressed_keys)
         screen.blit(background, (0, 0))
         for entity in structures:
             screen.blit(entity.surf, entity.rect)
