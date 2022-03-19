@@ -16,7 +16,7 @@ from pygame.locals import (RLEACCEL,
                            K_n,
                            K_x)
 
-MOUSE_STEERING = True
+MOUSE_STEERING = False
 LAYOUT = pg.image.load("assets/layout3.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
@@ -204,8 +204,9 @@ def pos_oob(x, y):
     return False
 
 
-def place_structure():
+def place_structure(prev_pos):
     if isinstance(cursor.hold, Structure):
+        built = False
         if structure_map[cursor.pos[0]][cursor.pos[1]] not in structures \
                 and tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea":
             new_structure = type(cursor.hold)(cursor.pos)
@@ -213,19 +214,24 @@ def place_structure():
             structures.add(new_structure)
             all_sprites.add(new_structure)
             structure_map[cursor.pos[0]][cursor.pos[1]] = new_structure
-            # boom_se.play()
-            sounds["drawbridge_control"].play()
-            if isinstance(new_structure, Road):
-                for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
-                                                          (0, -1, 0, 1), (1, 0, -1, 0)):
-                    if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) \
-                            and isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Road):
-                        structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, roads_list, True)
-                        new_structure.update_edges(direction_rev, roads_list, True)
-            # else:
-            #     cursor.holding = None
-        elif not place_hold:
+            built = True
+                # for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
+                #                                           (0, -1, 0, 1), (1, 0, -1, 0)):
+                #     if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) \
+                #             and isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Road):
+                #         structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, roads_list, True)
+                #         new_structure.update_edges(direction_rev, roads_list, True)
+        elif not isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Road) and not place_hold:
             speech_channel.play(sounds["Placement_Warning16"])
+        if isinstance(cursor.hold, Road) and prev_pos != tuple(cursor.pos) and place_hold:
+            change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
+            pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
+            structure_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], roads_list, True)
+            structure_map[cursor.pos[0] - change[0]][cursor.pos[1] - change[1]]. \
+                update_edges(pos_change_dict[change][1], roads_list, True)
+            built = True
+        if built:
+            sounds["drawbridge_control"].play()
     return
 
 
@@ -289,7 +295,7 @@ if __name__ == "__main__":
     structure_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
     roads_list = fill_roads_list()
-
+    prev_pos = (0, 0)
     background, tile_type_map = generate_map()
 
     pg.display.set_caption("Twierdza: Zawodzie")
@@ -331,11 +337,12 @@ if __name__ == "__main__":
                 #     place_structure()
 
         if pressed_keys[K_SPACE] or pg.mouse.get_pressed(num_buttons=3)[0]:  # placing down held structure
-            place_structure()
+            place_structure(prev_pos)
             place_hold = True
         else:
             place_hold = False
 
+        prev_pos = tuple(cursor.pos)
         if pressed_keys[K_x]:  # removing a structure
             remove_structure()
         if MOUSE_STEERING:
@@ -343,6 +350,8 @@ if __name__ == "__main__":
         else:
             cursor.update_arrows(pressed_keys)
         screen.blit(background, (0, 0))
+        # print(prev_pos, cursor.pos)
+
         for entity in structures:
             screen.blit(entity.surf, entity.rect)
 
