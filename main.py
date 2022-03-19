@@ -17,7 +17,7 @@ from pygame.locals import (RLEACCEL,
                            K_x)
 
 MOUSE_STEERING = True
-LAYOUT = pg.image.load("assets/layout2.png")
+LAYOUT = pg.image.load("assets/layout3.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
 TILE_S = 45
