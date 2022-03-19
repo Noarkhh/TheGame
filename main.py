@@ -15,10 +15,11 @@ from pygame.locals import (RLEACCEL,
                            K_r,
                            K_n,
                            K_x,
-                           K_w)
+                           K_w,
+                           K_g)
 
 MOUSE_STEERING = False
-LAYOUT = pg.image.load("assets/layout3.png")
+LAYOUT = pg.image.load("assets/layout2.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
 TILE_S = 45
@@ -180,7 +181,7 @@ class Snapper(Structure):
 class Road(Snapper):
     def __init__(self, xy):
         super().__init__(xy)
-        self.snapper_dict = fill_snappers_dicts()[0]
+        self.snapper_dict = roads_dict
         self.surf = pg.transform.scale(pg.image.load("assets/roads/road0.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
@@ -188,18 +189,27 @@ class Road(Snapper):
 class Wall(Snapper):
     def __init__(self, xy):
         super().__init__(xy)
-        self.snapper_dict = fill_snappers_dicts()[1]
+        self.snapper_dict = walls_dict
         self.surf = pg.transform.scale(pg.image.load("assets/walls/wall0.png").convert(), (TILE_S, TILE_S))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.isgate = False
+
+    def gate_upgrade(self, structure_map):
+        if isinstance(structure_map[self.pos[0] + 1][self.pos[1]], Wall) and \
+                isinstance(structure_map[self.pos[0] - 1][self.pos[1]], Wall):
+            self.surf = pg.transform.scale(pg.image.load("assets/gateEW.png").convert(), (TILE_S, TILE_S))
+            self.isgate = True
+        elif isinstance(structure_map[self.pos[0]][self.pos[1] + 1], Wall) and \
+                isinstance(structure_map[self.pos[0]][self.pos[1] - 1], Wall):
+            self.surf = pg.transform.scale(pg.image.load("assets/gateNS.png").convert(), (TILE_S, TILE_S))
+            self.isgate = True
+        else:
+            speech_channel.play(sounds["Placement_Warning16"])
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
 def fill_snappers_dicts():
-    directions_list = [('0',), ('N',), ('E',), ('S',), ('W',), ('N', 'E'), ('E', 'S'), ('S', 'W'), ('N', 'W'),
-                       ('N', 'S'), ('E', 'W'), ('N', 'E', 'S'), ('E', 'S', 'W'),
-                       ('N', 'S', 'W'), ('N', 'E', 'W'), ('N', 'E', 'S', 'W')]
-    roads_dict = {directions_list[i]: pg.Surface((60, 60)) for i in range(16)}
-    walls_dict = {directions_list[i]: pg.Surface((60, 60)) for i in range(16)}
-
+    roads_dict, walls_dict = {}, {}
     for snapper_dict, snapper_dir in ((roads_dict, "assets/roads"), (walls_dict, "assets/walls")):
         directory = os.listdir(snapper_dir)
         dir_cut = []
@@ -225,27 +235,21 @@ def pos_oob(x, y):
 def place_structure(prev_pos):
     if isinstance(cursor.hold, Structure):
         built = False
-        if structure_map[cursor.pos[0]][cursor.pos[1]] not in structures \
-                and tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea":
+        if structure_map[cursor.pos[0]][cursor.pos[1]] not in structures and \
+                tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea":
             new_structure = type(cursor.hold)(cursor.pos)
             structure_group_dict[type(cursor.hold)].add(new_structure)
             structures.add(new_structure)
             all_sprites.add(new_structure)
             structure_map[cursor.pos[0]][cursor.pos[1]] = new_structure
             built = True
-            # for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
-            #                                           (0, -1, 0, 1), (1, 0, -1, 0)):
-            #     if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) \
-            #             and isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper):
-            #         structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, roads_dict, True)
-            #         new_structure.update_edges(direction_rev, roads_dict, True)
         elif not isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Snapper) and not place_hold:
             speech_channel.play(sounds["Placement_Warning16"])
+
         if isinstance(cursor.hold, Snapper) and prev_pos != tuple(cursor.pos) and place_hold and \
                 isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Snapper) and \
                 isinstance(structure_map[prev_pos[0]][prev_pos[1]], Snapper) and \
                 type(structure_map[cursor.pos[0]][cursor.pos[1]]) == type(structure_map[prev_pos[0]][prev_pos[1]]):
-
             change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
             pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
             structure_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
@@ -265,7 +269,7 @@ def remove_structure():
         for direction, x, y in zip(('N', 'E', 'S', 'W'), (0, -1, 0, 1), (1, 0, -1, 0)):
             if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) \
                     and isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper):
-                structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, roads_dict, False)
+                structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, False)
 
 
 def generate_map():
@@ -353,6 +357,9 @@ if __name__ == "__main__":
 
                 if event.key == K_n:
                     cursor.hold = None
+
+                if event.key == K_g and isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Wall):
+                    structure_map[cursor.pos[0]][cursor.pos[1]].gate_upgrade(structure_map)
 
                 if event.key == K_ESCAPE:
                     running = False
