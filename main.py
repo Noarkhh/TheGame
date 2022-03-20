@@ -18,8 +18,8 @@ from pygame.locals import (RLEACCEL,
                            K_w,
                            K_g)
 
-MOUSE_STEERING = False
-LAYOUT = pg.image.load("assets/layout2.png")
+MOUSE_STEERING = True
+LAYOUT = pg.image.load("assets/desert_river.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
 TILE_S = 45
@@ -242,41 +242,41 @@ def pos_oob(x, y):
 def place_structure(prev_pos):
     if isinstance(cursor.hold, Structure):
         built = False
-        if structure_map[cursor.pos[0]][cursor.pos[1]] not in structures and \
+        if struct_map[cursor.pos[0]][cursor.pos[1]] not in structs and \
                 (tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea" or isinstance(cursor.hold, Road)):
-            new_structure = type(cursor.hold)(cursor.pos)
-            structure_group_dict[type(cursor.hold)].add(new_structure)
-            structures.add(new_structure)
-            all_sprites.add(new_structure)
-            structure_map[cursor.pos[0]][cursor.pos[1]] = new_structure
+            new_struct = type(cursor.hold)(cursor.pos)
+            structs_group_dict[type(cursor.hold)].add(new_struct)
+            structs.add(new_struct)
+            all_sprites.add(new_struct)
+            struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
             built = True
-        elif not isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Snapper) and not place_hold:
+        elif not isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper) and not place_hold:
             speech_channel.play(sounds["Placement_Warning16"])
 
         change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
         pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
 
         if isinstance(cursor.hold, Snapper) and change in pos_change_dict.keys() and place_hold and \
-                isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Snapper) and \
-                isinstance(structure_map[prev_pos[0]][prev_pos[1]], Snapper):
+                isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper) and \
+                isinstance(struct_map[prev_pos[0]][prev_pos[1]], Snapper):
 
-            if type(structure_map[cursor.pos[0]][cursor.pos[1]]) == type(structure_map[prev_pos[0]][prev_pos[1]]):
-                structure_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
-                structure_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
+            if type(struct_map[cursor.pos[0]][cursor.pos[1]]) == type(struct_map[prev_pos[0]][prev_pos[1]]):
+                struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
+                struct_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
                 built = True
-            elif isinstance(structure_map[prev_pos[0]][prev_pos[1]], Road) and \
-                    isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Wall) and \
-                    structure_map[cursor.pos[0]][cursor.pos[1]].isgate:
+            elif isinstance(struct_map[prev_pos[0]][prev_pos[1]], Road) and \
+                    isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall) and \
+                    struct_map[cursor.pos[0]][cursor.pos[1]].isgate:
 
-                structure_map[cursor.pos[0]][cursor.pos[1]].add_road()
-                structure_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
+                struct_map[cursor.pos[0]][cursor.pos[1]].add_road()
+                struct_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
                 built = True
-            elif isinstance(structure_map[prev_pos[0]][prev_pos[1]], Wall) and \
-                    isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Road) and \
-                    structure_map[prev_pos[0]][prev_pos[1]].isgate:
+            elif isinstance(struct_map[prev_pos[0]][prev_pos[1]], Wall) and \
+                    isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Road) and \
+                    struct_map[prev_pos[0]][prev_pos[1]].isgate:
 
-                structure_map[prev_pos[0]][prev_pos[1]].add_road()
-                structure_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
+                struct_map[prev_pos[0]][prev_pos[1]].add_road()
+                struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
                 built = True
         if built:
             sounds["drawbridge_control"].play()
@@ -284,25 +284,32 @@ def place_structure(prev_pos):
 
 
 def remove_structure():
-    if structure_map[cursor.pos[0]][cursor.pos[1]] in structures:
+    if struct_map[cursor.pos[0]][cursor.pos[1]] in structs:
         sounds["buildingwreck_01"].play()
 
         for direction, x, y in zip(('N', 'E', 'S', 'W'), (0, -1, 0, 1), (1, 0, -1, 0)):
             if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
-                    isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper) and \
-                    type(structure_map[cursor.pos[0] + x][cursor.pos[1] + y]) == \
-                    type(structure_map[cursor.pos[0]][cursor.pos[1]]):
-                structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, False)
+                    isinstance(struct_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper) and \
+                    (type(struct_map[cursor.pos[0] + x][cursor.pos[1] + y]) ==
+                     type(struct_map[cursor.pos[0]][cursor.pos[1]]) or
+                     isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall)):
+                struct_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, False)
 
-        structure_map[cursor.pos[0]][cursor.pos[1]].kill()
-        structure_map[cursor.pos[0]][cursor.pos[1]] = 0
+        struct_map[cursor.pos[0]][cursor.pos[1]].kill()
+        struct_map[cursor.pos[0]][cursor.pos[1]] = 0
+
 
 def generate_map():
-    color_to_type = {(0, 255, 0, 255): "grassland", (0, 0, 255, 255): "sea"}
-    tile_dict = {"grassland": pg.transform.scale(pg.image.load("assets/tiles/grassland_tile.png").convert(),
-                                                 (TILE_S, TILE_S)),
-                 "sea": pg.transform.scale(pg.image.load("assets/tiles/sea_tile.png").convert(),
-                                           (TILE_S, TILE_S))}
+    color_to_type = {(0, 255, 0, 255): "grassland", (0, 0, 255, 255): "sea", (255, 255, 0, 255): "desert"}
+    # tile_dict = {"grassland": pg.transform.scale(pg.image.load("assets/tiles/grassland_tile.png").convert(),
+    #                                              (TILE_S, TILE_S)),
+    #              "sea": pg.transform.scale(pg.image.load("assets/tiles/sea_tile.png").convert(),
+    #                                        (TILE_S, TILE_S)),
+    #              "desert": pg.transform.scale(pg.image.load("assets/tiles/desert_tile.png").convert(),
+    #                                        (TILE_S, TILE_S))}
+
+    tile_dict = {name: pg.transform.scale(pg.image.load("assets/tiles/" + name + "_tile.png").convert(),
+                                          (TILE_S, TILE_S)) for name in color_to_type.values()}
     background = pg.Surface((WIDTH_TILES * TILE_S, HEIGHT_TILES * TILE_S))
     tile_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
@@ -343,7 +350,7 @@ if __name__ == "__main__":
     screen = pg.display.set_mode([WIDTH_PIXELS, HEIGHT_PIXELS])
     cursor = Cursor()
     statistics = Statistics()
-    structure_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+    struct_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
     roads_dict, walls_dict = fill_snappers_dicts()
     prev_pos = (0, 0)
@@ -355,14 +362,14 @@ if __name__ == "__main__":
     towers = pg.sprite.Group()
     roads = pg.sprite.Group()
     walls = pg.sprite.Group()
-    structures = pg.sprite.Group()
+    structs = pg.sprite.Group()
     all_sprites = pg.sprite.Group()
 
     all_sprites.add(cursor)
 
     clock = pg.time.Clock()
     key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall}
-    structure_group_dict = {House: houses, Tower: towers, Road: roads, Wall: walls}
+    structs_group_dict = {House: houses, Tower: towers, Road: roads, Wall: walls}
     running = True
     # ------ MAIN LOOP -------
     while running:
@@ -383,8 +390,8 @@ if __name__ == "__main__":
                 if event.key == K_n:
                     cursor.hold = None
 
-                if event.key == K_g and isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Wall):
-                    structure_map[cursor.pos[0]][cursor.pos[1]].gate_upgrade()
+                if event.key == K_g and isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall):
+                    struct_map[cursor.pos[0]][cursor.pos[1]].gate_upgrade()
 
                 if event.key == K_ESCAPE:
                     running = False
@@ -408,7 +415,7 @@ if __name__ == "__main__":
         screen.blit(background, (0, 0))
         # print(prev_pos, cursor.pos)
 
-        for entity in structures:
+        for entity in structs:
             screen.blit(entity.surf, entity.rect)
 
         if cursor.hold is not None:
@@ -416,7 +423,7 @@ if __name__ == "__main__":
             screen.blit(structure_ghost.surf, structure_ghost.rect)
 
         screen.blit(cursor.surf, cursor.rect)
-        statistics.update_stats(cursor.pos, structure_map, tile_type_map)
+        statistics.update_stats(cursor.pos, struct_map, tile_type_map)
         screen.blit(statistics.stat_window, statistics.rect)
 
         play_soundtrack()
