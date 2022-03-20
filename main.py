@@ -253,11 +253,12 @@ def place_structure(prev_pos):
         elif not isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Snapper) and not place_hold:
             speech_channel.play(sounds["Placement_Warning16"])
 
-        if isinstance(cursor.hold, Snapper) and prev_pos != tuple(cursor.pos) and place_hold and \
+        change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
+        pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
+
+        if isinstance(cursor.hold, Snapper) and change in pos_change_dict.keys() and place_hold and \
                 isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Snapper) and \
                 isinstance(structure_map[prev_pos[0]][prev_pos[1]], Snapper):
-            change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
-            pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
 
             if type(structure_map[cursor.pos[0]][cursor.pos[1]]) == type(structure_map[prev_pos[0]][prev_pos[1]]):
                 structure_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
