@@ -192,19 +192,26 @@ class Wall(Snapper):
         self.snapper_dict = walls_dict
         self.surf = pg.transform.scale(pg.image.load("assets/walls/wall0.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.isgate = False
+        self.isgate = ""
+        self.hasroad = False
 
-    def gate_upgrade(self, structure_map):
-        if isinstance(structure_map[self.pos[0] + 1][self.pos[1]], Wall) and \
-                isinstance(structure_map[self.pos[0] - 1][self.pos[1]], Wall):
+    def gate_upgrade(self):
+        if self.neighbours == {'E', 'W'}:
             self.surf = pg.transform.scale(pg.image.load("assets/gateEW.png").convert(), (TILE_S, TILE_S))
-            self.isgate = True
-        elif isinstance(structure_map[self.pos[0]][self.pos[1] + 1], Wall) and \
-                isinstance(structure_map[self.pos[0]][self.pos[1] - 1], Wall):
+            self.isgate = "EW"
+            sounds["drawbridge_control"].play()
+        elif self.neighbours == {'N', 'S'}:
             self.surf = pg.transform.scale(pg.image.load("assets/gateNS.png").convert(), (TILE_S, TILE_S))
-            self.isgate = True
+            self.isgate = "NS"
+            sounds["drawbridge_control"].play()
         else:
             speech_channel.play(sounds["Placement_Warning16"])
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+    def add_road(self):
+        self.surf = pg.transform.scale(pg.image.load("assets/gate" + self.isgate + "road.png").convert(),
+                                       (TILE_S, TILE_S))
+        self.hasroad = True
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
@@ -236,7 +243,7 @@ def place_structure(prev_pos):
     if isinstance(cursor.hold, Structure):
         built = False
         if structure_map[cursor.pos[0]][cursor.pos[1]] not in structures and \
-                tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea":
+                (tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea" or isinstance(cursor.hold, Road)):
             new_structure = type(cursor.hold)(cursor.pos)
             structure_group_dict[type(cursor.hold)].add(new_structure)
             structures.add(new_structure)
@@ -248,14 +255,28 @@ def place_structure(prev_pos):
 
         if isinstance(cursor.hold, Snapper) and prev_pos != tuple(cursor.pos) and place_hold and \
                 isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Snapper) and \
-                isinstance(structure_map[prev_pos[0]][prev_pos[1]], Snapper) and \
-                type(structure_map[cursor.pos[0]][cursor.pos[1]]) == type(structure_map[prev_pos[0]][prev_pos[1]]):
+                isinstance(structure_map[prev_pos[0]][prev_pos[1]], Snapper):
             change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
             pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
-            structure_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
-            structure_map[cursor.pos[0] - change[0]][cursor.pos[1] - change[1]]. \
-                update_edges(pos_change_dict[change][1], True)
-            built = True
+
+            if type(structure_map[cursor.pos[0]][cursor.pos[1]]) == type(structure_map[prev_pos[0]][prev_pos[1]]):
+                structure_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
+                structure_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
+                built = True
+            elif isinstance(structure_map[prev_pos[0]][prev_pos[1]], Road) and \
+                    isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Wall) and \
+                    structure_map[cursor.pos[0]][cursor.pos[1]].isgate:
+
+                structure_map[cursor.pos[0]][cursor.pos[1]].add_road()
+                structure_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
+                built = True
+            elif isinstance(structure_map[prev_pos[0]][prev_pos[1]], Wall) and \
+                    isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Road) and \
+                    structure_map[prev_pos[0]][prev_pos[1]].isgate:
+
+                structure_map[prev_pos[0]][prev_pos[1]].add_road()
+                structure_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
+                built = True
         if built:
             sounds["drawbridge_control"].play()
     return
@@ -263,14 +284,17 @@ def place_structure(prev_pos):
 
 def remove_structure():
     if structure_map[cursor.pos[0]][cursor.pos[1]] in structures:
-        structure_map[cursor.pos[0]][cursor.pos[1]].kill()
-        structure_map[cursor.pos[0]][cursor.pos[1]] = 0
         sounds["buildingwreck_01"].play()
+
         for direction, x, y in zip(('N', 'E', 'S', 'W'), (0, -1, 0, 1), (1, 0, -1, 0)):
-            if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) \
-                    and isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper):
+            if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
+                    isinstance(structure_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper) and \
+                    type(structure_map[cursor.pos[0] + x][cursor.pos[1] + y]) == \
+                    type(structure_map[cursor.pos[0]][cursor.pos[1]]):
                 structure_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, False)
 
+        structure_map[cursor.pos[0]][cursor.pos[1]].kill()
+        structure_map[cursor.pos[0]][cursor.pos[1]] = 0
 
 def generate_map():
     color_to_type = {(0, 255, 0, 255): "grassland", (0, 0, 255, 255): "sea"}
@@ -359,7 +383,7 @@ if __name__ == "__main__":
                     cursor.hold = None
 
                 if event.key == K_g and isinstance(structure_map[cursor.pos[0]][cursor.pos[1]], Wall):
-                    structure_map[cursor.pos[0]][cursor.pos[1]].gate_upgrade(structure_map)
+                    structure_map[cursor.pos[0]][cursor.pos[1]].gate_upgrade()
 
                 if event.key == K_ESCAPE:
                     running = False
