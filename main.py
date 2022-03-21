@@ -16,10 +16,12 @@ from pygame.locals import (RLEACCEL,
                            K_n,
                            K_x,
                            K_w,
-                           K_g)
+                           K_g,
+                           K_q)
 
+SOUNDTRACK = False
 MOUSE_STEERING = False
-LAYOUT = pg.image.load("assets/desert_river.png")
+LAYOUT = pg.image.load("assets/maps/desert_river.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
 TILE_S = 45
@@ -114,10 +116,12 @@ class Ghost(pg.sprite.Sprite):
         self.position = xy
         self.rect = surf.get_rect(top=(TILE_S * xy[1]), left=(TILE_S * xy[0]))
 
-    def update(self, xy):
+    def update(self, xy, surf):
         self.position = xy
         self.rect.x = xy[0] * TILE_S
         self.rect.y = xy[1] * TILE_S
+        self.surf = surf
+        self.surf.set_alpha(128)
 
 
 class Tile(pg.sprite.Sprite):
@@ -162,7 +166,7 @@ class Snapper(Structure):
 
     def update_edges(self, direction, add):
         if add:
-            self.neighbours.add(direction)
+            self.neighbours.update(direction)
         elif direction in self.neighbours:
             self.neighbours.remove(direction)
 
@@ -171,10 +175,7 @@ class Snapper(Structure):
             if direct == 'E': return 1
             if direct == 'S': return 2
             if direct == 'W': return 3
-
         directions = tuple(sorted(self.neighbours, key=assign_value))
-        if not directions:
-            directions = ('0',)
         self.surf = self.snapper_dict[directions]
 
 
@@ -182,36 +183,40 @@ class Road(Snapper):
     def __init__(self, xy):
         super().__init__(xy)
         self.snapper_dict = roads_dict
-        self.surf = pg.transform.scale(pg.image.load("assets/roads/road0.png").convert(), (TILE_S, TILE_S))
+        self.surf = pg.transform.scale(pg.image.load("assets/roads/road.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.snapsto = {"roads"}
 
 
 class Wall(Snapper):
     def __init__(self, xy):
         super().__init__(xy)
         self.snapper_dict = walls_dict
-        self.surf = pg.transform.scale(pg.image.load("assets/walls/wall0.png").convert(), (TILE_S, TILE_S))
+        self.surf = pg.transform.scale(pg.image.load("assets/walls/wall.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.isgate = ""
-        self.hasroad = False
+        self.snapsto = {"walls"}
 
-    def gate_upgrade(self):
-        if self.neighbours == {'E', 'W'}:
-            self.surf = pg.transform.scale(pg.image.load("assets/gateEW.png").convert(), (TILE_S, TILE_S))
-            self.isgate = "EW"
-            sounds["drawbridge_control"].play()
-        elif self.neighbours == {'N', 'S'}:
-            self.surf = pg.transform.scale(pg.image.load("assets/gateNS.png").convert(), (TILE_S, TILE_S))
-            self.isgate = "NS"
-            sounds["drawbridge_control"].play()
-        else:
-            speech_channel.play(sounds["Placement_Warning16"])
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
-    def add_road(self):
-        self.surf = pg.transform.scale(pg.image.load("assets/gate" + self.isgate + "road.png").convert(),
+class Gate(Wall, Road):
+    def __init__(self, xy, orientation="v"):
+        super().__init__(xy)
+        self.orient = orientation
+        self.surf = pg.transform.scale(pg.image.load("assets/" + self.orient + "gates/gate.png").convert(),
                                        (TILE_S, TILE_S))
-        self.hasroad = True
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        if orientation == "v":
+            self.snapper_dict = vgates_dict
+        else:
+            self.snapper_dict = hgates_dict
+        self.snapsto = {"walls", "roads"}
+
+    def rotate(self):
+        if self.orient == "v":
+            self.orient = "h"
+        else:
+            self.orient = "v"
+        self.surf = pg.transform.scale(pg.image.load("assets/" + self.orient + "gates/gate.png").convert(),
+                                       (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
@@ -219,23 +224,26 @@ def count_road_network(xy):
     A = [[True for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
     count = 0
     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
+    required = struct_map[xy[0]][xy[1]].snapsto
+    print(required)
 
-    def _count_road_network(A, xy, direction_to_xy_dict):
+    def _count_road_network(A, xy, direction_to_xy_dict, required):
         nonlocal count
         count += 1
         A[xy[0]][xy[1]] = False
         for direction in struct_map[xy[0]][xy[1]].neighbours:
             next = direction_to_xy_dict[direction]
-            if A[xy[0] + next[0]][xy[1] + next[1]]:
-                _count_road_network(A, [xy[0] + next[0], xy[1] + next[1]], direction_to_xy_dict)
+            if A[xy[0] + next[0]][xy[1] + next[1]] and bool(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto & required):
+                _count_road_network(A, [xy[0] + next[0], xy[1] + next[1]], direction_to_xy_dict, required)
 
-    _count_road_network(A, xy, direction_to_xy_dict)
+    _count_road_network(A, xy, direction_to_xy_dict, required)
     return count
 
 
 def fill_snappers_dicts():
-    roads_dict, walls_dict = {}, {}
-    for snapper_dict, snapper_dir in ((roads_dict, "assets/roads"), (walls_dict, "assets/walls")):
+    roads_dict, walls_dict, vgates_dict, hgates_dict = {}, {}, {}, {}
+    for snapper_dict, snapper_dir in ((roads_dict, "assets/roads"), (walls_dict, "assets/walls"),
+                                      (vgates_dict, "assets/vgates"), (hgates_dict, "assets/hgates")):
         directory = os.listdir(snapper_dir)
         dir_cut = []
 
@@ -245,7 +253,7 @@ def fill_snappers_dicts():
         for file, name in zip(directory, dir_cut):
             snapper_dict[name] = pg.transform.scale(pg.image.load(snapper_dir + "/" + file).convert(), (TILE_S, TILE_S))
             snapper_dict[name].set_colorkey((255, 255, 255), RLEACCEL)
-    return roads_dict, walls_dict
+    return roads_dict, walls_dict, vgates_dict, hgates_dict
 
 
 def pos_oob(x, y):
@@ -256,17 +264,64 @@ def pos_oob(x, y):
     return False
 
 
+def gate_placement_logic():
+    def condition(direction, x, y, friend):
+        if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
+                isinstance(struct_map[cursor.pos[0] + x][cursor.pos[1] + y], friend) and \
+                direction in struct_map[cursor.pos[0] + x][cursor.pos[1] + y].neighbours:
+            return True
+        return False
+
+    if (isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall) or
+            isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Road)) and \
+            not isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Gate):
+        new_friends = set()
+        if cursor.hold.orient == "v":
+            err_table = (Wall, Road, Wall, Road)
+            neighbour_table = (Road, Wall, Road, Wall)
+        else:
+            err_table = (Road, Wall, Road, Wall)
+            neighbour_table = (Wall, Road, Wall, Road)
+        for direction, x, y, friend in zip(('N', 'E', 'S', 'W'), (0, -1, 0, 1), (1, 0, -1, 0), err_table):
+            if condition(direction, x, y, friend):
+                return False, None
+
+        for direction, direction_rev, x, y, friend in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
+                                                          (0, -1, 0, 1), (1, 0, -1, 0), neighbour_table):
+            if condition(direction, x, y, friend):
+                new_friends.add(direction_rev)
+        return True, new_friends
+    else:
+        return False, None
+
+
 def place_structure(prev_pos):
     if isinstance(cursor.hold, Structure):
         built = False
-        if struct_map[cursor.pos[0]][cursor.pos[1]] not in structs and \
-                (tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea" or isinstance(cursor.hold, Road)):
-            new_struct = type(cursor.hold)(cursor.pos)
-            structs_group_dict[type(cursor.hold)].add(new_struct)
-            structs.add(new_struct)
-            all_sprites.add(new_struct)
-            struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
-            built = True
+        if tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea" or isinstance(cursor.hold, Road):
+            if struct_map[cursor.pos[0]][cursor.pos[1]] not in structs:
+                if isinstance(cursor.hold, Gate):
+                    new_struct = type(cursor.hold)(cursor.pos, cursor.hold.orient)
+                else:
+                    new_struct = type(cursor.hold)(cursor.pos)
+                structs_group_dict[type(cursor.hold)].add(new_struct)
+                structs.add(new_struct)
+                all_sprites.add(new_struct)
+                struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
+                built = True
+            elif isinstance(cursor.hold, Gate):
+                passed, new_friends = gate_placement_logic()
+                if passed:
+                    new_struct = type(cursor.hold)(cursor.pos, cursor.hold.orient)
+                    structs_group_dict[type(cursor.hold)].add(new_struct)
+                    structs.add(new_struct)
+                    all_sprites.add(new_struct)
+                    struct_map[cursor.pos[0]][cursor.pos[1]].kill()
+                    struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
+                    struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(tuple(new_friends), True)
+                    built = True
+                elif not place_hold:
+                    speech_channel.play(sounds["Placement_Warning16"])
         elif not isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper) and not place_hold:
             speech_channel.play(sounds["Placement_Warning16"])
 
@@ -277,24 +332,11 @@ def place_structure(prev_pos):
                 isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper) and \
                 isinstance(struct_map[prev_pos[0]][prev_pos[1]], Snapper):
 
-            if type(struct_map[cursor.pos[0]][cursor.pos[1]]) == type(struct_map[prev_pos[0]][prev_pos[1]]):
+            if bool(struct_map[cursor.pos[0]][cursor.pos[1]].snapsto & struct_map[prev_pos[0]][prev_pos[1]].snapsto):
                 struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
                 struct_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
                 built = True
-            elif isinstance(struct_map[prev_pos[0]][prev_pos[1]], Road) and \
-                    isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall) and \
-                    struct_map[cursor.pos[0]][cursor.pos[1]].isgate:
 
-                struct_map[cursor.pos[0]][cursor.pos[1]].add_road()
-                struct_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
-                built = True
-            elif isinstance(struct_map[prev_pos[0]][prev_pos[1]], Wall) and \
-                    isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Road) and \
-                    struct_map[prev_pos[0]][prev_pos[1]].isgate:
-
-                struct_map[prev_pos[0]][prev_pos[1]].add_road()
-                struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
-                built = True
         if built:
             sounds["drawbridge_control"].play()
     return
@@ -336,7 +378,10 @@ def load_sounds():
     fx_dir = os.listdir("assets/fx")
     soundtrack_dir = os.listdir("assets/soundtrack")
     sounds = {file[:-4]: pg.mixer.Sound("assets/fx/" + file) for file in fx_dir}
-    tracks = [pg.mixer.Sound("assets/soundtrack/" + file) for file in soundtrack_dir]
+    if SOUNDTRACK:
+        tracks = [pg.mixer.Sound("assets/soundtrack/" + file) for file in soundtrack_dir]
+    else:
+        tracks = []
     for track in tracks:
         track.set_volume(0.4)
     for sound in sounds.values():
@@ -363,7 +408,7 @@ if __name__ == "__main__":
     statistics = Statistics()
     struct_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
-    roads_dict, walls_dict = fill_snappers_dicts()
+    roads_dict, walls_dict, vgates_dict, hgates_dict = fill_snappers_dicts()
     prev_pos = (0, 0)
     background, tile_type_map = generate_map()
 
@@ -374,13 +419,14 @@ if __name__ == "__main__":
     roads = pg.sprite.Group()
     walls = pg.sprite.Group()
     structs = pg.sprite.Group()
+    gates = pg.sprite.Group()
     all_sprites = pg.sprite.Group()
 
     all_sprites.add(cursor)
 
     clock = pg.time.Clock()
-    key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall}
-    structs_group_dict = {House: houses, Tower: towers, Road: roads, Wall: walls}
+    key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate}
+    structs_group_dict = {House: houses, Tower: towers, Road: roads, Wall: walls, Gate: gates}
     running = True
     # ------ MAIN LOOP -------
     while running:
@@ -401,11 +447,11 @@ if __name__ == "__main__":
                 if event.key == K_n:
                     cursor.hold = None
 
-                if event.key == K_g and isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall):
-                    struct_map[cursor.pos[0]][cursor.pos[1]].gate_upgrade()
-
                 if event.key == K_ESCAPE:
                     running = False
+
+                if event.key == K_q and isinstance(cursor.hold, Gate):
+                    cursor.hold.rotate()
 
                 if event.key == pg.K_c:
                     print(count_road_network(cursor.pos))
@@ -430,14 +476,15 @@ if __name__ == "__main__":
             screen.blit(entity.surf, entity.rect)
 
         if cursor.hold is not None:
-            structure_ghost.update(cursor.pos)
+            structure_ghost.update(cursor.pos, cursor.hold.surf)
             screen.blit(structure_ghost.surf, structure_ghost.rect)
 
         screen.blit(cursor.surf, cursor.rect)
         statistics.update_stats(cursor.pos, struct_map, tile_type_map)
         screen.blit(statistics.stat_window, statistics.rect)
 
-        play_soundtrack()
+        if SOUNDTRACK:
+            play_soundtrack()
         if randint(1, 100000) == 1: sounds["Random_Events13"].play()
         pg.display.flip()
         clock.tick(TICK_RATE)
