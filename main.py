@@ -18,7 +18,7 @@ from pygame.locals import (RLEACCEL,
                            K_w,
                            K_g)
 
-MOUSE_STEERING = True
+MOUSE_STEERING = False
 LAYOUT = pg.image.load("assets/desert_river.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
@@ -215,6 +215,24 @@ class Wall(Snapper):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
+def count_road_network(xy):
+    A = [[True for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+    count = 0
+    direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
+
+    def _count_road_network(A, xy, direction_to_xy_dict):
+        nonlocal count
+        count += 1
+        A[xy[0]][xy[1]] = False
+        for direction in struct_map[xy[0]][xy[1]].neighbours:
+            next = direction_to_xy_dict[direction]
+            if A[xy[0] + next[0]][xy[1] + next[1]]:
+                _count_road_network(A, [xy[0] + next[0], xy[1] + next[1]], direction_to_xy_dict)
+
+    _count_road_network(A, xy, direction_to_xy_dict)
+    return count
+
+
 def fill_snappers_dicts():
     roads_dict, walls_dict = {}, {}
     for snapper_dict, snapper_dir in ((roads_dict, "assets/roads"), (walls_dict, "assets/walls")):
@@ -227,7 +245,6 @@ def fill_snappers_dicts():
         for file, name in zip(directory, dir_cut):
             snapper_dict[name] = pg.transform.scale(pg.image.load(snapper_dir + "/" + file).convert(), (TILE_S, TILE_S))
             snapper_dict[name].set_colorkey((255, 255, 255), RLEACCEL)
-        print(snapper_dict)
     return roads_dict, walls_dict
 
 
@@ -301,15 +318,9 @@ def remove_structure():
 
 def generate_map():
     color_to_type = {(0, 255, 0, 255): "grassland", (0, 0, 255, 255): "sea", (255, 255, 0, 255): "desert"}
-    # tile_dict = {"grassland": pg.transform.scale(pg.image.load("assets/tiles/grassland_tile.png").convert(),
-    #                                              (TILE_S, TILE_S)),
-    #              "sea": pg.transform.scale(pg.image.load("assets/tiles/sea_tile.png").convert(),
-    #                                        (TILE_S, TILE_S)),
-    #              "desert": pg.transform.scale(pg.image.load("assets/tiles/desert_tile.png").convert(),
-    #                                        (TILE_S, TILE_S))}
-
     tile_dict = {name: pg.transform.scale(pg.image.load("assets/tiles/" + name + "_tile.png").convert(),
                                           (TILE_S, TILE_S)) for name in color_to_type.values()}
+
     background = pg.Surface((WIDTH_TILES * TILE_S, HEIGHT_TILES * TILE_S))
     tile_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
@@ -396,8 +407,8 @@ if __name__ == "__main__":
                 if event.key == K_ESCAPE:
                     running = False
 
-                # if event.key == pg.:
-                #     place_structure()
+                if event.key == pg.K_c:
+                    print(count_road_network(cursor.pos))
 
         if pressed_keys[K_SPACE] or pg.mouse.get_pressed(num_buttons=3)[0]:  # placing down held structure
             place_structure(prev_pos)
