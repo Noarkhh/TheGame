@@ -19,17 +19,18 @@ from pygame.locals import (RLEACCEL,
                            K_g,
                            K_q)
 
-SOUNDTRACK = False
+SOUNDTRACK = True
 MOUSE_STEERING = False
-LAYOUT = pg.image.load("assets/maps/desert_river.png")
+LAYOUT = pg.image.load("assets/maps/desert_river_M.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
-TILE_S = 45
+TILE_S = 30
 WIDTH_PIXELS = WIDTH_TILES * TILE_S
 HEIGHT_PIXELS = HEIGHT_TILES * TILE_S
-WINDOW_HEIGHT = HEIGHT_PIXELS
-WINDOW_WIDTH = WIDTH_PIXELS
-TICK_RATE = 30
+WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 1080
+TICK_RATE = 60
+TICK = 0
 
 
 class Background(pg.sprite.Sprite):
@@ -39,25 +40,55 @@ class Background(pg.sprite.Sprite):
         self.rect = self.surf.get_rect()
 
     def move_screen(self):
-        if pressed_keys[K_UP]:
-            self.rect.move_ip(0, 30)
-        if pressed_keys[K_DOWN]:
-            self.rect.move_ip(0, -30)
-        if pressed_keys[K_LEFT]:
-            self.rect.move_ip(30, 0)
-        if pressed_keys[K_RIGHT]:
-            self.rect.move_ip(-30, 0)
+        if cursor.rect.right + self.rect.left > WINDOW_WIDTH:
+            self.rect.move_ip(-TILE_S/1.5, 0)
+        if cursor.rect.left + self.rect.left < 0:
+            self.rect.move_ip(TILE_S/1.5, 0)
+        if cursor.rect.bottom + self.rect.top > WINDOW_HEIGHT:
+            self.rect.move_ip(0, -TILE_S/1.5)
+        if cursor.rect.top + self.rect.top < 0:
+            self.rect.move_ip(0, TILE_S/1.5)
 
 
 class Statistics:
     def __init__(self):
         self.font_size = 24
+        self.font = pg.font.SysFont('consolas', self.font_size)
         self.stat_window = pg.Surface((self.font_size * 20, self.font_size * 10))
         self.stat_window.fill((0, 0, 0))
-        self.font = pg.font.SysFont('consolas', self.font_size)
-        self.rect = self.stat_window.get_rect(bottom=HEIGHT_PIXELS - 2, right=WIDTH_PIXELS - 4)
 
-    def update_stats(self, xy, structure_map, tile_type_map):
+
+class GlobalStatistics(Statistics):
+    def __init__(self):
+        super().__init__()
+        self.rect = self.stat_window.get_rect(topleft=(2, 2))
+        self.tick = 0
+        self.time = [0, 0]
+
+    def update_global_stats(self):
+        self.stat_window.fill((0, 0, 0))
+        self.stat_window.blit(self.font.render("time: " + str(self.time[0]) + ":00  Day " + str(self.time[1]), False,
+                                               (255, 255, 255), (0, 0, 0)), (0, 0))
+        self.stat_window.blit(self.font.render("gold: " + str(vault.gold), False, (255, 255, 255), (0, 0, 0)), (0, 26))
+
+        self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
+
+    def get_time(self):
+        self.tick += 1
+        if self.tick >= TICK_RATE:
+            self.tick = 0
+            self.time[0] += 1
+            if self.time[0] >= 24:
+                self.time[0] = 0
+                self.time[1] += 1
+
+
+class TileStatistics(Statistics):
+    def __init__(self):
+        super().__init__()
+        self.rect = self.stat_window.get_rect(bottomright=(WINDOW_WIDTH - 2, WINDOW_HEIGHT - 2))
+
+    def update_tile_stats(self, xy, struct_map, tile_type_map):
         def blit_stat(stat):
             nonlocal stat_height
             stat_surf = self.font.render(stat, False, (255, 255, 255), (0, 0, 0))
@@ -69,11 +100,19 @@ class Statistics:
         self.stat_window.fill((0, 0, 0))
         stat_height = 4
 
-        if isinstance(structure_map[xy[0]][xy[1]], Structure):
-            blit_stat(str(type(structure_map[xy[0]][xy[1]]))[17:-2])
+        if isinstance(struct_map[xy[0]][xy[1]], Structure):
+            blit_stat("time left: " + str("{:.2f}".format(struct_map[xy[0]][xy[1]].time_left/TICK_RATE)) + "s")
+            blit_stat("cooldown: " + str(struct_map[xy[0]][xy[1]].cooldown/TICK_RATE) + "s")
+            blit_stat("profit: " + str(struct_map[xy[0]][xy[1]].profit))
+            blit_stat(str(type(struct_map[xy[0]][xy[1]]))[17:-2])
         blit_stat(tile_type_map[xy[0]][xy[1]])
         blit_stat(str(xy))
         self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
+
+
+class Vault:
+    def __init__(self):
+        self.gold = 10000000
 
 
 class Cursor(pg.sprite.Sprite):
@@ -88,15 +127,19 @@ class Cursor(pg.sprite.Sprite):
         self.hold = None
 
     def update_arrows(self, pressed_keys):
-        cooltime = 10
+        cooltime = 20
         key_list = [True if pressed_keys[key] else False for key in (K_UP, K_DOWN, K_LEFT, K_RIGHT)]
         iter_list = [(key, sign, xy) for key, sign, xy in zip(key_list, (-1, 1, -1, 1), (1, 1, 0, 0))]
         for i, elem in enumerate(iter_list):
             if elem[0]:
                 if self.cooldown[i] <= self.windup[i]:
-                    if self.windup[i] < cooltime: self.windup[i] += 4
+                    if self.windup[i] < cooltime - 8:
+                        self.windup[i] += 8
+                    else:
+                        self.windup[i] = cooltime
                     self.pos[elem[2]] += elem[1]
                     self.cooldown[i] = cooltime
+                    self.windup[i] -= 2
             else:
                 self.windup[i] = 0
                 self.cooldown[i] = 0
@@ -151,10 +194,20 @@ class Tile(pg.sprite.Sprite):
 class Structure(pg.sprite.Sprite):
     def __init__(self, xy):
         super().__init__()
-        self.surf = pg.Surface((60, 60))
+        self.surf = pg.Surface((TILE_S, TILE_S))
         self.surf.fill((0, 0, 0))
         self.pos = xy
-        self.rect = self.surf.get_rect(top=(TILE_S * xy[1]), left=(TILE_S * xy[0]))
+        self.rect = self.surf.get_rect(bottom=(TILE_S * (xy[1] + 1)), right=(TILE_S * (xy[0] + 1)))
+        self.profit = 0
+        self.cooldown = TICK_RATE * 24
+        self.time_left = self.cooldown
+        self.cost = 0
+
+    def get_profit(self):
+        self.time_left -= 1
+        if self.time_left == 0:
+            self.time_left = self.cooldown
+            vault.gold += self.profit
 
 
 class House(Structure):
@@ -162,13 +215,10 @@ class House(Structure):
         super().__init__(xy)
         self.surf = pg.transform.scale(pg.image.load("assets/hut1.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.taxed = False
-        self.debt = 10
-
-    def tax(self):
-        pg.draw.circle(self.surf, (255, max(355 - 10 * self.debt, 0), 0), (30, 30), self.debt)
-        self.debt += 5
-        self.taxed = True
+        self.cooldown = TICK_RATE * 6
+        self.time_left = self.cooldown
+        self.profit = 10
+        self.cost = 50
 
 
 class Tower(Structure):
@@ -204,7 +254,11 @@ class Road(Snapper):
         self.snapper_dict = roads_dict
         self.surf = pg.transform.scale(pg.image.load("assets/roads/road.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.snapsto = {"roads"}
+        self.snapsto = {snap: "roads" for snap in ('N', 'E', 'S', 'W')}
+        self.cooldown = TICK_RATE * 48
+        self.time_left = self.cooldown
+        self.profit = -3
+        self.cost = 10
 
 
 class Wall(Snapper):
@@ -213,7 +267,11 @@ class Wall(Snapper):
         self.snapper_dict = walls_dict
         self.surf = pg.transform.scale(pg.image.load("assets/walls/wall.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.snapsto = {"walls"}
+        self.snapsto = {snap: "walls" for snap in ('N', 'E', 'S', 'W')}
+        self.cooldown = TICK_RATE * 48
+        self.time_left = self.cooldown
+        self.profit = -3
+        self.cost = 20
 
 
 class Gate(Wall, Road):
@@ -225,15 +283,23 @@ class Gate(Wall, Road):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         if orientation == "v":
             self.snapper_dict = vgates_dict
+            self.snapsto = {'N': "roads", 'E': "walls", 'S': "roads", 'W': "walls"}
         else:
             self.snapper_dict = hgates_dict
-        self.snapsto = {"walls", "roads"}
+            self.snapsto = {'N': "walls", 'E': "roads", 'S': "walls", 'W': "roads"}
+
+        self.cooldown = TICK_RATE * 24
+        self.time_left = self.cooldown
+        self.profit = -15
+        self.cost = 150
 
     def rotate(self):
         if self.orient == "v":
             self.orient = "h"
+            # self.snapsto = {'N': "walls", 'E': "roads", 'S': "walls", 'W': "roads"}
         else:
             self.orient = "v"
+            # self.snapsto = {'N': "roads", 'E': "walls", 'S': "roads", 'W': "walls"}
         self.surf = pg.transform.scale(pg.image.load("assets/" + self.orient + "gates/gate.png").convert(),
                                        (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
@@ -243,7 +309,7 @@ def count_road_network(xy):
     A = [[True for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
     count = 0
     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
-    required = struct_map[xy[0]][xy[1]].snapsto
+    required = set(struct_map[xy[0]][xy[1]].snapsto.values())
 
     def _count_road_network(A, xy, direction_to_xy_dict, required):
         nonlocal count
@@ -251,7 +317,8 @@ def count_road_network(xy):
         A[xy[0]][xy[1]] = False
         for direction in struct_map[xy[0]][xy[1]].neighbours:
             next = direction_to_xy_dict[direction]
-            if A[xy[0] + next[0]][xy[1] + next[1]] and bool(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto & required):
+            if A[xy[0] + next[0]][xy[1] + next[1]] and \
+                    bool(set(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
                 _count_road_network(A, [xy[0] + next[0], xy[1] + next[1]], direction_to_xy_dict, required)
 
     _count_road_network(A, xy, direction_to_xy_dict, required)
@@ -283,13 +350,6 @@ def pos_oob(x, y):
 
 
 def gate_placement_logic():
-    def condition(direction, x, y, friend):
-        if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
-                isinstance(struct_map[cursor.pos[0] + x][cursor.pos[1] + y], friend) and \
-                direction in struct_map[cursor.pos[0] + x][cursor.pos[1] + y].neighbours:
-            return True
-        return False
-
     if (isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall) or
             isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Road)) and \
             not isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Gate):
@@ -301,12 +361,16 @@ def gate_placement_logic():
             err_table = (Road, Wall, Road, Wall)
             neighbour_table = (Wall, Road, Wall, Road)
         for direction, x, y, friend in zip(('N', 'E', 'S', 'W'), (0, -1, 0, 1), (1, 0, -1, 0), err_table):
-            if condition(direction, x, y, friend):
+            if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
+                    type(struct_map[cursor.pos[0] + x][cursor.pos[1] + y]) == friend and \
+                    direction in struct_map[cursor.pos[0] + x][cursor.pos[1] + y].neighbours:
                 return False, None
 
         for direction, direction_rev, x, y, friend in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
                                                           (0, -1, 0, 1), (1, 0, -1, 0), neighbour_table):
-            if condition(direction, x, y, friend):
+            if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
+                    isinstance(struct_map[cursor.pos[0] + x][cursor.pos[1] + y], friend) and \
+                    direction in struct_map[cursor.pos[0] + x][cursor.pos[1] + y].neighbours:
                 new_friends.add(direction_rev)
         return True, new_friends
     else:
@@ -315,31 +379,35 @@ def gate_placement_logic():
 
 def place_structure(prev_pos):
     if isinstance(cursor.hold, Structure):
-        built = False
+        built, snapped = False, False
         if tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea" or isinstance(cursor.hold, Road):
-            if struct_map[cursor.pos[0]][cursor.pos[1]] not in structs:
-                if isinstance(cursor.hold, Gate):
-                    new_struct = type(cursor.hold)(cursor.pos, cursor.hold.orient)
-                else:
-                    new_struct = type(cursor.hold)(cursor.pos)
-                structs_group_dict[type(cursor.hold)].add(new_struct)
-                structs.add(new_struct)
-                all_sprites.add(new_struct)
-                struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
-                built = True
-            elif isinstance(cursor.hold, Gate):
-                passed, new_friends = gate_placement_logic()
-                if passed:
-                    new_struct = type(cursor.hold)(cursor.pos, cursor.hold.orient)
+            if cursor.hold.cost <= vault.gold:
+                if struct_map[cursor.pos[0]][cursor.pos[1]] not in structs:
+
+                    if isinstance(cursor.hold, Gate):
+                        new_struct = type(cursor.hold)(cursor.pos, cursor.hold.orient)
+                    else:
+                        new_struct = type(cursor.hold)(cursor.pos)
                     structs_group_dict[type(cursor.hold)].add(new_struct)
                     structs.add(new_struct)
                     all_sprites.add(new_struct)
-                    struct_map[cursor.pos[0]][cursor.pos[1]].kill()
                     struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
-                    struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(tuple(new_friends), True)
                     built = True
-                elif not place_hold:
-                    speech_channel.play(sounds["Placement_Warning16"])
+                elif isinstance(cursor.hold, Gate):
+                    passed, new_friends = gate_placement_logic()
+                    if passed:
+                        new_struct = type(cursor.hold)(cursor.pos, cursor.hold.orient)
+                        structs_group_dict[type(cursor.hold)].add(new_struct)
+                        structs.add(new_struct)
+                        all_sprites.add(new_struct)
+                        struct_map[cursor.pos[0]][cursor.pos[1]].kill()
+                        struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
+                        struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(tuple(new_friends), True)
+                        built = True
+                    elif not place_hold:
+                        speech_channel.play(sounds["Placement_Warning16"])
+            elif not place_hold:
+                speech_channel.play(sounds["Resource_Need" + str(randint(17, 19))])
         elif not isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper) and not place_hold:
             speech_channel.play(sounds["Placement_Warning16"])
 
@@ -349,14 +417,16 @@ def place_structure(prev_pos):
         if isinstance(cursor.hold, Snapper) and change in pos_change_dict.keys() and place_hold and \
                 isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper) and \
                 isinstance(struct_map[prev_pos[0]][prev_pos[1]], Snapper):
-
-            if bool(struct_map[cursor.pos[0]][cursor.pos[1]].snapsto & struct_map[prev_pos[0]][prev_pos[1]].snapsto):
+            if struct_map[cursor.pos[0]][cursor.pos[1]].snapsto[pos_change_dict[change][0]] == \
+                    struct_map[prev_pos[0]][prev_pos[1]].snapsto[pos_change_dict[change][1]]:
                 struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
                 struct_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
-                built = True
+                snapped = True
 
-        if built:
+        if built or snapped:
             sounds["drawbridge_control"].play()
+        if built:
+            vault.gold -= new_struct.cost
     return
 
 
@@ -424,7 +494,9 @@ if __name__ == "__main__":
     # screen = pg.display.set_mode([WIDTH_PIXELS, HEIGHT_PIXELS])
     screen = pg.display.set_mode([WINDOW_WIDTH, WINDOW_HEIGHT])
     cursor = Cursor()
-    statistics = Statistics()
+    tile_statistics = TileStatistics()
+    global_statistics = GlobalStatistics()
+    vault = Vault()
     struct_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
     roads_dict, walls_dict, vgates_dict, hgates_dict = fill_snappers_dicts()
@@ -473,7 +545,7 @@ if __name__ == "__main__":
                 if event.key == K_q and isinstance(cursor.hold, Gate):
                     cursor.hold.rotate()
 
-                if event.key == pg.K_c:
+                if event.key == pg.K_c and isinstance((struct_map[cursor.pos[0]][cursor.pos[1]]), Snapper):
                     print(count_road_network(cursor.pos))
 
         if pressed_keys[K_SPACE] or pg.mouse.get_pressed(num_buttons=3)[0]:  # placing down held structure
@@ -489,13 +561,19 @@ if __name__ == "__main__":
             cursor.update_mouse(pg.mouse.get_pos())
         else:
             cursor.update_arrows(pressed_keys)
-        # background.move_screen()
+        background.move_screen()
 
+        for struct in structs:
+            struct.get_profit()
+        if vault.gold < 0:
+            running = False
 
-        # print(prev_pos, cursor.pos)
-
-        for entity in structs:
-            background.surf.blit(entity.surf, entity.rect)
+        # for entity in structs:
+        #     background.surf.blit(entity.surf, entity.rect)
+        for i in struct_map:
+            for j in i:
+                if isinstance(j, Structure):
+                    background.surf.blit(j.surf, j.rect)
 
         if cursor.hold is not None:
             structure_ghost.update(cursor.pos, cursor.hold.surf)
@@ -503,15 +581,19 @@ if __name__ == "__main__":
 
         background.surf.blit(cursor.surf, cursor.rect)
 
-        statistics.update_stats(cursor.pos, struct_map, tile_type_map)
-        background.surf.blit(statistics.stat_window, statistics.rect)
-
         if SOUNDTRACK:
             play_soundtrack()
         if randint(1, 100000) == 1: sounds["Random_Events13"].play()
 
         screen.fill((0, 0, 0))
         screen.blit(background.surf, background.rect)
+
+        global_statistics.get_time()
+        global_statistics.update_global_stats()
+        screen.blit(global_statistics.stat_window, global_statistics.rect)
+
+        tile_statistics.update_tile_stats(cursor.pos, struct_map, tile_type_map)
+        screen.blit(tile_statistics.stat_window, tile_statistics.rect)
 
         background.surf.blit(map_surf, (0, 0))
         pg.display.flip()
