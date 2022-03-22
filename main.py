@@ -27,7 +27,26 @@ WIDTH_TILES = LAYOUT.get_width()
 TILE_S = 45
 WIDTH_PIXELS = WIDTH_TILES * TILE_S
 HEIGHT_PIXELS = HEIGHT_TILES * TILE_S
+WINDOW_HEIGHT = HEIGHT_PIXELS
+WINDOW_WIDTH = WIDTH_PIXELS
 TICK_RATE = 30
+
+
+class Background(pg.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.surf = generate_map()[0]
+        self.rect = self.surf.get_rect()
+
+    def move_screen(self):
+        if pressed_keys[K_UP]:
+            self.rect.move_ip(0, 30)
+        if pressed_keys[K_DOWN]:
+            self.rect.move_ip(0, -30)
+        if pressed_keys[K_LEFT]:
+            self.rect.move_ip(30, 0)
+        if pressed_keys[K_RIGHT]:
+            self.rect.move_ip(-30, 0)
 
 
 class Statistics:
@@ -225,7 +244,6 @@ def count_road_network(xy):
     count = 0
     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
     required = struct_map[xy[0]][xy[1]].snapsto
-    print(required)
 
     def _count_road_network(A, xy, direction_to_xy_dict, required):
         nonlocal count
@@ -403,14 +421,16 @@ if __name__ == "__main__":
     soundtrack_channel = pg.mixer.Channel(5)
     speech_channel = pg.mixer.Channel(3)
 
-    screen = pg.display.set_mode([WIDTH_PIXELS, HEIGHT_PIXELS])
+    # screen = pg.display.set_mode([WIDTH_PIXELS, HEIGHT_PIXELS])
+    screen = pg.display.set_mode([WINDOW_WIDTH, WINDOW_HEIGHT])
     cursor = Cursor()
     statistics = Statistics()
     struct_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
     roads_dict, walls_dict, vgates_dict, hgates_dict = fill_snappers_dicts()
     prev_pos = (0, 0)
-    background, tile_type_map = generate_map()
+    map_surf, tile_type_map = generate_map()
+    background = Background()
 
     pg.display.set_caption("Twierdza: Zawodzie")
 
@@ -469,23 +489,31 @@ if __name__ == "__main__":
             cursor.update_mouse(pg.mouse.get_pos())
         else:
             cursor.update_arrows(pressed_keys)
-        screen.blit(background, (0, 0))
+        # background.move_screen()
+
+
         # print(prev_pos, cursor.pos)
 
         for entity in structs:
-            screen.blit(entity.surf, entity.rect)
+            background.surf.blit(entity.surf, entity.rect)
 
         if cursor.hold is not None:
             structure_ghost.update(cursor.pos, cursor.hold.surf)
-            screen.blit(structure_ghost.surf, structure_ghost.rect)
+            background.surf.blit(structure_ghost.surf, structure_ghost.rect)
 
-        screen.blit(cursor.surf, cursor.rect)
+        background.surf.blit(cursor.surf, cursor.rect)
+
         statistics.update_stats(cursor.pos, struct_map, tile_type_map)
-        screen.blit(statistics.stat_window, statistics.rect)
+        background.surf.blit(statistics.stat_window, statistics.rect)
 
         if SOUNDTRACK:
             play_soundtrack()
         if randint(1, 100000) == 1: sounds["Random_Events13"].play()
+
+        screen.fill((0, 0, 0))
+        screen.blit(background.surf, background.rect)
+
+        background.surf.blit(map_surf, (0, 0))
         pg.display.flip()
         clock.tick(TICK_RATE)
     pg.quit()
