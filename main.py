@@ -347,19 +347,33 @@ def detect_wall_loops(xy):
                 node_list.append((xi, yj))
 
     edge_dict = {}
+    edge_list = []
     required = set(struct_map[xy[0]][xy[1]].snapsto.values())
     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
 
     for node in node_list:
-        for i, direction in enumerate(struct_map[node[0]][node[1]].neighbours):
+        i = 0
+        for direction in struct_map[node[0]][node[1]].neighbours:
             current_walls = walls_in_edge.copy()
             current_walls.append(node)
-            result = (find_connected_nodes(A, (node[0] + direction_to_xy_dict[direction][0],
+            edge, second_node, found = (find_connected_nodes(A, (node[0] + direction_to_xy_dict[direction][0],
                                      node[1] + direction_to_xy_dict[direction][1]),
                                  direction_to_xy_dict, required, current_walls, node, 2))
-            print(node, result, direction)
-            if result[2]:
-                edge_dict[(node, result[1], i)] = result[0]
+
+            if found:
+                if node[0] > second_node[0]:
+                    node_pair = (node, second_node)
+                elif node[0] < second_node[0]:
+                    node_pair = (second_node, node)
+                else:
+                    if node[1] > second_node[1]:
+                        node_pair = (node, second_node)
+                    else:
+                        node_pair = (second_node, node)
+                if node_pair != tuple(edge):
+                    edge_dict[(node_pair, i)] = edge
+                    edge_list.append([(node_pair, i), "white"])
+                    i += 1
     return edge_dict
 
 
