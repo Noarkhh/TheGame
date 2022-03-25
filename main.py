@@ -22,7 +22,7 @@ from pygame.locals import (RLEACCEL,
 
 SOUNDTRACK = False
 MOUSE_STEERING = False
-LAYOUT = pg.image.load("assets/maps/desert_river.png")
+LAYOUT = pg.image.load("assets/maps/desert_river_M.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
 TILE_S = 30
@@ -593,11 +593,12 @@ def place_structure(prev_pos):
             sounds["drawbridge_control"].play()
         if built:
             vault.gold -= new_struct.cost
-            if isinstance(new_struct, Wall):
-                surrounded_tiles = detect_surrounded_tiles(cursor.pos)
-                for x in surrounded_tiles:
-                    print(x)
-                print("\n\n")
+        if snapped and not built:
+            surrounded_tiles = detect_surrounded_tiles(cursor.pos)
+            print("aa")
+                # for x in surrounded_tiles:
+                #     print(x)
+                # print("\n\n")
     return
 
 
