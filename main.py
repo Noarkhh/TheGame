@@ -1,6 +1,7 @@
 import pygame as pg
 import os
 from random import randint
+from collections import defaultdict
 from pygame.locals import (RLEACCEL,
                            K_UP,
                            K_DOWN,
@@ -21,7 +22,7 @@ from pygame.locals import (RLEACCEL,
 
 SOUNDTRACK = False
 MOUSE_STEERING = False
-LAYOUT = pg.image.load("assets/maps/desert_river_M.png")
+LAYOUT = pg.image.load("assets/maps/desert_river.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
 TILE_S = 30
@@ -114,9 +115,9 @@ class TileStatistics(Statistics):
         if isinstance(struct_map[xy[0]][xy[1]], Structure):
             blit_stat("time left: " + str("{:.2f}".format(struct_map[xy[0]][xy[1]].time_left / TICK_RATE)) + "s")
             blit_stat("cooldown: " + str(struct_map[xy[0]][xy[1]].cooldown / TICK_RATE) + "s")
-            blit_stat("profit: " + str(struct_map[xy[0]][xy[1]].profit))
+            blit_stat("profit: " + str(struct_map[xy[0]][xy[1]].profit) + "g")
+            blit_stat("inside: " + str(struct_map[xy[0]][xy[1]].inside))
             blit_stat(str(type(struct_map[xy[0]][xy[1]]))[17:-2])
-            blit_stat(str(struct_map[xy[0]][xy[1]].pos))
         blit_stat(tile_type_map[xy[0]][xy[1]])
         blit_stat(str(xy))
         self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
@@ -214,6 +215,7 @@ class Structure(pg.sprite.Sprite):
         self.cooldown = TICK_RATE * 24
         self.time_left = self.cooldown
         self.cost = 0
+        self.inside = False
 
     def get_profit(self):
         self.time_left -= 1
@@ -317,64 +319,154 @@ class Gate(Wall, Road):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
-def detect_wall_loops(xy):
-    def find_connected_nodes(A, node_xy, direction_to_xy_dict, required, current_walls, origin, i):
-        # print(current_walls, node_xy)
-        current_walls.append(node_xy)
-        if len(struct_map[node_xy[0]][node_xy[1]].neighbours) >= 3:
-            return current_walls, node_xy, True
+# def detect_wall_loops(xy):
+#     def find_connected_nodes(A, node_xy, direction_to_xy_dict, required, current_walls, origin, i):
+#         # print(current_walls, node_xy)
+#         current_walls.append(node_xy)
+#         if len(struct_map[node_xy[0]][node_xy[1]].neighbours) >= 3:
+#             return current_walls, node_xy, True
+#
+#         if len(struct_map[node_xy[0]][node_xy[1]].neighbours) <= 1 or A[node_xy[0]][node_xy[1]] == False:
+#             return 0, 0, False
+#         A[node_xy[0]][node_xy[1]] = False
+#
+#         for direction in struct_map[node_xy[0]][node_xy[1]].neighbours:
+#             next = direction_to_xy_dict[direction]
+#             if A[node_xy[0] + next[0]][node_xy[1] + next[1]] and \
+#                     bool(set(struct_map[node_xy[0] + next[0]][node_xy[1] + next[1]].snapsto.values()) & required) and \
+#                     ((node_xy[0] + next[0], node_xy[1] + next[1]) != origin or i <= 0):
+#                 return find_connected_nodes(A, (node_xy[0] + next[0], node_xy[1] + next[1]), direction_to_xy_dict,
+#                                      required, current_walls, origin, i-1)
+#         return 0, 0, False
+#
+#     def DFScycle(graph, v, e, visited_v, visited_e, cycle):
+#         global cycle_start
+#         global flag
+#         flag = True
+#         cycle_start = None
+#         visited_v.add(v)
+#         if e is not None:
+#             visited_e.add(e)
+#
+#         for neighbour_v, neighbour_e in graph[v]:
+#             if neighbour_e not in visited_e:
+#                 if neighbour_v not in visited_v:
+#                     if DFScycle(graph, neighbour_v, neighbour_e, visited_v, visited_e, cycle):
+#                         if flag:
+#                             cycle.append(neighbour_e)
+#                         if v == cycle_start:
+#                             flag = False
+#                         return True
+#                 else:
+#                     cycle_start = neighbour_v
+#                     cycle.append(neighbour_e)
+#                     visited_e.add(neighbour_e)
+#                     return True
+#         return False
+#
+#     A = [[True if isinstance(y, Wall) else 0 for y in x] for x in struct_map]
+#     B = [[1 if isinstance(y, Wall) and len(y.neighbours) >= 3 else 0 for y in x] for x in struct_map]
+#     walls_in_edge = []
+#     node_list = []
+#     for xi, x in enumerate(B):
+#         for yj, y in enumerate(x):
+#             if y == 1:
+#                 node_list.append((xi, yj))
+#
+#     edge_dict = {}
+#     edge_list = []
+#     graph = defaultdict(list)
+#     required = set(struct_map[xy[0]][xy[1]].snapsto.values())
+#     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
+#
+#     i = 0
+#     for node in node_list:
+#         for direction in struct_map[node[0]][node[1]].neighbours:
+#             current_walls = walls_in_edge.copy()
+#             current_walls.append(node)
+#             edge, second_node, found = (find_connected_nodes(A, (node[0] + direction_to_xy_dict[direction][0],
+#                                      node[1] + direction_to_xy_dict[direction][1]),
+#                                  direction_to_xy_dict, required, current_walls, node, 2))
+#
+#             if found:
+#                 if node[0] > second_node[0]:
+#                     node_pair = (node, second_node)
+#                 elif node[0] < second_node[0]:
+#                     node_pair = (second_node, node)
+#                 else:
+#                     if node[1] > second_node[1]:
+#                         node_pair = (node, second_node)
+#                     else:
+#                         node_pair = (second_node, node)
+#                 if node_pair != tuple(edge):
+#                     edge_dict[(node_pair, i)] = edge
+#                     graph[node].append((second_node, (node_pair, i)))
+#                     graph[second_node].append((node, (node_pair, i)))
+#
+#                     edge_list.append([(node_pair, i), "white"])
+#                     i += 1
+#
+#     visited_e = set()
+#     all_cycles = list()
+#     for node in node_list:
+#         # for _ in range(len(struct_map[node[0]][node[1]].neighbours)):
+#         visited_v = set()
+#         visited_e = set()
+#         cycle = list()
+#         DFScycle(graph, node, None, visited_v, visited_e, cycle)
+#         if cycle not in all_cycles:
+#             all_cycles.append(cycle)
+#
+#     for cycle in all_cycles:
+#         print(cycle)
+#     return graph
 
-        if len(struct_map[node_xy[0]][node_xy[1]].neighbours) <= 1 or A[node_xy[0]][node_xy[1]] == False:
-            return 0, 0, False
-        A[node_xy[0]][node_xy[1]] = False
 
-        for direction in struct_map[node_xy[0]][node_xy[1]].neighbours:
+def detect_surrounded_tiles(xy):
+    def get_wall_network(wall_map, xy, direction_to_xy_dict, required, network_list):
+        wall_map[xy[0]][xy[1]] = True
+        network_list.append(xy)
+        for direction in struct_map[xy[0]][xy[1]].neighbours:
             next = direction_to_xy_dict[direction]
-            if A[node_xy[0] + next[0]][node_xy[1] + next[1]] and \
-                    bool(set(struct_map[node_xy[0] + next[0]][node_xy[1] + next[1]].snapsto.values()) & required) and \
-                    ((node_xy[0] + next[0], node_xy[1] + next[1]) != origin or i <= 0):
-                return find_connected_nodes(A, (node_xy[0] + next[0], node_xy[1] + next[1]), direction_to_xy_dict,
-                                     required, current_walls, origin, i-1)
-        return 0, 0, False
+            if not wall_map[xy[0] + next[0]][xy[1] + next[1]] and \
+                    bool(set(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
+                get_wall_network(wall_map, [xy[0] + next[0], xy[1] + next[1]],
+                                 direction_to_xy_dict, required, network_list)
 
-    A = [[True if isinstance(y, Wall) else 0 for y in x] for x in struct_map]
-    B = [[1 if isinstance(y, Wall) and len(y.neighbours) >= 3 else 0 for y in x] for x in struct_map]
-    walls_in_edge = []
-    node_list = []
-    for xi, x in enumerate(B):
-        for yj, y in enumerate(x):
-            if y == 1:
-                node_list.append((xi, yj))
+    def get_extremes(network_list):
+        bottom_top_dict = defaultdict(list)
+        right_left_dict = defaultdict(list)
+        for elem in network_list:
+            bottom_top_dict[elem[0]].append(elem)
+            right_left_dict[elem[1]].append(elem)
 
-    edge_dict = {}
-    edge_list = []
+        for curr_dict, k in ((bottom_top_dict, 1), (right_left_dict, 0)):
+            for stripe, cands in curr_dict.items():
+                max_y = max(cands, key=lambda xy: xy[k])
+                min_y = min(cands, key=lambda xy: xy[k])
+                curr_dict[stripe] = [max_y, min_y]
+
+        return bottom_top_dict, right_left_dict
+
+    def mark_safe_stripes(bottom_top_dict, right_left_dict, surrounded_tiles):
+        for x, stripe in bottom_top_dict.items():
+            for y in range(stripe[1][1], stripe[0][1] + 1):
+                surrounded_tiles[x][y] += 1
+
+        for y, stripe in right_left_dict.items():
+            for x in range(stripe[1][0], stripe[0][0] + 1):
+                surrounded_tiles[x][y] += 1
+        return surrounded_tiles
+
     required = set(struct_map[xy[0]][xy[1]].snapsto.values())
     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
+    wall_map = [[False for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+    surrounded_tiles = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+    network_list = []
 
-    for node in node_list:
-        i = 0
-        for direction in struct_map[node[0]][node[1]].neighbours:
-            current_walls = walls_in_edge.copy()
-            current_walls.append(node)
-            edge, second_node, found = (find_connected_nodes(A, (node[0] + direction_to_xy_dict[direction][0],
-                                     node[1] + direction_to_xy_dict[direction][1]),
-                                 direction_to_xy_dict, required, current_walls, node, 2))
-
-            if found:
-                if node[0] > second_node[0]:
-                    node_pair = (node, second_node)
-                elif node[0] < second_node[0]:
-                    node_pair = (second_node, node)
-                else:
-                    if node[1] > second_node[1]:
-                        node_pair = (node, second_node)
-                    else:
-                        node_pair = (second_node, node)
-                if node_pair != tuple(edge):
-                    edge_dict[(node_pair, i)] = edge
-                    edge_list.append([(node_pair, i), "white"])
-                    i += 1
-    return edge_dict
+    get_wall_network(wall_map, xy, direction_to_xy_dict, required, network_list)
+    bottom_top_dict, right_left_dict = get_extremes(network_list)
+    return mark_safe_stripes(bottom_top_dict, right_left_dict, surrounded_tiles)
 
 
 def count_road_network(xy):
@@ -450,6 +542,7 @@ def gate_placement_logic():
 
 
 def place_structure(prev_pos):
+    global surrounded_tiles
     if isinstance(cursor.hold, Structure):
         built, snapped = False, False
         if tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea" or isinstance(cursor.hold, Road):
@@ -465,6 +558,7 @@ def place_structure(prev_pos):
                     entities.add(new_struct)
                     struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
                     built = True
+
                 elif isinstance(cursor.hold, Gate):
                     passed, new_friends = gate_placement_logic()
                     if passed:
@@ -499,6 +593,11 @@ def place_structure(prev_pos):
             sounds["drawbridge_control"].play()
         if built:
             vault.gold -= new_struct.cost
+            if isinstance(new_struct, Wall):
+                surrounded_tiles = detect_surrounded_tiles(cursor.pos)
+                for x in surrounded_tiles:
+                    print(x)
+                print("\n\n")
     return
 
 
@@ -556,6 +655,9 @@ def play_soundtrack():
 
 
 if __name__ == "__main__":
+    global surrounded_tiles
+    surrounded_tiles = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+
     pg.init()
     pg.mixer.init()
 
@@ -596,6 +698,11 @@ if __name__ == "__main__":
 
         pressed_keys = pg.key.get_pressed()
         # checking events
+        if MOUSE_STEERING:
+            cursor.update_mouse(pg.mouse.get_pos())
+        else:
+            cursor.update_arrows(pressed_keys)
+
         for event in pg.event.get():
             if event.type == QUIT:
                 running = False
@@ -620,7 +727,8 @@ if __name__ == "__main__":
                     print(count_road_network(cursor.pos))
 
                 if event.key == pg.K_j and isinstance((struct_map[cursor.pos[0]][cursor.pos[1]]), Wall):
-                    print(detect_wall_loops(cursor.pos))
+                    for x in surrounded_tiles:
+                        print(x)
 
         if pressed_keys[K_SPACE] or pg.mouse.get_pressed(num_buttons=3)[0]:  # placing down held structure
             place_structure(prev_pos)
@@ -631,14 +739,13 @@ if __name__ == "__main__":
         prev_pos = tuple(cursor.pos)
         if pressed_keys[K_x]:  # removing a structure
             remove_structure()
-        if MOUSE_STEERING:
-            cursor.update_mouse(pg.mouse.get_pos())
-        else:
-            cursor.update_arrows(pressed_keys)
+
         background.move_screen()
 
         for struct in structs:
             struct.get_profit()
+            if surrounded_tiles[struct.pos[0]][struct.pos[1]] == 2:
+                struct.inside = True
         if vault.gold < 0:
             running = False
 
