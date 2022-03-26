@@ -75,13 +75,15 @@ class GlobalStatistics(Statistics):
         super().__init__()
         self.rect = self.stat_window.get_rect(topleft=(2, 2))
         self.tick = 0
-        self.time = [0, 0]
+        self.time = [0, 0, 0]
 
     def update_global_stats(self):
         self.stat_window.fill((0, 0, 0))
-        self.stat_window.blit(self.font.render("time: " + str(self.time[0]) + ":00  Day " + str(self.time[1]), False,
-                                               (255, 255, 255), (0, 0, 0)), (0, 0))
-        self.stat_window.blit(self.font.render("gold: " + str(vault.gold), False, (255, 255, 255), (0, 0, 0)), (0, 26))
+        self.stat_window.blit(self.font.render(
+            "Time: " + str(self.time[0]) + ":00, Day " + str(self.time[1] + 1) + ", Week " + str(self.time[2] + 1),
+            False, (255, 255, 255), (0, 0, 0)), (0, 0))
+        self.stat_window.blit(self.font.render("Gold: " + str(vault.gold) + "g",
+                                               False, (255, 255, 255), (0, 0, 0)), (0, 26))
 
         self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
 
@@ -93,6 +95,9 @@ class GlobalStatistics(Statistics):
             if self.time[0] >= 24:
                 self.time[0] = 0
                 self.time[1] += 1
+                if self.time[1] >= 7:
+                    self.time[1] = 0
+                    self.time[2] += 1
 
 
 class TileStatistics(Statistics):
