@@ -20,7 +20,7 @@ from pygame.locals import (RLEACCEL,
                            K_g,
                            K_q)
 
-SOUNDTRACK = False
+SOUNDTRACK = True
 MOUSE_STEERING = False
 LAYOUT = pg.image.load("assets/maps/desert_river_M.png")
 HEIGHT_TILES = LAYOUT.get_height()
@@ -422,21 +422,60 @@ class Gate(Wall, Road):
 #     return graph
 
 
-def detect_surrounded_tiles(xy):
-    def get_wall_network(wall_map, xy, direction_to_xy_dict, required, network_list):
+def detect_surrounded_tiles(wall_set, surrounded_tiles):
+    def search_for_crossroads(wall_map, xy, prev, direction_to_xy_dict, required, network_set, open_network_set):
         wall_map[xy[0]][xy[1]] = True
-        network_list.append(xy)
+        network_set.add(xy)
+        open_network_set.add(xy)
+        if len(struct_map[xy[0]][xy[1]].neighbours) >= 3:
+            network_set.clear()
+            open_network_set.clear()
+            return xy, True, False
+        if len(struct_map[xy[0]][xy[1]].neighbours) == 1:
+            return None, False, False
+
         for direction in struct_map[xy[0]][xy[1]].neighbours:
             next = direction_to_xy_dict[direction]
-            if not wall_map[xy[0] + next[0]][xy[1] + next[1]] and \
-                    bool(set(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
-                get_wall_network(wall_map, [xy[0] + next[0], xy[1] + next[1]],
-                                 direction_to_xy_dict, required, network_list)
+            curr = tuple([a * -1 for a in next])
+            if bool(set(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
+                if not wall_map[xy[0] + next[0]][xy[1] + next[1]]:
+                    start, found, simple = search_for_crossroads(wall_map, (xy[0] + next[0], xy[1] + next[1]), curr,
+                                     direction_to_xy_dict, required, network_set, open_network_set)
+                    if found:
+                        return start, True, simple
+                elif next != prev:
+                    return (xy[0] + next[0], xy[1] + next[1]), True, True
+        return None, False, False
 
-    def get_extremes(network_list):
+    def get_wall_network(wall_map, xy, direction_to_xy_dict, required, network_set, open_network_set):
+        wall_map[xy[0]][xy[1]] = True
+        network_set.add(xy)
+        open_network_set.add(xy)
+        # print(xy, network_set)
+
+        if len(struct_map[xy[0]][xy[1]].neighbours) == 1:
+            network_set.remove(xy)
+            return True
+
+        for direction in struct_map[xy[0]][xy[1]].neighbours:
+            next = direction_to_xy_dict[direction]
+            # curr = tuple([a * -1 for a in next])
+            # print(xy, next, prev)
+            if bool(set(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
+                if not wall_map[xy[0] + next[0]][xy[1] + next[1]]:
+                    if get_wall_network(wall_map, (xy[0] + next[0], xy[1] + next[1]),
+                                        direction_to_xy_dict, required, network_set, open_network_set):
+                        if len(struct_map[xy[0]][xy[1]].neighbours) <= 2:
+                            network_set.remove(xy)
+                            # print("rm: ", xy)
+                            return True
+        return False
+
+    def get_extremes(network_set):
+        # print(network_set)
         bottom_top_dict = defaultdict(list)
         right_left_dict = defaultdict(list)
-        for elem in network_list:
+        for elem in network_set:
             bottom_top_dict[elem[0]].append(elem)
             right_left_dict[elem[1]].append(elem)
 
@@ -456,17 +495,29 @@ def detect_surrounded_tiles(xy):
         for y, stripe in right_left_dict.items():
             for x in range(stripe[1][0], stripe[0][0] + 1):
                 surrounded_tiles[x][y] += 1
-        return surrounded_tiles
+        return
 
-    required = set(struct_map[xy[0]][xy[1]].snapsto.values())
+    required = {"walls"}
     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
     wall_map = [[False for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
-    surrounded_tiles = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
-    network_list = []
+    surrounded_tiles[0:-1] = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+    wall_set_copy = wall_set.copy()
 
-    get_wall_network(wall_map, xy, direction_to_xy_dict, required, network_list)
-    bottom_top_dict, right_left_dict = get_extremes(network_list)
-    return mark_safe_stripes(bottom_top_dict, right_left_dict, surrounded_tiles)
+    while wall_set_copy:
+        network_set = set()
+        open_network_set = set()
+        start, not_line, simple = search_for_crossroads(wall_map, tuple(wall_set_copy)[0], (0, 0), direction_to_xy_dict,
+                                                       required, network_set, open_network_set)
+        # print(start, not_line, simple)
+        if not_line:
+            if not simple:
+                wall_map = [[False for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+                get_wall_network(wall_map, tuple(start), direction_to_xy_dict, required, network_set, open_network_set)
+            bottom_top_dict, right_left_dict = get_extremes(network_set)
+            mark_safe_stripes(bottom_top_dict, right_left_dict, surrounded_tiles)
+        wall_set_copy -= open_network_set
+
+    return
 
 
 def count_road_network(xy):
@@ -541,8 +592,7 @@ def gate_placement_logic():
         return False, None
 
 
-def place_structure(prev_pos):
-    global surrounded_tiles
+def place_structure(prev_pos, wall_set, surrounded_tiles):
     if isinstance(cursor.hold, Structure):
         built, snapped = False, False
         if tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea" or isinstance(cursor.hold, Road):
@@ -593,27 +643,28 @@ def place_structure(prev_pos):
             sounds["drawbridge_control"].play()
         if built:
             vault.gold -= new_struct.cost
+            if isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall):
+                wall_set.add(tuple(cursor.pos))
         if snapped and not built:
-            surrounded_tiles = detect_surrounded_tiles(cursor.pos)
-            print("aa")
-                # for x in surrounded_tiles:
-                #     print(x)
-                # print("\n\n")
+            detect_surrounded_tiles(wall_set, surrounded_tiles)
     return
 
 
-def remove_structure():
+def remove_structure(wall_set, surrounded_tiles):
     if isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Structure):
         sounds["buildingwreck_01"].play()
+        if isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper):
+            for direction, x, y in zip(('N', 'E', 'S', 'W'), (0, -1, 0, 1), (1, 0, -1, 0)):
+                if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
+                        isinstance(struct_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper) and \
+                        (type(struct_map[cursor.pos[0] + x][cursor.pos[1] + y]) ==
+                         type(struct_map[cursor.pos[0]][cursor.pos[1]]) or
+                         isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Gate)):
+                    struct_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, False)
 
-        for direction, x, y in zip(('N', 'E', 'S', 'W'), (0, -1, 0, 1), (1, 0, -1, 0)):
-            if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
-                    isinstance(struct_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper) and \
-                    (type(struct_map[cursor.pos[0] + x][cursor.pos[1] + y]) ==
-                     type(struct_map[cursor.pos[0]][cursor.pos[1]]) or
-                     isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall)):
-                struct_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, False)
-
+        if isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall):
+            wall_set.remove(tuple(cursor.pos))
+            detect_surrounded_tiles(wall_set, surrounded_tiles)
         struct_map[cursor.pos[0]][cursor.pos[1]].kill()
         struct_map[cursor.pos[0]][cursor.pos[1]] = 0
 
@@ -693,6 +744,7 @@ if __name__ == "__main__":
     clock = pg.time.Clock()
     key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate}
     # structs_group_dict = {House: houses, Tower: towers, Road: roads, Wall: walls, Gate: gates}
+    wall_set = set()
     running = True
     # ------ MAIN LOOP -------
     while running:
@@ -732,14 +784,14 @@ if __name__ == "__main__":
                         print(x)
 
         if pressed_keys[K_SPACE] or pg.mouse.get_pressed(num_buttons=3)[0]:  # placing down held structure
-            place_structure(prev_pos)
+            place_structure(prev_pos, wall_set, surrounded_tiles)
             place_hold = True
         else:
             place_hold = False
 
         prev_pos = tuple(cursor.pos)
         if pressed_keys[K_x]:  # removing a structure
-            remove_structure()
+            remove_structure(wall_set, surrounded_tiles)
 
         background.move_screen()
 
@@ -747,6 +799,8 @@ if __name__ == "__main__":
             struct.get_profit()
             if surrounded_tiles[struct.pos[0]][struct.pos[1]] == 2:
                 struct.inside = True
+            else:
+                struct.inside = False
         if vault.gold < 0:
             running = False
 
