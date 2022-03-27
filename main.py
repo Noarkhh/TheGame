@@ -19,11 +19,12 @@ from pygame.locals import (RLEACCEL,
                            K_x,
                            K_w,
                            K_g,
-                           K_q)
+                           K_q,
+                           K_F3)
 
 SOUNDTRACK = True
-MOUSE_STEERING = False
-LAYOUT = pg.image.load("assets/maps/desert_XL.png")
+MOUSE_STEERING = True
+LAYOUT = pg.image.load("assets/maps/desert_delta_L.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
 TILE_S = 30
@@ -31,36 +32,40 @@ WIDTH_PIXELS = WIDTH_TILES * TILE_S
 HEIGHT_PIXELS = HEIGHT_TILES * TILE_S
 WINDOW_HEIGHT = 720
 WINDOW_WIDTH = 1080
+WINDOWED = True
 TICK_RATE = 60
 TICK = 0
 
 
 class Background(pg.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, map_surf):
         super().__init__()
-        self.surf = load_map()[0]
-        self.rect = self.surf.get_rect()
+        self.surf = map_surf.copy()
+        self.surf_raw = map_surf.copy()
+        self.surf_rendered = self.surf.subsurface((0, 0, WINDOW_WIDTH, WINDOW_HEIGHT))
+        self.rect = self.surf_rendered.get_rect()
 
     def move_screen(self):
-        if not MOUSE_STEERING:
-            if cursor.rect.right + self.rect.left > WINDOW_WIDTH:
-                self.rect.move_ip(-TILE_S / 1.5, 0)
-            if cursor.rect.left + self.rect.left < 0:
-                self.rect.move_ip(TILE_S / 1.5, 0)
-            if cursor.rect.bottom + self.rect.top > WINDOW_HEIGHT:
-                self.rect.move_ip(0, -TILE_S / 1.5)
-            if cursor.rect.top + self.rect.top < 0:
-                self.rect.move_ip(0, TILE_S / 1.5)
+        if cursor.rect.right >= self.rect.right <= WIDTH_PIXELS - TILE_S / 2:
+            self.rect.move_ip(TILE_S / 2, 0)
+        if cursor.rect.left <= self.rect.left >= 0 + TILE_S / 2:
+            self.rect.move_ip(-TILE_S / 2, 0)
+        if cursor.rect.bottom >= self.rect.bottom <= HEIGHT_PIXELS - TILE_S / 2:
+            self.rect.move_ip(0, TILE_S / 2)
+        if cursor.rect.top <= self.rect.top >= 0 + TILE_S / 2:
+            self.rect.move_ip(0, -TILE_S / 2)
+        self.surf_rendered = self.surf.subsurface(self.rect)
 
 
 class Entities(pg.sprite.Group):
     def give_y(self, sprite):
         return sprite.pos[1]
 
-    def draw(self, surface):
+    def draw(self, background):
         sprites = self.sprites()
         for spr in sorted(sprites, key=lambda spr: spr.pos[1]):
-            surface.blit(spr.surf, spr.rect)
+            if spr.rect.colliderect(background.rect):
+                background.surf.blit(spr.surf, spr.rect)
         self.lostsprites = []
 
 
@@ -89,7 +94,7 @@ class GlobalStatistics(Statistics):
             False, (255, 255, 255), (0, 0, 0)), (0, 0))
         self.stat_window.blit(self.font.render("Gold: " + str(vault.gold) + "g",
                                                False, (255, 255, 255), (0, 0, 0)), (0, 26))
-        self.stat_window.blit(self.font.render("TPS: " + str(round(1 / self.elapsed * TICK_RATE, 2)),
+        self.stat_window.blit(self.font.render("TPS: " + str(round(self.elapsed * TICK_RATE, 2)),
                                                False, (255, 255, 255), (0, 0, 0)), (0, 52))
         self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
 
@@ -190,9 +195,9 @@ class Cursor(pg.sprite.Sprite):
         self.rect.x = self.pos[0] * TILE_S
         self.rect.y = self.pos[1] * TILE_S
 
-    def update_mouse(self, xy):
-        self.pos[0] = xy[0] // TILE_S
-        self.pos[1] = xy[1] // TILE_S
+    def update_mouse(self, xy, bg):
+        self.pos[0] = (xy[0] + bg.rect.x) // TILE_S
+        self.pos[1] = (xy[1] + bg.rect.y) // TILE_S
         self.rect.x = self.pos[0] * TILE_S
         self.rect.y = self.pos[1] * TILE_S
 
@@ -241,7 +246,9 @@ class Structure(pg.sprite.Sprite):
 class House(Structure):
     def __init__(self, xy):
         super().__init__(xy)
-        self.surf = pg.transform.scale(pg.image.load("assets/house.png").convert(), (TILE_S, TILE_S))
+        self.surf = pg.transform.scale(pg.image.load("assets/house" + str(randint(1, 2)) + ".png").convert(),
+                                       (TILE_S, TILE_S*19/15))
+        self.rect = self.surf.get_rect(bottomright=(TILE_S * (xy[0] + 1), TILE_S * (xy[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.cooldown = TICK_RATE * 6
         self.time_left = self.cooldown
@@ -327,9 +334,11 @@ class Gate(Wall, Road):
     def rotate(self):
         if self.orient == "v":
             self.orient = "h"
+            self.snapsto = {'N': "walls", 'E': "roads", 'S': "walls", 'W': "roads"}
             height = 20
         else:
             self.orient = "v"
+            self.snapsto = {'N': "roads", 'E': "walls", 'S': "roads", 'W': "walls"}
             height = 19
         self.surf = pg.transform.scale(pg.image.load("assets/" + self.orient + "gates/gate.png").convert(),
                                        (TILE_S, TILE_S * height / 15))
@@ -567,30 +576,32 @@ def pos_oob(x, y):
     return False
 
 
-def place_structure(prev_pos, wall_set, surrounded_tiles):
+def place_structure(prev_pos, wall_set, surrounded_tiles, place_hold):
     def gate_placement_logic():
         if (isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall) or
             isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Road)) and \
                 not isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Gate):
             new_friends = set()
-            if cursor.hold.orient == "v":
-                err_table = (Wall, Road, Wall, Road)
-                neighbour_table = (Road, Wall, Road, Wall)
-            else:
-                err_table = (Road, Wall, Road, Wall)
-                neighbour_table = (Wall, Road, Wall, Road)
-            for direction, x, y, friend in zip(('N', 'E', 'S', 'W'), (0, -1, 0, 1), (1, 0, -1, 0), err_table):
-                if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
-                        type(struct_map[cursor.pos[0] + x][cursor.pos[1] + y]) == friend and \
-                        direction in struct_map[cursor.pos[0] + x][cursor.pos[1] + y].neighbours:
-                    return False, None
 
-            for direction, direction_rev, x, y, friend in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
-                                                              (0, -1, 0, 1), (1, 0, -1, 0), neighbour_table):
+            for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
+                                                           (0, -1, 0, 1), (1, 0, -1, 0)):
                 if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
-                        isinstance(struct_map[cursor.pos[0] + x][cursor.pos[1] + y], friend) and \
+                        isinstance(struct_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper) and \
                         direction in struct_map[cursor.pos[0] + x][cursor.pos[1] + y].neighbours:
-                    new_friends.add(direction_rev)
+                    if cursor.hold.snapsto[direction_rev] != \
+                            struct_map[cursor.pos[0] + x][cursor.pos[1] + y].snapsto[direction]:
+                        return False, None
+                    else:
+                        new_friends.add(direction_rev)
+
+            # for direction, direction_rev, x, y, friend in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
+            #                                                   (0, -1, 0, 1), (1, 0, -1, 0), neighbour_table):
+            #     if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
+            #             isinstance(struct_map[cursor.pos[0] + x][cursor.pos[1] + y], friend) and \
+            #             direction in struct_map[cursor.pos[0] + x][cursor.pos[1] + y].neighbours and \
+            #             cursor.hold.snapsto[direction_rev] == \
+            #             struct_map[cursor.pos[0] + x][cursor.pos[1] + y].snapsto[direction]:
+            #         new_friends.add(direction_rev)
             return True, new_friends
         else:
             return False, None
@@ -611,7 +622,7 @@ def place_structure(prev_pos, wall_set, surrounded_tiles):
                     struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
                     built = True
 
-                elif isinstance(cursor.hold, Gate):
+                elif isinstance(cursor.hold, Gate) and not place_hold:
                     passed, new_friends = gate_placement_logic()
                     if passed:
                         new_struct = type(cursor.hold)(cursor.pos, cursor.hold.orient)
@@ -622,12 +633,8 @@ def place_structure(prev_pos, wall_set, surrounded_tiles):
                         struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
                         struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(tuple(new_friends), True)
                         built = True
-                    elif not place_hold:
-                        speech_channel.play(sounds["Placement_Warning16"])
             elif not place_hold:
                 speech_channel.play(sounds["Resource_Need" + str(randint(17, 19))])
-        elif not isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper) and not place_hold:
-            speech_channel.play(sounds["Placement_Warning16"])
 
         change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
         pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
@@ -649,6 +656,7 @@ def place_structure(prev_pos, wall_set, surrounded_tiles):
                 wall_set.add(tuple(cursor.pos))
         if snapped and not built:
             detect_surrounded_tiles(wall_set, surrounded_tiles)
+
         if not snapped and not built and not place_hold:
             if not isinstance(cursor.hold, Snapper) or \
                     not isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper):
@@ -659,9 +667,10 @@ def place_structure(prev_pos, wall_set, surrounded_tiles):
     return
 
 
-def remove_structure(wall_set, surrounded_tiles):
+def remove_structure(wall_set, surrounded_tiles, remove_hold):
     if isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Structure):
-        pg.mixer.find_channel(True).play(sounds["buildingwreck_01"])
+        if not remove_hold:
+            pg.mixer.find_channel(True).play(sounds["buildingwreck_01"])
         if isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper):
             for direction, x, y in zip(('N', 'E', 'S', 'W'), (0, -1, 0, 1), (1, 0, -1, 0)):
                 if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
@@ -674,14 +683,19 @@ def remove_structure(wall_set, surrounded_tiles):
         if isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall):
             wall_set.remove(tuple(cursor.pos))
             detect_surrounded_tiles(wall_set, surrounded_tiles)
+        removed = True
+
         struct_map[cursor.pos[0]][cursor.pos[1]].kill()
         struct_map[cursor.pos[0]][cursor.pos[1]] = 0
+    else:
+        removed = False
+    return removed
 
 
 def fill_snappers_dicts():
     roads_dict, walls_dict, vgates_dict, hgates_dict = {}, {}, {}, {}
     for snapper_dict, snapper_dir, height in ((walls_dict, "assets/walls", TILE_S),
-                                              (roads_dict, "assets/roads", TILE_S),
+                                              (roads_dict, "assets/croads", TILE_S),
                                               (vgates_dict, "assets/vgates", TILE_S * 19 / 15),
                                               (hgates_dict, "assets/hgates", TILE_S * 20 / 15)):
         directory = os.listdir(snapper_dir)
@@ -737,14 +751,15 @@ if __name__ == "__main__":
 
     pg.init()
     pg.mixer.init()
-    pg.mixer.set_num_channels(6)
     sounds, tracks = load_sounds()
     soundtrack_channel = pg.mixer.Channel(5)
     speech_channel = pg.mixer.Channel(3)
     # fx_channel = pg.mixer.Channel(1)
-
-    # screen = pg.display.set_mode([WIDTH_PIXELS, HEIGHT_PIXELS])
-    screen = pg.display.set_mode([WINDOW_WIDTH, WINDOW_HEIGHT])
+    if WINDOWED:
+        screen = pg.display.set_mode([WINDOW_WIDTH, WINDOW_HEIGHT])
+    else:
+        screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
+        WINDOW_WIDTH, WINDOW_HEIGHT = pg.display.get_surface().get_size()
     cursor = Cursor()
     tile_statistics = TileStatistics()
     global_statistics = GlobalStatistics()
@@ -754,23 +769,22 @@ if __name__ == "__main__":
     roads_dict, walls_dict, vgates_dict, hgates_dict = fill_snappers_dicts()
     prev_pos = (0, 0)
     map_surf, tile_type_map = load_map()
-    background = Background()
+
+    background = Background(map_surf)
 
     pg.display.set_caption("Twierdza: Zawodzie")
+    pg.display.set_icon(pg.image.load("assets/icon.png").convert())
 
     entities = Entities()
-    # houses = pg.sprite.Group()
-    # towers = pg.sprite.Group()
-    # roads = pg.sprite.Group()
-    # walls = pg.sprite.Group()
     structs = pg.sprite.Group()
-    # gates = pg.sprite.Group()
-    # entities = pg.sprite.Group()
 
     clock = pg.time.Clock()
     key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate}
-    # structs_group_dict = {House: houses, Tower: towers, Road: roads, Wall: walls, Gate: gates}
     wall_set = set()
+    place_hold, remove_hold = False, False
+    display_stats = True
+
+    speech_channel.play(sounds["General_Startgame"])
     running = True
     # ------ MAIN LOOP -------
     while running:
@@ -778,7 +792,7 @@ if __name__ == "__main__":
         pressed_keys = pg.key.get_pressed()
         # checking events
         if MOUSE_STEERING:
-            cursor.update_mouse(pg.mouse.get_pos())
+            cursor.update_mouse(pg.mouse.get_pos(), background)
         else:
             cursor.update_arrows(pressed_keys)
 
@@ -791,7 +805,6 @@ if __name__ == "__main__":
                     cursor.hold = key_structure_dict[event.key]([0, 0])
                     structure_ghost = Ghost(cursor.pos, cursor.hold.surf)
                     sounds["menusl_" + str(randint(1, 3))].play()
-                    # violin_se.play()
 
                 if event.key == K_n:
                     cursor.hold = None
@@ -809,16 +822,22 @@ if __name__ == "__main__":
                     for x in surrounded_tiles:
                         print(x)
 
+                if event.key == K_F3:
+                    display_stats = not display_stats
+
         if pressed_keys[K_SPACE] or pg.mouse.get_pressed(num_buttons=3)[0]:  # placing down held structure
-            place_structure(prev_pos, wall_set, surrounded_tiles)
+            place_structure(prev_pos, wall_set, surrounded_tiles, place_hold)
             place_hold = True
         else:
             place_hold = False
 
-        prev_pos = tuple(cursor.pos)
         if pressed_keys[K_x]:  # removing a structure
-            remove_structure(wall_set, surrounded_tiles)
+            if remove_structure(wall_set, surrounded_tiles, remove_hold):
+                remove_hold = True
+        else:
+            remove_hold = False
 
+        prev_pos = tuple(cursor.pos)
         background.move_screen()
 
         for struct in structs:
@@ -827,10 +846,11 @@ if __name__ == "__main__":
                 struct.inside = True
             else:
                 struct.inside = False
+
         if vault.gold < 0:
             running = False
 
-        entities.draw(background.surf)
+        entities.draw(background)
 
         if cursor.hold is not None:
             structure_ghost.update(cursor.pos, cursor.hold.surf)
@@ -840,20 +860,20 @@ if __name__ == "__main__":
 
         if SOUNDTRACK:
             play_soundtrack()
-        if randint(1, 100000) == 1: sounds["Random_Events13"].play()
+        if randint(1, 200000) == 1: sounds["Random_Events13"].play()
 
-        screen.fill((0, 0, 0))
-        screen.blit(background.surf, background.rect)
+        screen.blit(background.surf_rendered, (0, 0))
 
         global_statistics.get_time()
 
-        global_statistics.update_global_stats()
-        screen.blit(global_statistics.stat_window, global_statistics.rect)
+        if display_stats:
+            global_statistics.update_global_stats()
+            screen.blit(global_statistics.stat_window, global_statistics.rect)
 
-        tile_statistics.update_tile_stats(cursor.pos, struct_map, tile_type_map)
-        screen.blit(tile_statistics.stat_window, tile_statistics.rect)
+            tile_statistics.update_tile_stats(cursor.pos, struct_map, tile_type_map)
+            screen.blit(tile_statistics.stat_window, tile_statistics.rect)
 
-        background.surf.blit(map_surf, (0, 0))
+        background.surf_rendered.blit(background.surf_raw.subsurface(background.rect), (0, 0))
         pg.display.flip()
 
         clock.tick(TICK_RATE)
