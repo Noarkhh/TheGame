@@ -1,6 +1,7 @@
 import pygame as pg
 import os
 from random import randint
+import time
 from collections import defaultdict
 from pygame.locals import (RLEACCEL,
                            K_UP,
@@ -22,7 +23,7 @@ from pygame.locals import (RLEACCEL,
 
 SOUNDTRACK = True
 MOUSE_STEERING = False
-LAYOUT = pg.image.load("assets/maps/desert_delta_L.png")
+LAYOUT = pg.image.load("assets/maps/desert_XL.png")
 HEIGHT_TILES = LAYOUT.get_height()
 WIDTH_TILES = LAYOUT.get_width()
 TILE_S = 30
@@ -77,6 +78,9 @@ class GlobalStatistics(Statistics):
         self.rect = self.stat_window.get_rect(topleft=(2, 2))
         self.tick = 0
         self.time = [0, 0, 0]
+        self.elapsed = 1
+        self.start = time.time()
+        self.end = 0
 
     def update_global_stats(self):
         self.stat_window.fill((0, 0, 0))
@@ -85,7 +89,8 @@ class GlobalStatistics(Statistics):
             False, (255, 255, 255), (0, 0, 0)), (0, 0))
         self.stat_window.blit(self.font.render("Gold: " + str(vault.gold) + "g",
                                                False, (255, 255, 255), (0, 0, 0)), (0, 26))
-
+        self.stat_window.blit(self.font.render("TPS: " + str(round(1 / self.elapsed * TICK_RATE, 2)),
+                                               False, (255, 255, 255), (0, 0, 0)), (0, 52))
         self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
 
     def get_time(self):
@@ -93,6 +98,9 @@ class GlobalStatistics(Statistics):
         if self.tick >= TICK_RATE:
             self.tick = 0
             self.time[0] += 1
+            self.end = time.time()
+            self.elapsed = self.end - self.start
+            self.start = time.time()
             if self.time[0] >= 24:
                 self.time[0] = 0
                 self.time[1] += 1
@@ -324,7 +332,7 @@ class Gate(Wall, Road):
             self.orient = "v"
             height = 19
         self.surf = pg.transform.scale(pg.image.load("assets/" + self.orient + "gates/gate.png").convert(),
-                                       (TILE_S, TILE_S*height/15))
+                                       (TILE_S, TILE_S * height / 15))
         self.rect = self.surf.get_rect(bottomright=(TILE_S * (self.pos[0] + 1), TILE_S * (self.pos[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
@@ -450,7 +458,8 @@ def detect_surrounded_tiles(wall_set, surrounded_tiles):
             if bool(set(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
                 if not wall_map[xy[0] + next[0]][xy[1] + next[1]]:
                     start, found, simple = search_for_crossroads(wall_map, (xy[0] + next[0], xy[1] + next[1]), curr,
-                                     direction_to_xy_dict, required, network_set, open_network_set)
+                                                                 direction_to_xy_dict, required, network_set,
+                                                                 open_network_set)
                     if found:
                         return start, True, simple
                 elif next != prev:
@@ -517,7 +526,7 @@ def detect_surrounded_tiles(wall_set, surrounded_tiles):
         network_set = set()
         open_network_set = set()
         start, not_line, simple = search_for_crossroads(wall_map, tuple(wall_set_copy)[0], (0, 0), direction_to_xy_dict,
-                                                       required, network_set, open_network_set)
+                                                        required, network_set, open_network_set)
         # print(start, not_line, simple)
         if not_line:
             if not simple:
@@ -671,10 +680,10 @@ def remove_structure(wall_set, surrounded_tiles):
 
 def fill_snappers_dicts():
     roads_dict, walls_dict, vgates_dict, hgates_dict = {}, {}, {}, {}
-    for snapper_dict, snapper_dir, height in ((roads_dict, "assets/roads", TILE_S),
-                                              (walls_dict, "assets/walls", TILE_S),
-                                              (vgates_dict, "assets/vgates", TILE_S*19/15),
-                                              (hgates_dict, "assets/hgates", TILE_S*20/15)):
+    for snapper_dict, snapper_dir, height in ((walls_dict, "assets/walls", TILE_S),
+                                              (roads_dict, "assets/roads", TILE_S),
+                                              (vgates_dict, "assets/vgates", TILE_S * 19 / 15),
+                                              (hgates_dict, "assets/hgates", TILE_S * 20 / 15)):
         directory = os.listdir(snapper_dir)
         dir_cut = []
         for name in directory:
@@ -837,6 +846,7 @@ if __name__ == "__main__":
         screen.blit(background.surf, background.rect)
 
         global_statistics.get_time()
+
         global_statistics.update_global_stats()
         screen.blit(global_statistics.stat_window, global_statistics.rect)
 
@@ -845,5 +855,6 @@ if __name__ == "__main__":
 
         background.surf.blit(map_surf, (0, 0))
         pg.display.flip()
+
         clock.tick(TICK_RATE)
     pg.quit()
