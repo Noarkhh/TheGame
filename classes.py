@@ -42,16 +42,54 @@ class Entities(pg.sprite.Group):
 
 class Statistics:
     def __init__(self):
+        self.rect = None
         self.font_size = 24
         self.font = pg.font.SysFont('consolas', self.font_size)
         self.stat_window = pg.Surface((self.font_size * 20, self.font_size * 10))
         self.stat_window.fill((0, 0, 0))
+        self.stat_background = pg.Surface((self.font_size * 20, self.font_size * 10))
+        self.stat_background.fill((255, 255, 255))
+        self.stat_height = self.font_size + 4
+        self.screen_part = ""
+        self.curr_coords = []
+
+    def blit_stat(self, stat):
+        stat_surf = self.font.render(stat, False, (255, 255, 255), (0, 0, 0))
+        if self.screen_part == "topleft":
+            stat_rect = stat_surf.get_rect(topleft=self.curr_coords)
+        elif self.screen_part == "topright":
+            stat_rect = stat_surf.get_rect(topright=self.curr_coords)
+        elif self.screen_part == "bottomleft":
+            stat_rect = stat_surf.get_rect(bottomleft=self.curr_coords)
+        elif self.screen_part == "bottomright":
+            stat_rect = stat_surf.get_rect(bottomright=self.curr_coords)
+        else:
+            stat_rect = stat_surf.get_rect(topleft=self.curr_coords)
+
+        self.stat_window.blit(stat_surf, stat_rect)
+        layer = pg.Surface((stat_rect.width + 8, stat_rect.height + 8))
+        layer.fill((0, 0, 0))
+        self.stat_background.blit(layer, (stat_rect.x - 4, stat_rect.y - 4))
+        if self.screen_part in {"topleft", "topright"}:
+            self.curr_coords[1] += self.stat_height
+        else:
+            self.curr_coords[1] -= self.stat_height
+
+    def print_stats(self, gw):
+        self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
+        self.stat_background.set_colorkey((255, 255, 255), RLEACCEL)
+        self.stat_background.set_alpha(100)
+
+        gw.screen.blit(self.stat_background, self.rect)
+        gw.screen.blit(self.stat_window, self.rect)
 
 
 class GlobalStatistics(Statistics):
     def __init__(self):
         super().__init__()
-        self.rect = self.stat_window.get_rect(topleft=(2, 2))
+        self.rect = self.stat_window.get_rect(topleft=(0, 0))
+        self.screen_part = "topleft"
+        self.curr_coords = [4, 4]
         self.tick = 0
         self.time = [0, 0, 0]
         self.elapsed = 1
@@ -60,20 +98,15 @@ class GlobalStatistics(Statistics):
 
     def update_global_stats(self, gw):
         self.stat_window.fill((0, 0, 0))
-        self.stat_window.blit(self.font.render(
-            "Time: " + str(self.time[0]) + ":00, Day " + str(self.time[1] + 1) + ", Week " + str(self.time[2] + 1),
-            False, (255, 255, 255), (0, 0, 0)), (0, 0))
-        self.stat_window.blit(self.font.render("Gold: " + str(gw.vault.gold) + "g",
-                                               False, (255, 255, 255), (0, 0, 0)), (0, 26))
-        self.stat_window.blit(self.font.render("TPS: " + str(round(self.elapsed * gw.TICK_RATE, 2)),
-                                               False, (255, 255, 255), (0, 0, 0)), (0, 52))
-        self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
+        self.stat_background.fill((255, 255, 255))
+        self.curr_coords = [4, 4]
 
-        # layer = pg.Surface((200, 80))
-        # layer.fill((0, 0, 0))
-        # layer.set_alpha(100)
-        # layer.blit(self.stat_window, (0, 0))
-        # self.stat_window = layer
+        super().blit_stat(
+            "Time: " + str(self.time[0]) + ":00, Day " + str(self.time[1] + 1) + ", Week " + str(self.time[2] + 1))
+        super().blit_stat("Gold: " + str(gw.vault.gold) + "g")
+        super().blit_stat("TPS: " + str(round(self.elapsed * gw.TICK_RATE, 2)))
+
+        super().print_stats(gw)
 
     def get_time(self, gw):
         self.tick += 1
@@ -94,29 +127,26 @@ class GlobalStatistics(Statistics):
 class TileStatistics(Statistics):
     def __init__(self, gw):
         super().__init__()
-        self.rect = self.stat_window.get_rect(bottomright=(gw.WINDOW_WIDTH - 2, gw.WINDOW_HEIGHT - 2))
+        self.rect = self.stat_window.get_rect(bottomright=(gw.WINDOW_WIDTH, gw.WINDOW_HEIGHT))
+        self.screen_part = "bottomright"
+        self.curr_coords = [self.stat_window.get_width() - 4, self.stat_window.get_height() - 4]
 
     def update_tile_stats(self, xy, gw):
-        def blit_stat(stat):
-            nonlocal stat_height
-            stat_surf = self.font.render(stat, False, (255, 255, 255), (0, 0, 0))
-            stat_rect = stat_surf.get_rect(bottom=self.stat_window.get_height() - stat_height,
-                                           right=self.stat_window.get_width())
-            self.stat_window.blit(stat_surf, stat_rect)
-            stat_height += self.font_size + 4
-
         self.stat_window.fill((0, 0, 0))
-        stat_height = 4
+        self.stat_background.fill((255, 255, 255))
+        self.curr_coords = [self.stat_window.get_width() - 4, self.stat_window.get_height() - 4]
 
         if isinstance(gw.struct_map[xy[0]][xy[1]], Structure):
-            blit_stat("time left: " + str("{:.2f}".format(gw.struct_map[xy[0]][xy[1]].time_left / gw.TICK_RATE)) + "s")
-            blit_stat("cooldown: " + str(gw.struct_map[xy[0]][xy[1]].cooldown / gw.TICK_RATE) + "s")
-            blit_stat("profit: " + str(gw.struct_map[xy[0]][xy[1]].profit) + "g")
-            blit_stat("inside: " + str(gw.struct_map[xy[0]][xy[1]].inside))
-            blit_stat(str(type(gw.struct_map[xy[0]][xy[1]]))[17:-2])
-        blit_stat(gw.tile_type_map[xy[0]][xy[1]])
-        blit_stat(str(xy))
-        self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
+            super().blit_stat(
+                "time left: " + str("{:.2f}".format(gw.struct_map[xy[0]][xy[1]].time_left / gw.TICK_RATE)) + "s")
+            super().blit_stat("cooldown: " + str(gw.struct_map[xy[0]][xy[1]].cooldown / gw.TICK_RATE) + "s")
+            super().blit_stat("profit: " + str(gw.struct_map[xy[0]][xy[1]].profit) + "g")
+            super().blit_stat("inside: " + str(gw.struct_map[xy[0]][xy[1]].inside))
+            super().blit_stat(str(type(gw.struct_map[xy[0]][xy[1]]))[16:-2])
+        super().blit_stat(gw.tile_type_map[xy[0]][xy[1]])
+        super().blit_stat(str(xy))
+
+        super().print_stats(gw)
 
 
 class Vault:

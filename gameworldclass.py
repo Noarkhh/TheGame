@@ -10,14 +10,14 @@ from pygame.locals import (RLEACCEL,
 
 class GameWorld:
     def __init__(self):
-        self.SOUNDTRACK = True
+        self.SOUNDTRACK = False
         self.MOUSE_STEERING = True
         self.LAYOUT = pg.image.load("assets/maps/desert_delta_L.png")
         self.HEIGHT_TILES = self.LAYOUT.get_height()
         self.WIDTH_TILES = self.LAYOUT.get_width()
         self.WINDOW_HEIGHT = 720
         self.WINDOW_WIDTH = 1080
-        self.WINDOWED = False
+        self.WINDOWED = True
         self.TICK_RATE = 60
         self.TICK = 0
 

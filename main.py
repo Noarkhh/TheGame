@@ -458,10 +458,7 @@ if __name__ == "__main__":
 
         if display_stats:
             global_statistics.update_global_stats(gw)
-            gw.screen.blit(global_statistics.stat_window, global_statistics.rect)
-
             tile_statistics.update_tile_stats(cursor.pos, gw)
-            gw.screen.blit(tile_statistics.stat_window, tile_statistics.rect)
 
         background.surf_rendered.blit(background.surf_raw.subsurface(background.rect), (0, 0))
         pg.display.flip()
