@@ -1,5 +1,8 @@
 import pygame as pg
 import os
+from random import randint
+import time
+from collections import defaultdict
 from pygame.locals import (RLEACCEL,
                            K_UP,
                            K_DOWN,
@@ -12,12 +15,136 @@ from pygame.locals import (RLEACCEL,
                            K_t,
                            K_h,
                            K_r,
-                           K_n)
+                           K_n,
+                           K_x,
+                           K_w,
+                           K_g,
+                           K_q,
+                           K_F3)
 
-HEIGHT_TILES = 12
-WIDTH_TILES = 18
-TILE_SIZE = 60
-TICK_RATE = 20
+SOUNDTRACK = True
+MOUSE_STEERING = True
+LAYOUT = pg.image.load("assets/maps/desert_delta_L.png")
+HEIGHT_TILES = LAYOUT.get_height()
+WIDTH_TILES = LAYOUT.get_width()
+TILE_S = 30
+WIDTH_PIXELS = WIDTH_TILES * TILE_S
+HEIGHT_PIXELS = HEIGHT_TILES * TILE_S
+WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 1080
+WINDOWED = False
+TICK_RATE = 60
+TICK = 0
+
+
+class Background(pg.sprite.Sprite):
+    def __init__(self, map_surf):
+        super().__init__()
+        self.surf = map_surf.copy()
+        self.surf_raw = map_surf.copy()
+        self.surf_rendered = self.surf.subsurface((0, 0, WINDOW_WIDTH, WINDOW_HEIGHT))
+        self.rect = self.surf_rendered.get_rect()
+
+    def move_screen(self):
+        if cursor.rect.right >= self.rect.right <= WIDTH_PIXELS - TILE_S / 2:
+            self.rect.move_ip(TILE_S / 2, 0)
+        if cursor.rect.left <= self.rect.left >= 0 + TILE_S / 2:
+            self.rect.move_ip(-TILE_S / 2, 0)
+        if cursor.rect.bottom >= self.rect.bottom <= HEIGHT_PIXELS - TILE_S / 2:
+            self.rect.move_ip(0, TILE_S / 2)
+        if cursor.rect.top <= self.rect.top >= 0 + TILE_S / 2:
+            self.rect.move_ip(0, -TILE_S / 2)
+        self.surf_rendered = self.surf.subsurface(self.rect)
+
+
+class Entities(pg.sprite.Group):
+    def give_y(self, sprite):
+        return sprite.pos[1]
+
+    def draw(self, background):
+        sprites = self.sprites()
+        for spr in sorted(sprites, key=lambda spr: spr.pos[1]):
+            if spr.rect.colliderect(background.rect):
+                background.surf.blit(spr.surf, spr.rect)
+        self.lostsprites = []
+
+
+class Statistics:
+    def __init__(self):
+        self.font_size = 24
+        self.font = pg.font.SysFont('consolas', self.font_size)
+        self.stat_window = pg.Surface((self.font_size * 20, self.font_size * 10))
+        self.stat_window.fill((0, 0, 0))
+
+
+class GlobalStatistics(Statistics):
+    def __init__(self):
+        super().__init__()
+        self.rect = self.stat_window.get_rect(topleft=(2, 2))
+        self.tick = 0
+        self.time = [0, 0, 0]
+        self.elapsed = 1
+        self.start = time.time()
+        self.end = 0
+
+    def update_global_stats(self):
+        self.stat_window.fill((0, 0, 0))
+        self.stat_window.blit(self.font.render(
+            "Time: " + str(self.time[0]) + ":00, Day " + str(self.time[1] + 1) + ", Week " + str(self.time[2] + 1),
+            False, (255, 255, 255), (0, 0, 0)), (0, 0))
+        self.stat_window.blit(self.font.render("Gold: " + str(vault.gold) + "g",
+                                               False, (255, 255, 255), (0, 0, 0)), (0, 26))
+        self.stat_window.blit(self.font.render("TPS: " + str(round(self.elapsed * TICK_RATE, 2)),
+                                               False, (255, 255, 255), (0, 0, 0)), (0, 52))
+        self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
+
+    def get_time(self):
+        self.tick += 1
+        if self.tick >= TICK_RATE:
+            self.tick = 0
+            self.time[0] += 1
+            self.end = time.time()
+            self.elapsed = self.end - self.start
+            self.start = time.time()
+            if self.time[0] >= 24:
+                self.time[0] = 0
+                self.time[1] += 1
+                if self.time[1] >= 7:
+                    self.time[1] = 0
+                    self.time[2] += 1
+
+
+class TileStatistics(Statistics):
+    def __init__(self):
+        super().__init__()
+        self.rect = self.stat_window.get_rect(bottomright=(WINDOW_WIDTH - 2, WINDOW_HEIGHT - 2))
+
+    def update_tile_stats(self, xy, struct_map, tile_type_map):
+        def blit_stat(stat):
+            nonlocal stat_height
+            stat_surf = self.font.render(stat, False, (255, 255, 255), (0, 0, 0))
+            stat_rect = stat_surf.get_rect(bottom=self.stat_window.get_height() - stat_height,
+                                           right=self.stat_window.get_width())
+            self.stat_window.blit(stat_surf, stat_rect)
+            stat_height += self.font_size + 4
+
+        self.stat_window.fill((0, 0, 0))
+        stat_height = 4
+
+        if isinstance(struct_map[xy[0]][xy[1]], Structure):
+            blit_stat("time left: " + str("{:.2f}".format(struct_map[xy[0]][xy[1]].time_left / TICK_RATE)) + "s")
+            blit_stat("cooldown: " + str(struct_map[xy[0]][xy[1]].cooldown / TICK_RATE) + "s")
+            blit_stat("profit: " + str(struct_map[xy[0]][xy[1]].profit) + "g")
+            blit_stat("inside: " + str(struct_map[xy[0]][xy[1]].inside))
+            blit_stat(str(type(struct_map[xy[0]][xy[1]]))[17:-2])
+        blit_stat(tile_type_map[xy[0]][xy[1]])
+        blit_stat(str(xy))
+        self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
+
+
+class Vault:
+    def __init__(self):
+        self.gold = 100000
 
 
 class Cursor(pg.sprite.Sprite):
@@ -25,42 +152,54 @@ class Cursor(pg.sprite.Sprite):
         super().__init__()
         self.windup = [0 for _ in range(4)]
         self.cooldown = [0 for _ in range(4)]
-        self.surf = pg.image.load("assets/cursor3.png").convert()
+        self.surf = pg.transform.scale(pg.image.load("assets/cursor3.png").convert(), (TILE_S, TILE_S))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
-        self.position = [0, 0]
-        self.holding = None
+        self.pos = [0, 0]
+        self.hold = None
 
-    def update(self, pressed_keys):
-        cooltime = 10
+    def update_arrows(self, pressed_keys):
+        cooltime = 20
         key_list = [True if pressed_keys[key] else False for key in (K_UP, K_DOWN, K_LEFT, K_RIGHT)]
         iter_list = [(key, sign, xy) for key, sign, xy in zip(key_list, (-1, 1, -1, 1), (1, 1, 0, 0))]
         for i, elem in enumerate(iter_list):
             if elem[0]:
                 if self.cooldown[i] <= self.windup[i]:
-                    if self.windup[i] < cooltime: self.windup[i] += 4
-                    self.position[elem[2]] += elem[1]
+                    if self.windup[i] < cooltime - 8:
+                        self.windup[i] += 8
+                    else:
+                        self.windup[i] = cooltime
+                    self.pos[elem[2]] += elem[1]
                     self.cooldown[i] = cooltime
+                    self.windup[i] -= 2
             else:
                 self.windup[i] = 0
                 self.cooldown[i] = 0
-
-        if self.position[0] < 0:
-            self.position[0] = 0
-            bruh_se.play()
-        if self.position[0] > WIDTH_TILES - 1:
-            self.position[0] = WIDTH_TILES - 1
-            bruh_se.play()
-        if self.position[1] < 0:
-            self.position[1] = 0
-            bruh_se.play()
-        if self.position[1] > HEIGHT_TILES - 1:
-            self.position[1] = HEIGHT_TILES - 1
-            bruh_se.play()
+        bruh = False
+        if self.pos[0] < 0:
+            self.pos[0] = 0
+            bruh = True
+        if self.pos[0] > WIDTH_TILES - 1:
+            self.pos[0] = WIDTH_TILES - 1
+            bruh = True
+        if self.pos[1] < 0:
+            self.pos[1] = 0
+            bruh = True
+        if self.pos[1] > HEIGHT_TILES - 1:
+            self.pos[1] = HEIGHT_TILES - 1
+            bruh = True
+        if bruh:
+            speech_channel.play(sounds["Insult" + str(randint(1, 20))])
 
         self.cooldown = [x - 1 if x > 0 else 0 for x in self.cooldown]
-        self.rect.x = self.position[0] * TILE_SIZE
-        self.rect.y = self.position[1] * TILE_SIZE
+        self.rect.x = self.pos[0] * TILE_S
+        self.rect.y = self.pos[1] * TILE_S
+
+    def update_mouse(self, xy, bg):
+        self.pos[0] = (xy[0] + bg.rect.x) // TILE_S
+        self.pos[1] = (xy[1] + bg.rect.y) // TILE_S
+        self.rect.x = self.pos[0] * TILE_S
+        self.rect.y = self.pos[1] * TILE_S
 
 
 class Ghost(pg.sprite.Sprite):
@@ -69,54 +208,95 @@ class Ghost(pg.sprite.Sprite):
         self.surf = surf
         self.surf.set_alpha(128)
         self.position = xy
-        self.rect = surf.get_rect(top=(TILE_SIZE * xy[1]), left=(TILE_SIZE * xy[0]))
+        self.rect = surf.get_rect(bottomright=(TILE_S * (xy[0] + 1), TILE_S * (xy[1] + 1)))
 
-    def update(self, xy):
+    def update(self, xy, surf):
         self.position = xy
-        self.rect.x = xy[0] * TILE_SIZE
-        self.rect.y = xy[1] * TILE_SIZE
+        self.rect.right = TILE_S * (xy[0] + 1)
+        self.rect.bottom = TILE_S * (xy[1] + 1)
+        self.surf = surf
+        self.surf.set_alpha(128)
+
+
+class Tile(pg.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
 
 
 class Structure(pg.sprite.Sprite):
     def __init__(self, xy):
         super().__init__()
-        self.surf = pg.Surface((60, 60))
+        self.surf = pg.Surface((TILE_S, TILE_S))
         self.surf.fill((0, 0, 0))
-        self.position = xy
-        self.rect = self.surf.get_rect(top=(TILE_SIZE * xy[1]), left=(TILE_SIZE * xy[0]))
+        self.pos = xy.copy()
+        self.rect = self.surf.get_rect(bottomright=(TILE_S * (xy[0] + 1), TILE_S * (xy[1] + 1)))
+        self.profit = 0
+        self.cooldown = TICK_RATE * 24
+        self.time_left = self.cooldown
+        self.cost = 0
+        self.inside = False
+
+    def get_profit(self):
+        self.time_left -= 1
+        if self.time_left == 0:
+            self.time_left = self.cooldown
+            vault.gold += self.profit
+
+
+class Tree(Structure):
+    def __init__(self, xy):
+        super().__init__(xy)
+        self.surf = pg.transform.scale(pg.image.load("assets/tree.png").convert(), (TILE_S, TILE_S))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+
+class Cactus(Structure):
+    def __init__(self, xy):
+        super().__init__(xy)
+        self.surf = pg.transform.scale(pg.image.load("assets/cactus.png").convert(), (TILE_S, TILE_S))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+
+class Pyramid(Structure):
+    def __init__(self, xy):
+        super().__init__(xy)
+        self.surf = pg.transform.scale(pg.image.load("assets/obama.png").convert(),
+                                       (TILE_S*4, TILE_S*4))
+        self.rect = self.surf.get_rect(bottomright=(TILE_S * (xy[0] + 1), TILE_S * (xy[1] + 1)))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
 class House(Structure):
     def __init__(self, xy):
         super().__init__(xy)
-        self.surf = pg.image.load("assets/hut1.png").convert()
+        self.surf = pg.transform.scale(pg.image.load("assets/house" + str(randint(1, 2)) + ".png").convert(),
+                                       (TILE_S, TILE_S*21/15))
+        self.rect = self.surf.get_rect(bottomright=(TILE_S * (xy[0] + 1), TILE_S * (xy[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.taxed = False
-        self.debt = 10
-
-    def tax(self):
-        pg.draw.circle(self.surf, (255, max(355 - 10 * self.debt, 0), 0), (30, 30), self.debt)
-        self.debt += 5
-        self.taxed = True
+        self.cooldown = TICK_RATE * 6
+        self.time_left = self.cooldown
+        self.profit = 10
+        self.cost = 50
 
 
 class Tower(Structure):
     def __init__(self, xy):
         super().__init__(xy)
-        self.surf = pg.image.load("assets/tower.png").convert()
-        self.surf.set_colorkey((0, 0, 0), RLEACCEL)
+        self.surf = pg.transform.scale(pg.image.load("assets/big_tower.png").convert(), (TILE_S, 2 * TILE_S))
+        self.rect = self.surf.get_rect(bottomright=(TILE_S * (xy[0] + 1), TILE_S * (xy[1] + 1)))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
-class Road(Structure):
+class Snapper(Structure):
     def __init__(self, xy):
         super().__init__(xy)
         self.neighbours = set()
-        self.surf = pg.transform.scale(pg.image.load("assets/roads/road0.png").convert(), (60, 60))
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
-    def update_edges(self, direction, roads_list):
-        self.neighbours.add(direction)
-        # print(self.neighbours)
+    def update_edges(self, direction, add):
+        if add:
+            self.neighbours.update(direction)
+        elif direction in self.neighbours:
+            self.neighbours.remove(direction)
 
         def assign_value(direct):
             if direct == 'N': return 0
@@ -125,111 +305,600 @@ class Road(Structure):
             if direct == 'W': return 3
 
         directions = tuple(sorted(self.neighbours, key=assign_value))
+        self.surf = self.snapper_dict[directions]
 
-        self.surf = roads_list[directions]
+
+class Road(Snapper):
+    def __init__(self, xy):
+        super().__init__(xy)
+        self.snapper_dict = roads_dict
+        # self.surf = pg.transform.scale(pg.image.load("assets/roads/road.png").convert(), (TILE_S, TILE_S))
+        self.surf = self.snapper_dict[()].copy()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.snapsto = {snap: "roads" for snap in ('N', 'E', 'S', 'W')}
+        self.cooldown = TICK_RATE * 48
+        self.time_left = self.cooldown
+        self.profit = -3
+        self.cost = 10
 
 
-def fill_roads_list():
-    directory = os.listdir("assets/roads")
-    dir_cut = []
-    directions_list = [('0',), ('N',), ('E',), ('S',), ('W',), ('N', 'E'), ('E', 'S'), ('S', 'W'), ('N', 'W'),
-                       ('N', 'S'), ('E', 'W'), ('N', 'E', 'S'), ('E', 'S', 'W'),
-                       ('N', 'S', 'W'), ('N', 'E', 'W'), ('N', 'E', 'S', 'W')]
-    roads_list = {directions_list[i]: pg.Surface((60, 60)) for i in range(16)}
+class Wall(Snapper):
+    def __init__(self, xy):
+        super().__init__(xy)
+        self.snapper_dict = walls_dict
+        self.surf = self.snapper_dict[()].copy()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.snapsto = {snap: "walls" for snap in ('N', 'E', 'S', 'W')}
+        self.cooldown = TICK_RATE * 48
+        self.time_left = self.cooldown
+        self.profit = -3
+        self.cost = 20
 
-    for name in directory:
-        dir_cut.append(tuple(name[4:-4]))
 
-    for file, name in zip(directory, dir_cut):
-        roads_list[name] = pg.transform.scale(pg.image.load("assets/roads/" + file).convert(), (60, 60))
-        roads_list[name].set_colorkey((255, 255, 255), RLEACCEL)
+class Gate(Wall, Road):
+    def __init__(self, xy, orientation="v"):
+        super().__init__(xy)
+        self.orient = orientation
+        if orientation == "v":
+            self.snapper_dict = vgates_dict
+            self.snapsto = {'N': "roads", 'E': "walls", 'S': "roads", 'W': "walls"}
+        else:
+            self.snapper_dict = hgates_dict
+            self.snapsto = {'N': "walls", 'E': "roads", 'S': "walls", 'W': "roads"}
+        self.surf = self.snapper_dict[()].copy()
+        self.rect = self.surf.get_rect(bottomright=(TILE_S * (xy[0] + 1), TILE_S * (xy[1] + 1)))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
-    return roads_list
+        self.cooldown = TICK_RATE * 24
+        self.time_left = self.cooldown
+        self.profit = -15
+        self.cost = 150
+
+    def rotate(self):
+        if self.orient == "v":
+            self.orient = "h"
+            self.snapsto = {'N': "walls", 'E': "roads", 'S': "walls", 'W': "roads"}
+        else:
+            self.orient = "v"
+            self.snapsto = {'N': "roads", 'E': "walls", 'S': "roads", 'W': "walls"}
+        self.surf = pg.transform.scale(pg.image.load("assets/" + self.orient + "gates/gate.png").convert(),
+                                       (TILE_S, TILE_S * 20 / 15))
+        self.rect = self.surf.get_rect(bottomright=(TILE_S * (self.pos[0] + 1), TILE_S * (self.pos[1] + 1)))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+
+# def detect_wall_loops(xy):
+#     def find_connected_nodes(A, node_xy, direction_to_xy_dict, required, current_walls, origin, i):
+#         # print(current_walls, node_xy)
+#         current_walls.append(node_xy)
+#         if len(struct_map[node_xy[0]][node_xy[1]].neighbours) >= 3:
+#             return current_walls, node_xy, True
+#
+#         if len(struct_map[node_xy[0]][node_xy[1]].neighbours) <= 1 or A[node_xy[0]][node_xy[1]] == False:
+#             return 0, 0, False
+#         A[node_xy[0]][node_xy[1]] = False
+#
+#         for direction in struct_map[node_xy[0]][node_xy[1]].neighbours:
+#             next = direction_to_xy_dict[direction]
+#             if A[node_xy[0] + next[0]][node_xy[1] + next[1]] and \
+#                     bool(set(struct_map[node_xy[0] + next[0]][node_xy[1] + next[1]].snapsto.values()) & required) and \
+#                     ((node_xy[0] + next[0], node_xy[1] + next[1]) != origin or i <= 0):
+#                 return find_connected_nodes(A, (node_xy[0] + next[0], node_xy[1] + next[1]), direction_to_xy_dict,
+#                                      required, current_walls, origin, i-1)
+#         return 0, 0, False
+#
+#     def DFScycle(graph, v, e, visited_v, visited_e, cycle):
+#         global cycle_start
+#         global flag
+#         flag = True
+#         cycle_start = None
+#         visited_v.add(v)
+#         if e is not None:
+#             visited_e.add(e)
+#
+#         for neighbour_v, neighbour_e in graph[v]:
+#             if neighbour_e not in visited_e:
+#                 if neighbour_v not in visited_v:
+#                     if DFScycle(graph, neighbour_v, neighbour_e, visited_v, visited_e, cycle):
+#                         if flag:
+#                             cycle.append(neighbour_e)
+#                         if v == cycle_start:
+#                             flag = False
+#                         return True
+#                 else:
+#                     cycle_start = neighbour_v
+#                     cycle.append(neighbour_e)
+#                     visited_e.add(neighbour_e)
+#                     return True
+#         return False
+#
+#     A = [[True if isinstance(y, Wall) else 0 for y in x] for x in struct_map]
+#     B = [[1 if isinstance(y, Wall) and len(y.neighbours) >= 3 else 0 for y in x] for x in struct_map]
+#     walls_in_edge = []
+#     node_list = []
+#     for xi, x in enumerate(B):
+#         for yj, y in enumerate(x):
+#             if y == 1:
+#                 node_list.append((xi, yj))
+#
+#     edge_dict = {}
+#     edge_list = []
+#     graph = defaultdict(list)
+#     required = set(struct_map[xy[0]][xy[1]].snapsto.values())
+#     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
+#
+#     i = 0
+#     for node in node_list:
+#         for direction in struct_map[node[0]][node[1]].neighbours:
+#             current_walls = walls_in_edge.copy()
+#             current_walls.append(node)
+#             edge, second_node, found = (find_connected_nodes(A, (node[0] + direction_to_xy_dict[direction][0],
+#                                      node[1] + direction_to_xy_dict[direction][1]),
+#                                  direction_to_xy_dict, required, current_walls, node, 2))
+#
+#             if found:
+#                 if node[0] > second_node[0]:
+#                     node_pair = (node, second_node)
+#                 elif node[0] < second_node[0]:
+#                     node_pair = (second_node, node)
+#                 else:
+#                     if node[1] > second_node[1]:
+#                         node_pair = (node, second_node)
+#                     else:
+#                         node_pair = (second_node, node)
+#                 if node_pair != tuple(edge):
+#                     edge_dict[(node_pair, i)] = edge
+#                     graph[node].append((second_node, (node_pair, i)))
+#                     graph[second_node].append((node, (node_pair, i)))
+#
+#                     edge_list.append([(node_pair, i), "white"])
+#                     i += 1
+#
+#     visited_e = set()
+#     all_cycles = list()
+#     for node in node_list:
+#         # for _ in range(len(struct_map[node[0]][node[1]].neighbours)):
+#         visited_v = set()
+#         visited_e = set()
+#         cycle = list()
+#         DFScycle(graph, node, None, visited_v, visited_e, cycle)
+#         if cycle not in all_cycles:
+#             all_cycles.append(cycle)
+#
+#     for cycle in all_cycles:
+#         print(cycle)
+#     return graph
+
+
+def detect_surrounded_tiles(wall_set, surrounded_tiles):
+    def search_for_crossroads(wall_map, xy, prev, direction_to_xy_dict, required, network_set, open_network_set):
+        wall_map[xy[0]][xy[1]] = True
+        network_set.add(xy)
+        open_network_set.add(xy)
+        if len(struct_map[xy[0]][xy[1]].neighbours) >= 3:
+            network_set.clear()
+            open_network_set.clear()
+            return xy, True, False
+        if len(struct_map[xy[0]][xy[1]].neighbours) == 1:
+            return None, False, False
+
+        for direction in struct_map[xy[0]][xy[1]].neighbours:
+            next = direction_to_xy_dict[direction]
+            curr = tuple([a * -1 for a in next])
+            if isinstance(struct_map[xy[0] + next[0]][xy[1] + next[1]], Wall) and \
+                    bool(set(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
+                if not wall_map[xy[0] + next[0]][xy[1] + next[1]]:
+                    start, found, simple = search_for_crossroads(wall_map, (xy[0] + next[0], xy[1] + next[1]), curr,
+                                                                 direction_to_xy_dict, required, network_set,
+                                                                 open_network_set)
+                    if found:
+                        return start, True, simple
+                elif next != prev:
+                    return (xy[0] + next[0], xy[1] + next[1]), True, True
+        return None, False, False
+
+    def get_wall_network(wall_map, xy, direction_to_xy_dict, required, network_set, open_network_set):
+        wall_map[xy[0]][xy[1]] = True
+        network_set.add(xy)
+        open_network_set.add(xy)
+        # print(xy, network_set)
+
+        if len(struct_map[xy[0]][xy[1]].neighbours) == 1:
+            network_set.remove(xy)
+            return True
+
+        for direction in struct_map[xy[0]][xy[1]].neighbours:
+            next = direction_to_xy_dict[direction]
+            # curr = tuple([a * -1 for a in next])
+            # print(xy, next, prev)
+            if bool(set(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
+                if not wall_map[xy[0] + next[0]][xy[1] + next[1]]:
+                    if get_wall_network(wall_map, (xy[0] + next[0], xy[1] + next[1]),
+                                        direction_to_xy_dict, required, network_set, open_network_set):
+                        if len(struct_map[xy[0]][xy[1]].neighbours) <= 2:
+                            network_set.remove(xy)
+                            # print("rm: ", xy)
+                            return True
+        return False
+
+    def get_extremes(network_set):
+        # print(network_set)
+        bottom_top_dict = defaultdict(list)
+        right_left_dict = defaultdict(list)
+        for elem in network_set:
+            bottom_top_dict[elem[0]].append(elem)
+            right_left_dict[elem[1]].append(elem)
+
+        for curr_dict, k in ((bottom_top_dict, 1), (right_left_dict, 0)):
+            for stripe, cands in curr_dict.items():
+                max_y = max(cands, key=lambda xy: xy[k])
+                min_y = min(cands, key=lambda xy: xy[k])
+                curr_dict[stripe] = [max_y, min_y]
+
+        return bottom_top_dict, right_left_dict
+
+    def mark_safe_stripes(bottom_top_dict, right_left_dict, surrounded_tiles):
+        for x, stripe in bottom_top_dict.items():
+            for y in range(stripe[1][1], stripe[0][1] + 1):
+                surrounded_tiles[x][y] += 1
+
+        for y, stripe in right_left_dict.items():
+            for x in range(stripe[1][0], stripe[0][0] + 1):
+                surrounded_tiles[x][y] += 1
+        return
+
+    required = {"walls"}
+    direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
+    wall_map = [[False for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+    surrounded_tiles[0:-1] = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+    wall_set_copy = wall_set.copy()
+
+    while wall_set_copy:
+        network_set = set()
+        open_network_set = set()
+        start, not_line, simple = search_for_crossroads(wall_map, tuple(wall_set_copy)[0], (0, 0), direction_to_xy_dict,
+                                                        required, network_set, open_network_set)
+        # print(start, not_line, simple)
+        if not_line:
+            if not simple:
+                wall_map = [[False for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+                get_wall_network(wall_map, tuple(start), direction_to_xy_dict, required, network_set, open_network_set)
+            bottom_top_dict, right_left_dict = get_extremes(network_set)
+            mark_safe_stripes(bottom_top_dict, right_left_dict, surrounded_tiles)
+        wall_set_copy -= open_network_set
+
+    return
+
+
+def count_road_network(xy):
+    A = [[True for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+    count = 0
+    direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
+    required = set(struct_map[xy[0]][xy[1]].snapsto.values())
+
+    def _count_road_network(A, xy, direction_to_xy_dict, required):
+        nonlocal count
+        count += 1
+        A[xy[0]][xy[1]] = False
+        for direction in struct_map[xy[0]][xy[1]].neighbours:
+            next = direction_to_xy_dict[direction]
+            if A[xy[0] + next[0]][xy[1] + next[1]] and \
+                    bool(set(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
+                _count_road_network(A, [xy[0] + next[0], xy[1] + next[1]], direction_to_xy_dict, required)
+
+    _count_road_network(A, xy, direction_to_xy_dict, required)
+    return count
+
+
+def pos_oob(x, y):
+    if x < 0: return True
+    if x > WIDTH_TILES - 1: return True
+    if y < 0: return True
+    if y > HEIGHT_TILES - 1: return True
+    return False
+
+
+def place_structure(prev_pos, wall_set, surrounded_tiles, place_hold):
+    def gate_placement_logic():
+        if (isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall) or
+            isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Road)) and \
+                not isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Gate):
+            new_friends = set()
+
+            for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
+                                                           (0, -1, 0, 1), (1, 0, -1, 0)):
+                if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
+                        isinstance(struct_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper) and \
+                        direction in struct_map[cursor.pos[0] + x][cursor.pos[1] + y].neighbours:
+                    if cursor.hold.snapsto[direction_rev] != \
+                            struct_map[cursor.pos[0] + x][cursor.pos[1] + y].snapsto[direction]:
+                        return False, None
+                    else:
+                        new_friends.add(direction_rev)
+
+            return True, new_friends
+        else:
+            return False, None
+
+    if isinstance(cursor.hold, Structure):
+        built, snapped = False, False
+        if tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea" or isinstance(cursor.hold, Road):
+            if cursor.hold.cost <= vault.gold:
+                if not isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Structure):
+
+                    if isinstance(cursor.hold, Gate):
+                        new_struct = type(cursor.hold)(cursor.pos, cursor.hold.orient)
+                    else:
+                        new_struct = type(cursor.hold)(cursor.pos)
+                    # structs_group_dict[type(cursor.hold)].add(new_struct)
+                    structs.add(new_struct)
+                    entities.add(new_struct)
+                    struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
+                    built = True
+
+                elif isinstance(cursor.hold, Gate) and not place_hold:
+                    passed, new_friends = gate_placement_logic()
+                    if passed:
+                        new_struct = type(cursor.hold)(cursor.pos, cursor.hold.orient)
+                        # structs_group_dict[type(cursor.hold)].add(new_struct)
+                        structs.add(new_struct)
+                        entities.add(new_struct)
+                        struct_map[cursor.pos[0]][cursor.pos[1]].kill()
+                        struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
+                        struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(tuple(new_friends), True)
+                        built = True
+            elif not place_hold:
+                speech_channel.play(sounds["Resource_Need" + str(randint(17, 19))])
+
+        change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
+        pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
+
+        if isinstance(cursor.hold, Snapper) and change in pos_change_dict.keys() and place_hold and \
+                isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper) and \
+                isinstance(struct_map[prev_pos[0]][prev_pos[1]], Snapper):
+            if struct_map[cursor.pos[0]][cursor.pos[1]].snapsto[pos_change_dict[change][0]] == \
+                    struct_map[prev_pos[0]][prev_pos[1]].snapsto[pos_change_dict[change][1]]:
+                struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
+                struct_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
+                snapped = True
+
+        if built or snapped:
+            sounds["drawbridge_control"].play()
+        if built:
+            vault.gold -= new_struct.cost
+            if isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall):
+                wall_set.add(tuple(cursor.pos))
+        if snapped and not built:
+            detect_surrounded_tiles(wall_set, surrounded_tiles)
+
+        if not snapped and not built and not place_hold:
+            if not isinstance(cursor.hold, Snapper) or \
+                    not isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper):
+                speech_channel.play(sounds["Placement_Warning16"])
+            elif not bool(set(cursor.hold.snapsto.values()) &
+                          set(struct_map[cursor.pos[0]][cursor.pos[1]].snapsto.values())):
+                speech_channel.play(sounds["Placement_Warning16"])
+    return
+
+
+def remove_structure(wall_set, surrounded_tiles, remove_hold):
+    if isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Structure):
+        if not remove_hold:
+            pg.mixer.find_channel(True).play(sounds["buildingwreck_01"])
+        if isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Snapper):
+            for direction, x, y in zip(('N', 'E', 'S', 'W'), (0, -1, 0, 1), (1, 0, -1, 0)):
+                if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
+                        isinstance(struct_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper) and \
+                        (type(struct_map[cursor.pos[0] + x][cursor.pos[1] + y]) ==
+                         type(struct_map[cursor.pos[0]][cursor.pos[1]]) or
+                         isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Gate)):
+                    struct_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, False)
+
+        if isinstance(struct_map[cursor.pos[0]][cursor.pos[1]], Wall):
+            wall_set.remove(tuple(cursor.pos))
+            detect_surrounded_tiles(wall_set, surrounded_tiles)
+        removed = True
+
+        struct_map[cursor.pos[0]][cursor.pos[1]].kill()
+        struct_map[cursor.pos[0]][cursor.pos[1]] = 0
+    else:
+        removed = False
+    return removed
+
+
+def fill_snappers_dicts():
+    roads_dict, walls_dict, vgates_dict, hgates_dict = {}, {}, {}, {}
+    for snapper_dict, snapper_dir, height in ((walls_dict, "assets/walls", TILE_S),
+                                              (roads_dict, "assets/croads", TILE_S),
+                                              (vgates_dict, "assets/vgates", TILE_S * 20 / 15),
+                                              (hgates_dict, "assets/hgates", TILE_S * 20 / 15)):
+        directory = os.listdir(snapper_dir)
+        dir_cut = []
+        for name in directory:
+            dir_cut.append(tuple(name[4:-4]))
+
+        for file, name in zip(directory, dir_cut):
+            snapper_dict[name] = pg.transform.scale(pg.image.load(snapper_dir + "/" + file).convert(), (TILE_S, height))
+            snapper_dict[name].set_colorkey((255, 255, 255), RLEACCEL)
+    return roads_dict, walls_dict, vgates_dict, hgates_dict
+
+
+def load_map(struct_map):
+    color_to_type = {(0, 255, 0, 255): "grassland", (0, 0, 255, 255): "sea", (255, 255, 0, 255): "desert"}
+    tile_dict = {name: pg.transform.scale(pg.image.load("assets/tiles/" + name + "_tile.png").convert(),
+                                          (TILE_S, TILE_S)) for name in color_to_type.values()}
+
+    background = pg.Surface((WIDTH_TILES * TILE_S, HEIGHT_TILES * TILE_S))
+    tile_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+
+    for x in range(WIDTH_TILES):
+        for y in range(HEIGHT_TILES):
+            tile_color = tuple(LAYOUT.get_at((x, y)))
+            background.blit(tile_dict[color_to_type[tile_color]], (x * TILE_S, y * TILE_S))
+            tile_map[x][y] = color_to_type[tile_color]
+            # if tile_map[x][y] == "grassland" and randint(1, 16) == 1:
+            #     struct_map[x][y] = Tree([x, y])
+            #     structs.add(struct_map[x][y])
+            #     entities.add(struct_map[x][y])
+            # elif tile_map[x][y] == "desert" and randint(1, 25) == 1:
+            #     struct_map[x][y] = Cactus([x, y])
+            #     structs.add(struct_map[x][y])
+            #     entities.add(struct_map[x][y])
+
+    return background, tile_map
+
+
+def load_sounds():
+    fx_dir = os.listdir("assets/fx")
+    soundtrack_dir = os.listdir("assets/soundtrack")
+    sounds = {file[:-4]: pg.mixer.Sound("assets/fx/" + file) for file in fx_dir}
+    if SOUNDTRACK:
+        tracks = [pg.mixer.Sound("assets/soundtrack/" + file) for file in soundtrack_dir]
+    else:
+        tracks = []
+    for track in tracks:
+        track.set_volume(0.4)
+    for sound in sounds.values():
+        sound.set_volume(0.7)
+
+    return sounds, tracks
+
+
+def play_soundtrack():
+    if not soundtrack_channel.get_busy():
+        soundtrack_channel.play(tracks[randint(0, 13)])
 
 
 if __name__ == "__main__":
+    surrounded_tiles = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+
     pg.init()
     pg.mixer.init()
-    boom_se = pg.mixer.Sound("assets/boom sound effect.ogg")
-    bruh_se = pg.mixer.Sound("assets/bruh sound effect.ogg")
-    violin_se = pg.mixer.Sound("assets/violin screech sound effect.ogg")
+    sounds, tracks = load_sounds()
+    soundtrack_channel = pg.mixer.Channel(5)
+    speech_channel = pg.mixer.Channel(3)
+    # fx_channel = pg.mixer.Channel(1)
 
-    screen = pg.display.set_mode([1080, 720])
+    entities = Entities()
+    structs = pg.sprite.Group()
+
+    if WINDOWED:
+        screen = pg.display.set_mode([WINDOW_WIDTH, WINDOW_HEIGHT])
+    else:
+        screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
+        WINDOW_WIDTH, WINDOW_HEIGHT = pg.display.get_surface().get_size()
     cursor = Cursor()
-    game_board = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
+    tile_statistics = TileStatistics()
+    global_statistics = GlobalStatistics()
+    vault = Vault()
+    struct_map = [[0 for _ in range(HEIGHT_TILES)] for _ in range(WIDTH_TILES)]
 
+    roads_dict, walls_dict, vgates_dict, hgates_dict = fill_snappers_dicts()
+    prev_pos = (0, 0)
+    map_surf, tile_type_map = load_map(struct_map)
 
-    # print(directions_list)
-    roads_list = fill_roads_list()
+    background = Background(map_surf)
 
-    background = pg.image.load("assets/background.png").convert()
-    houses = pg.sprite.Group()
-    towers = pg.sprite.Group()
-    roads = pg.sprite.Group()
-    structures = pg.sprite.Group()
-    all_sprites = pg.sprite.Group()
-    all_sprites.add(cursor)
+    pg.display.set_caption("Twierdza: Zawodzie")
+    pg.display.set_icon(pg.image.load("assets/icon.png").convert())
 
     clock = pg.time.Clock()
-    key_structure_dict = {K_h: House, K_t: Tower, K_r: Road}
-    structure_group_dict = {House: houses, Tower: towers, Road: roads}
-    # i = 0
+    key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid}
+    wall_set = set()
+    place_hold, remove_hold = False, False
+    display_stats = True
+
+    speech_channel.play(sounds["General_Startgame"])
     running = True
     # ------ MAIN LOOP -------
     while running:
 
+        pressed_keys = pg.key.get_pressed()
         # checking events
+        if MOUSE_STEERING:
+            cursor.update_mouse(pg.mouse.get_pos(), background)
+        else:
+            cursor.update_arrows(pressed_keys)
+
         for event in pg.event.get():
             if event.type == QUIT:
                 running = False
             if event.type == KEYDOWN:
 
                 if event.key in key_structure_dict:  # picking up a chosen structure
-                    cursor.holding = key_structure_dict[event.key]([0, 0])
-                    structure_ghost = Ghost(cursor.position, cursor.holding.surf)
-                    violin_se.play()
-                if event.key == K_n:
-                    cursor.holding = None
-                if event.key == K_SPACE:  # placing down held structure
-                    if isinstance(cursor.holding, Structure):
-                        if game_board[cursor.position[0]][cursor.position[1]] not in structures:
-                            new_structure = type(cursor.holding)(cursor.position)
-                            structure_group_dict[type(cursor.holding)].add(new_structure)
-                            structures.add(new_structure)
-                            all_sprites.add(new_structure)
-                            game_board[new_structure.position[0]][new_structure.position[1]] = new_structure
-                            boom_se.play()
+                    cursor.hold = key_structure_dict[event.key]([0, 0])
+                    structure_ghost = Ghost(cursor.pos, cursor.hold.surf)
+                    sounds["menusl_" + str(randint(1, 3))].play()
 
-                            if isinstance(new_structure, Road):
-                                for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
-                                                          (0, -1, 0, 1), (1, 0, -1, 0)):
-                                    if isinstance(game_board[cursor.position[0] + x][cursor.position[1] + y], Road):
-                                        game_board[cursor.position[0] + x][cursor.position[1] + y].\
-                                                   update_edges(direction, roads_list)
-                                        new_structure.update_edges(direction_rev, roads_list)
-                            else:
-                                cursor.holding = None
-                        else:
-                            bruh_se.play()
+                if event.key == K_n:
+                    cursor.hold = None
 
                 if event.key == K_ESCAPE:
                     running = False
 
-        pressed_keys = pg.key.get_pressed()
+                if event.key == K_q and isinstance(cursor.hold, Gate):
+                    cursor.hold.rotate()
 
-        cursor.update(pressed_keys)
-        screen.blit(background, (0, 0))
-        for entity in structures:
-            screen.blit(entity.surf, entity.rect)
+                if event.key == pg.K_c and isinstance((struct_map[cursor.pos[0]][cursor.pos[1]]), Snapper):
+                    print(count_road_network(cursor.pos))
 
-        if cursor.holding is not None:
-            structure_ghost.update(cursor.position)
-            screen.blit(structure_ghost.surf, structure_ghost.rect)
-        screen.blit(cursor.surf, cursor.rect)
+                if event.key == pg.K_j and isinstance((struct_map[cursor.pos[0]][cursor.pos[1]]), Wall):
+                    for x in surrounded_tiles:
+                        print(x)
 
-        # screen.blit(roads_list[directions_list[i]], (180, 180))
-        # i += 1
+                if event.key == K_F3:
+                    display_stats = not display_stats
 
+        if pressed_keys[K_SPACE] or pg.mouse.get_pressed(num_buttons=3)[0]:  # placing down held structure
+            place_structure(prev_pos, wall_set, surrounded_tiles, place_hold)
+            place_hold = True
+        else:
+            place_hold = False
+
+        if pressed_keys[K_x]:  # removing a structure
+            if remove_structure(wall_set, surrounded_tiles, remove_hold):
+                remove_hold = True
+        else:
+            remove_hold = False
+
+        prev_pos = tuple(cursor.pos)
+        background.move_screen()
+
+        for struct in structs:
+            struct.get_profit()
+            if surrounded_tiles[struct.pos[0]][struct.pos[1]] == 2:
+                struct.inside = True
+            else:
+                struct.inside = False
+
+        if vault.gold < 0:
+            running = False
+
+        entities.draw(background)
+
+        if cursor.hold is not None:
+            structure_ghost.update(cursor.pos, cursor.hold.surf)
+            background.surf.blit(structure_ghost.surf, structure_ghost.rect)
+
+        background.surf.blit(cursor.surf, cursor.rect)
+
+        if SOUNDTRACK:
+            play_soundtrack()
+        if randint(1, 200000) == 1: sounds["Random_Events13"].play()
+
+        screen.blit(background.surf_rendered, (0, 0))
+
+        global_statistics.get_time()
+
+        if display_stats:
+            global_statistics.update_global_stats()
+            screen.blit(global_statistics.stat_window, global_statistics.rect)
+
+            tile_statistics.update_tile_stats(cursor.pos, struct_map, tile_type_map)
+            screen.blit(tile_statistics.stat_window, tile_statistics.rect)
+
+        background.surf_rendered.blit(background.surf_raw.subsurface(background.rect), (0, 0))
         pg.display.flip()
+
         clock.tick(TICK_RATE)
     pg.quit()
