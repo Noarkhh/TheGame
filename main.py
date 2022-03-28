@@ -32,7 +32,7 @@ WIDTH_PIXELS = WIDTH_TILES * TILE_S
 HEIGHT_PIXELS = HEIGHT_TILES * TILE_S
 WINDOW_HEIGHT = 720
 WINDOW_WIDTH = 1080
-WINDOWED = True
+WINDOWED = False
 TICK_RATE = 60
 TICK = 0
 
@@ -243,11 +243,34 @@ class Structure(pg.sprite.Sprite):
             vault.gold += self.profit
 
 
+class Tree(Structure):
+    def __init__(self, xy):
+        super().__init__(xy)
+        self.surf = pg.transform.scale(pg.image.load("assets/tree.png").convert(), (TILE_S, TILE_S))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+
+class Cactus(Structure):
+    def __init__(self, xy):
+        super().__init__(xy)
+        self.surf = pg.transform.scale(pg.image.load("assets/cactus.png").convert(), (TILE_S, TILE_S))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+
+class Pyramid(Structure):
+    def __init__(self, xy):
+        super().__init__(xy)
+        self.surf = pg.transform.scale(pg.image.load("assets/obama.png").convert(),
+                                       (TILE_S*4, TILE_S*4))
+        self.rect = self.surf.get_rect(bottomright=(TILE_S * (xy[0] + 1), TILE_S * (xy[1] + 1)))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+
 class House(Structure):
     def __init__(self, xy):
         super().__init__(xy)
         self.surf = pg.transform.scale(pg.image.load("assets/house" + str(randint(1, 2)) + ".png").convert(),
-                                       (TILE_S, TILE_S*19/15))
+                                       (TILE_S, TILE_S*21/15))
         self.rect = self.surf.get_rect(bottomright=(TILE_S * (xy[0] + 1), TILE_S * (xy[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.cooldown = TICK_RATE * 6
@@ -335,13 +358,11 @@ class Gate(Wall, Road):
         if self.orient == "v":
             self.orient = "h"
             self.snapsto = {'N': "walls", 'E': "roads", 'S': "walls", 'W': "roads"}
-            height = 20
         else:
             self.orient = "v"
             self.snapsto = {'N': "roads", 'E': "walls", 'S': "roads", 'W': "walls"}
-            height = 19
         self.surf = pg.transform.scale(pg.image.load("assets/" + self.orient + "gates/gate.png").convert(),
-                                       (TILE_S, TILE_S * height / 15))
+                                       (TILE_S, TILE_S * 20 / 15))
         self.rect = self.surf.get_rect(bottomright=(TILE_S * (self.pos[0] + 1), TILE_S * (self.pos[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
@@ -464,7 +485,8 @@ def detect_surrounded_tiles(wall_set, surrounded_tiles):
         for direction in struct_map[xy[0]][xy[1]].neighbours:
             next = direction_to_xy_dict[direction]
             curr = tuple([a * -1 for a in next])
-            if bool(set(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
+            if isinstance(struct_map[xy[0] + next[0]][xy[1] + next[1]], Wall) and \
+                    bool(set(struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
                 if not wall_map[xy[0] + next[0]][xy[1] + next[1]]:
                     start, found, simple = search_for_crossroads(wall_map, (xy[0] + next[0], xy[1] + next[1]), curr,
                                                                  direction_to_xy_dict, required, network_set,
@@ -594,14 +616,6 @@ def place_structure(prev_pos, wall_set, surrounded_tiles, place_hold):
                     else:
                         new_friends.add(direction_rev)
 
-            # for direction, direction_rev, x, y, friend in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
-            #                                                   (0, -1, 0, 1), (1, 0, -1, 0), neighbour_table):
-            #     if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
-            #             isinstance(struct_map[cursor.pos[0] + x][cursor.pos[1] + y], friend) and \
-            #             direction in struct_map[cursor.pos[0] + x][cursor.pos[1] + y].neighbours and \
-            #             cursor.hold.snapsto[direction_rev] == \
-            #             struct_map[cursor.pos[0] + x][cursor.pos[1] + y].snapsto[direction]:
-            #         new_friends.add(direction_rev)
             return True, new_friends
         else:
             return False, None
@@ -696,7 +710,7 @@ def fill_snappers_dicts():
     roads_dict, walls_dict, vgates_dict, hgates_dict = {}, {}, {}, {}
     for snapper_dict, snapper_dir, height in ((walls_dict, "assets/walls", TILE_S),
                                               (roads_dict, "assets/croads", TILE_S),
-                                              (vgates_dict, "assets/vgates", TILE_S * 19 / 15),
+                                              (vgates_dict, "assets/vgates", TILE_S * 20 / 15),
                                               (hgates_dict, "assets/hgates", TILE_S * 20 / 15)):
         directory = os.listdir(snapper_dir)
         dir_cut = []
@@ -709,7 +723,7 @@ def fill_snappers_dicts():
     return roads_dict, walls_dict, vgates_dict, hgates_dict
 
 
-def load_map():
+def load_map(struct_map):
     color_to_type = {(0, 255, 0, 255): "grassland", (0, 0, 255, 255): "sea", (255, 255, 0, 255): "desert"}
     tile_dict = {name: pg.transform.scale(pg.image.load("assets/tiles/" + name + "_tile.png").convert(),
                                           (TILE_S, TILE_S)) for name in color_to_type.values()}
@@ -722,6 +736,15 @@ def load_map():
             tile_color = tuple(LAYOUT.get_at((x, y)))
             background.blit(tile_dict[color_to_type[tile_color]], (x * TILE_S, y * TILE_S))
             tile_map[x][y] = color_to_type[tile_color]
+            # if tile_map[x][y] == "grassland" and randint(1, 16) == 1:
+            #     struct_map[x][y] = Tree([x, y])
+            #     structs.add(struct_map[x][y])
+            #     entities.add(struct_map[x][y])
+            # elif tile_map[x][y] == "desert" and randint(1, 25) == 1:
+            #     struct_map[x][y] = Cactus([x, y])
+            #     structs.add(struct_map[x][y])
+            #     entities.add(struct_map[x][y])
+
     return background, tile_map
 
 
@@ -755,6 +778,10 @@ if __name__ == "__main__":
     soundtrack_channel = pg.mixer.Channel(5)
     speech_channel = pg.mixer.Channel(3)
     # fx_channel = pg.mixer.Channel(1)
+
+    entities = Entities()
+    structs = pg.sprite.Group()
+
     if WINDOWED:
         screen = pg.display.set_mode([WINDOW_WIDTH, WINDOW_HEIGHT])
     else:
@@ -768,18 +795,15 @@ if __name__ == "__main__":
 
     roads_dict, walls_dict, vgates_dict, hgates_dict = fill_snappers_dicts()
     prev_pos = (0, 0)
-    map_surf, tile_type_map = load_map()
+    map_surf, tile_type_map = load_map(struct_map)
 
     background = Background(map_surf)
 
     pg.display.set_caption("Twierdza: Zawodzie")
     pg.display.set_icon(pg.image.load("assets/icon.png").convert())
 
-    entities = Entities()
-    structs = pg.sprite.Group()
-
     clock = pg.time.Clock()
-    key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate}
+    key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid}
     wall_set = set()
     place_hold, remove_hold = False, False
     display_stats = True
