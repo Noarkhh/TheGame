@@ -1,5 +1,5 @@
 from classes import *
-from gameworldclass import GameWorld
+from gameworld import GameWorld
 from collections import defaultdict
 from pygame.locals import (K_SPACE,
                            KEYDOWN,
@@ -115,6 +115,22 @@ from pygame.locals import (K_SPACE,
 
 
 def detect_surrounded_tiles(gw):
+    """
+    Function that detects which tiles are inside walls.
+    The process is done in 4 steps for each separate wall network:
+
+    1. Finding wall crossroads in a wall network or, if unable, determines if the network
+       is a simple perimeter or a line. This step is required for step 2 to work correctly.
+    2. Finding all walls in a network that are not dead ends and adding them to the wall network set.
+    3. Finding the highest, lowest, leftmost and rightmost walls in a wall network and adding them to dictionaries
+    4. Marking all tiles between highest and lowest walls in the network, repeating the process for
+       leftmost and rightmost. If a tile has been marked both times, it is now considered surrounded.
+
+    This sequence is repeated until there are no more walls left to check, the information
+    is saved in gw.surrounded_tiles.
+
+        :param gw: Gameworld object
+    """
     def search_for_crossroads(gw, xy, prev, direction_to_xy_dict, required, network_set, open_network_set):
         gw.wall_map[xy[0]][xy[1]] = True
         network_set.add(xy)
@@ -132,11 +148,11 @@ def detect_surrounded_tiles(gw):
             if isinstance(gw.struct_map[xy[0] + next[0]][xy[1] + next[1]], Wall) and \
                     bool(set(gw.struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
                 if not gw.wall_map[xy[0] + next[0]][xy[1] + next[1]]:
-                    start, found, simple = search_for_crossroads(gw, (xy[0] + next[0], xy[1] + next[1]), curr,
+                    start, found, perimeter = search_for_crossroads(gw, (xy[0] + next[0], xy[1] + next[1]), curr,
                                                                  direction_to_xy_dict, required, network_set,
                                                                  open_network_set)
                     if found:
-                        return start, True, simple
+                        return start, True, perimeter
                 elif next != prev:
                     return (xy[0] + next[0], xy[1] + next[1]), True, True
         return None, False, False
@@ -200,11 +216,11 @@ def detect_surrounded_tiles(gw):
     while wall_set_copy:
         network_set = set()
         open_network_set = set()
-        start, not_line, simple = search_for_crossroads(gw, tuple(wall_set_copy)[0], (0, 0),
+        start, not_line, perimeter = search_for_crossroads(gw, tuple(wall_set_copy)[0], (0, 0),
                                                         direction_to_xy_dict, required, network_set, open_network_set)
-        # print(start, not_line, simple)
-        if not_line:
-            if not simple:
+        line = not not_line
+        if not line:
+            if not perimeter:
                 gw.wall_map = [[False for _ in range(gw.HEIGHT_TILES)] for _ in range(gw.WIDTH_TILES)]
                 get_wall_network(gw, tuple(start), direction_to_xy_dict,
                                  required, network_set, open_network_set)
@@ -217,6 +233,12 @@ def detect_surrounded_tiles(gw):
 
 
 def count_road_network(gw, xy):
+    """
+    Function that counts how many roads are in a network with the selected road.
+
+        :param gw: Gameworld object
+        :param xy: Coordinates of the selected road
+    """
     A = [[True for _ in range(gw.HEIGHT_TILES)] for _ in range(gw.WIDTH_TILES)]
     count = 0
     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
@@ -237,6 +259,13 @@ def count_road_network(gw, xy):
 
 
 def pos_oob(x, y, gw):
+    """
+    Function that determines whether given coordinates are in bounds of the map.
+
+        :param x: X coordinate
+        :param y: Y coordinate
+        :param gw: Gameworld object
+    """
     if x < 0: return True
     if x > gw.WIDTH_TILES - 1: return True
     if y < 0: return True
@@ -245,6 +274,35 @@ def pos_oob(x, y, gw):
 
 
 def place_structure(gw, cursor, prev_pos, place_hold):
+    """
+    Function responsible for placing structures on the map.
+    The structure that will be tested for placement is the one held by the cursor.
+    The tile that the structure will be tested for placement on is the one that the cursor's on.
+
+    Logic:
+    - The structure cannot be placed on water tiles unless it's a Road.
+    - The structure cannot be placed if it can't be afforded.
+    - The structure cannot be placed on another structure unless the structure that is
+      being placed is a Gate and it's being placed on a Road or a Wall.
+      > If the latter is the case, then the gate and the structure it's being placed on
+       have to be in the right orientation so that the placement is valid.
+
+    - If the structure is a Snapper and the conditions are met, two neighbouring Snappers can connect.
+      > The placement key had to be held down while the cursor was moving between two tiles.
+      > The snapper on the previous tile must be able to snap to the snapper on the current tile, and vice versa.
+        The validity is determined by both snappers' attributes snapsto.
+
+    If the requirements to place the structure have been met, it's added to gw.entities, gw.structs and
+    corresponding tile in gw.struct_map now references it.
+    If the requirements to snap two structure have been met, their sprites and neighbours attributes are updated.
+
+    If a structure has been placed or two structures were snapped, a building sound effect is played.
+
+        :param gw: Gameworld object
+        :param cursor: Cursor object
+        :param prev_pos: Position of the cursor in the previous gametick
+        :param place_hold: A variable that indicates whether the place key is being held down
+    """
     def gate_placement_logic(gw):
         if (isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Wall) or
             isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Road)) and \
@@ -268,7 +326,7 @@ def place_structure(gw, cursor, prev_pos, place_hold):
 
     if isinstance(cursor.hold, Structure):
         built, snapped = False, False
-        if gw.tile_type_map[cursor.pos[0]][cursor.pos[1]] != "sea" or isinstance(cursor.hold, Road):
+        if gw.tile_type_map[cursor.pos[0]][cursor.pos[1]] != "water" or isinstance(cursor.hold, Road):
             if cursor.hold.cost <= gw.vault.gold:
                 if not isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Structure):
 
@@ -327,6 +385,21 @@ def place_structure(gw, cursor, prev_pos, place_hold):
 
 
 def remove_structure(gw, remove_hold):
+    """
+    Function that is responsible for removing structures from the map.
+    The structure that will be removed is the one that is on a tile that the cursor's on.
+
+    If the structure that's being removed is a Snapper, all its connected Snapper neighbours
+    are updated so that they no longer connect to the tile that the Structure was on.
+
+    The structure is removed from all sprite groups and gw.struct_map is no longer referencing it,
+    the value at its coordinates is now set to 0.
+
+    If the remove key is not being held down, a demolition sound effect is played.
+
+        :param gw: Gameworld object
+        :param remove_hold: A variable that indicates whether the remove key is being held down
+    """
     if isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Structure):
         if not remove_hold:
             pg.mixer.find_channel(True).play(gw.sounds["buildingwreck_01"])
@@ -349,11 +422,6 @@ def remove_structure(gw, remove_hold):
     else:
         removed = False
     return removed
-
-
-def play_soundtrack(gw):
-    if not gw.soundtrack_channel.get_busy():
-        gw.soundtrack_channel.play(gw.tracks[randint(0, 13)])
 
 
 if __name__ == "__main__":
@@ -448,13 +516,11 @@ if __name__ == "__main__":
 
         background.surf.blit(cursor.surf, cursor.rect)
 
-        if gw.SOUNDTRACK:
-            play_soundtrack(gw)
+        if gw.SOUNDTRACK and not gw.soundtrack_channel.get_busy():
+            gw.soundtrack_channel.play(gw.tracks[randint(0, 13)])
         if randint(1, 200000) == 1: gw.sounds["Random_Events13"].play()
 
         gw.screen.blit(background.surf_rendered, (0, 0))
-
-        global_statistics.get_time(gw)
 
         if display_stats:
             global_statistics.update_global_stats(gw)

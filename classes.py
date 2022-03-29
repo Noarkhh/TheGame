@@ -78,7 +78,7 @@ class Statistics:
     def print_stats(self, gw):
         self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
         self.stat_background.set_colorkey((255, 255, 255), RLEACCEL)
-        self.stat_background.set_alpha(100)
+        self.stat_background.set_alpha(48)
 
         gw.screen.blit(self.stat_background, self.rect)
         gw.screen.blit(self.stat_window, self.rect)
@@ -97,6 +97,7 @@ class GlobalStatistics(Statistics):
         self.end = 0
 
     def update_global_stats(self, gw):
+        self.get_time(gw)
         self.stat_window.fill((0, 0, 0))
         self.stat_background.fill((255, 255, 255))
         self.curr_coords = [4, 4]
