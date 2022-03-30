@@ -327,7 +327,7 @@ def place_structure(gw, cursor, prev_pos, place_hold):
     if isinstance(cursor.hold, Structure):
         built, snapped = False, False
         if gw.tile_type_map[cursor.pos[0]][cursor.pos[1]] != "water" or isinstance(cursor.hold, Road):
-            if cursor.hold.cost <= gw.vault.gold:
+            if cursor.hold.build_cost <= gw.vault.gold:
                 if not isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Structure):
 
                     if isinstance(cursor.hold, Gate):
@@ -365,14 +365,21 @@ def place_structure(gw, cursor, prev_pos, place_hold):
                 gw.struct_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
                 snapped = True
 
-        if built or snapped:
-            gw.sounds["drawbridge_control"].play()
         if built:
-            gw.vault.gold -= gw.struct_map[cursor.pos[0]][cursor.pos[1]].cost
+            gw.vault.gold -= gw.struct_map[cursor.pos[0]][cursor.pos[1]].build_cost
             if isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Wall):
                 gw.wall_set.add(tuple(cursor.pos))
         if snapped and not built:
             detect_surrounded_tiles(gw)
+        if built or snapped:
+            gw.sounds["drawbridge_control"].play()
+            for struct in gw.structs:
+                if gw.surrounded_tiles[struct.pos[0]][struct.pos[1]] == 2:
+                    struct.inside = True
+                else:
+                    struct.inside = False
+                if isinstance(struct, House):
+                    struct.update_profit(gw)
 
         if not snapped and not built and not place_hold:
             if not isinstance(cursor.hold, Snapper) or \
@@ -419,6 +426,13 @@ def remove_structure(gw, remove_hold):
 
         gw.struct_map[cursor.pos[0]][cursor.pos[1]].kill()
         gw.struct_map[cursor.pos[0]][cursor.pos[1]] = 0
+        for struct in gw.structs:
+            if gw.surrounded_tiles[struct.pos[0]][struct.pos[1]] == 2:
+                struct.inside = True
+            else:
+                struct.inside = False
+            if isinstance(struct, House):
+                struct.update_profit(gw)
     else:
         removed = False
     return removed
@@ -473,8 +487,8 @@ if __name__ == "__main__":
                 if event.key == K_q and isinstance(cursor.hold, Gate):
                     cursor.hold.rotate(gw)
 
-                if event.key == pg.K_c and isinstance((gw.struct_map[cursor.pos[0]][cursor.pos[1]]), Snapper):
-                    print(count_road_network(gw, cursor.pos))
+                if event.key == pg.K_c and isinstance((gw.struct_map[cursor.pos[0]][cursor.pos[1]]), House):
+                    gw.struct_map[cursor.pos[0]][cursor.pos[1]].update_profit(gw)
 
                 if event.key == pg.K_j and isinstance((gw.struct_map[cursor.pos[0]][cursor.pos[1]]), Wall):
                     for x in gw.surrounded_tiles:
@@ -500,10 +514,10 @@ if __name__ == "__main__":
 
         for struct in gw.structs:
             struct.get_profit(gw.vault)
-            if gw.surrounded_tiles[struct.pos[0]][struct.pos[1]] == 2:
-                struct.inside = True
-            else:
-                struct.inside = False
+        #     if gw.surrounded_tiles[struct.pos[0]][struct.pos[1]] == 2:
+        #         struct.inside = True
+        #     else:
+        #         struct.inside = False
 
         if gw.vault.gold < 0:
             running = False

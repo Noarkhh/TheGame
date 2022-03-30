@@ -46,9 +46,9 @@ class GameWorld:
         sounds, tracks: Dictionaries that assign sounds and tracks to their corresponding names
     """
     def __init__(self):
-        self.SOUNDTRACK = False
+        self.SOUNDTRACK = True
         self.MOUSE_STEERING = True
-        self.WINDOWED = True
+        self.WINDOWED = False
         self.LAYOUT = pg.image.load("assets/maps/desert_delta_L.png")
         self.HEIGHT_TILES = self.LAYOUT.get_height()
         self.WIDTH_TILES = self.LAYOUT.get_width()

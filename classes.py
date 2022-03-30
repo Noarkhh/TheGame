@@ -29,9 +29,6 @@ class Background(pg.sprite.Sprite):
 
 
 class Entities(pg.sprite.Group):
-    def give_y(self, sprite):
-        return sprite.pos[1]
-
     def draw(self, background):
         sprites = self.sprites()
         for spr in sorted(sprites, key=lambda spr: spr.pos[1]):
@@ -95,9 +92,10 @@ class GlobalStatistics(Statistics):
         self.elapsed = 1
         self.start = time.time()
         self.end = 0
+        self.tribute = 25
 
     def update_global_stats(self, gw):
-        self.get_time(gw)
+        self.time_lapse(gw)
         self.stat_window.fill((0, 0, 0))
         self.stat_background.fill((255, 255, 255))
         self.curr_coords = [4, 4]
@@ -106,10 +104,11 @@ class GlobalStatistics(Statistics):
             "Time: " + str(self.time[0]) + ":00, Day " + str(self.time[1] + 1) + ", Week " + str(self.time[2] + 1))
         super().blit_stat("Gold: " + str(gw.vault.gold) + "g")
         super().blit_stat("TPS: " + str(round(self.elapsed * gw.TICK_RATE, 2)))
+        super().blit_stat("Weekly Tribute: " + str(self.tribute) + "g")
 
         super().print_stats(gw)
 
-    def get_time(self, gw):
+    def time_lapse(self, gw):
         self.tick += 1
         if self.tick >= gw.TICK_RATE:
             self.tick = 0
@@ -123,6 +122,9 @@ class GlobalStatistics(Statistics):
                 if self.time[1] >= 7:
                     self.time[1] = 0
                     self.time[2] += 1
+                    gw.vault.gold -= self.tribute
+                    gw.sounds["ignite_oil"].play()
+                    self.tribute = int(self.tribute ** 1.1)
 
 
 class TileStatistics(Statistics):
@@ -152,7 +154,7 @@ class TileStatistics(Statistics):
 
 class Vault:
     def __init__(self):
-        self.gold = 100000
+        self.gold = 200
 
 
 class Cursor(pg.sprite.Sprite):
@@ -233,10 +235,11 @@ class Structure(pg.sprite.Sprite):
         self.surf.fill((0, 0, 0))
         self.pos = xy.copy()
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
-        self.profit = 0
+        self.base_profit = 0
+        self.profit = self.base_profit
         self.cooldown = gw.TICK_RATE * 24
         self.time_left = self.cooldown
-        self.cost = 0
+        self.build_cost = 0
         self.inside = False
 
     def get_profit(self, vault):
@@ -276,8 +279,50 @@ class House(Structure):
                                        (gw.tile_s, gw.tile_s * 21 / 15))
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.profit = 10
-        self.cost = 50
+        self.base_profit = 10
+        self.profit = self.base_profit
+        self.build_cost = 50
+
+    def update_profit(self, gw):
+        self.profit = self.base_profit
+        visited = {tuple(self.pos)}
+        nearby_houses = 0
+        for xy in ((-1, 0), (0, 1), (1, 0), (0, -1)):
+            if isinstance(gw.struct_map[self.pos[0] + xy[0]][self.pos[1] + xy[1]], Road):
+                nearby_houses += self.detect_nearby_houses(gw, [self.pos[0] + xy[0], self.pos[1] + xy[1]], visited)
+        self.profit += nearby_houses
+        if self.inside:
+            self.profit *= 2
+        # print(visited, nearby_houses)
+
+    def detect_nearby_houses(self, gw, xy, visited):
+
+        resolved = [[True for _ in range(gw.HEIGHT_TILES)] for _ in range(gw.WIDTH_TILES)]
+        direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
+        required = {"roads"}
+        distance = 0
+        nearby = 0
+
+        def _detect_nearby_houses(gw, resolved, xy, direction_to_xy_dict, required, distance, visited):
+            nonlocal nearby
+            if distance >= 6:
+                return
+            for xy0 in direction_to_xy_dict.values():
+                if isinstance(gw.struct_map[xy[0] + xy0[0]][xy[1] + xy0[1]], House) and \
+                        (xy[0] + xy0[0], xy[1] + xy0[1]) not in visited:
+                    nearby += 1
+                    visited.add((xy[0] + xy0[0], xy[1] + xy0[1]))
+
+            resolved[xy[0]][xy[1]] = False
+            for direction in gw.struct_map[xy[0]][xy[1]].neighbours:
+                next = direction_to_xy_dict[direction]
+                if resolved[xy[0] + next[0]][xy[1] + next[1]] and \
+                        bool(set(gw.struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
+                    _detect_nearby_houses(gw, resolved, [xy[0] + next[0], xy[1] + next[1]], direction_to_xy_dict,
+                                          required, distance + 1, visited)
+
+        _detect_nearby_houses(gw, resolved, xy, direction_to_xy_dict, required, distance, visited)
+        return nearby
 
 
 class Tower(Structure):
@@ -318,8 +363,9 @@ class Road(Snapper):
         self.surf = self.snapper_dict[()].copy()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.snapsto = {snap: "roads" for snap in ('N', 'E', 'S', 'W')}
-        self.profit = -3
-        self.cost = 10
+        self.base_profit = -2
+        self.profit = self.base_profit
+        self.build_cost = 10
 
 
 class Wall(Snapper):
@@ -329,8 +375,9 @@ class Wall(Snapper):
         self.surf = self.snapper_dict[()].copy()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.snapsto = {snap: "walls" for snap in ('N', 'E', 'S', 'W')}
-        self.profit = -3
-        self.cost = 20
+        self.base_profit = -3
+        self.profit = self.base_profit
+        self.build_cost = 20
 
 
 class Gate(Wall, Road):
@@ -346,8 +393,9 @@ class Gate(Wall, Road):
         self.surf = self.snapper_dict[()].copy()
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.profit = -15
-        self.cost = 150
+        self.base_profit = -15
+        self.profit = self.base_profit
+        self.build_cost = 150
 
     def rotate(self, gw):
         if self.orient == "v":
