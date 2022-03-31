@@ -45,9 +45,10 @@ class GameWorld:
         struct_map: 2-dimensional array of all structures, main way to reference structures
         sounds, tracks: Dictionaries that assign sounds and tracks to their corresponding names
     """
+
     def __init__(self):
         self.SOUNDTRACK = False
-        self.MOUSE_STEERING = False
+        self.MOUSE_STEERING = True
         self.WINDOWED = True
         self.LAYOUT = pg.image.load("assets/maps/desert_delta_L.png")
         self.HEIGHT_TILES = self.LAYOUT.get_height()
@@ -55,15 +56,17 @@ class GameWorld:
         self.WINDOW_HEIGHT = 720
         self.WINDOW_WIDTH = 1080
         self.TICK_RATE = 60
+        self.STARTING_GOLD = 300
 
         self.tile_s = 30
         self.width_pixels = self.WIDTH_TILES * self.tile_s
         self.height_pixels = self.HEIGHT_TILES * self.tile_s
         self.wall_set = set()
-        self.key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid}
+        self.key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid,
+                                   pg.K_f: Farmland}
         self.entities = Entities()
         self.structs = pg.sprite.Group()
-        self.vault = Vault()
+        self.vault = Vault(self)
         self.soundtrack_channel = pg.mixer.Channel(5)
         self.speech_channel = pg.mixer.Channel(3)
 

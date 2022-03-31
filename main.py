@@ -131,6 +131,7 @@ def detect_surrounded_tiles(gw):
 
         :param gw: Gameworld object
     """
+
     def search_for_crossroads(gw, xy, prev, direction_to_xy_dict, required, network_set, open_network_set):
         gw.wall_map[xy[0]][xy[1]] = True
         network_set.add(xy)
@@ -149,8 +150,8 @@ def detect_surrounded_tiles(gw):
                     bool(set(gw.struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
                 if not gw.wall_map[xy[0] + next[0]][xy[1] + next[1]]:
                     start, found, perimeter = search_for_crossroads(gw, (xy[0] + next[0], xy[1] + next[1]), curr,
-                                                                 direction_to_xy_dict, required, network_set,
-                                                                 open_network_set)
+                                                                    direction_to_xy_dict, required, network_set,
+                                                                    open_network_set)
                     if found:
                         return start, True, perimeter
                 elif next != prev:
@@ -217,7 +218,8 @@ def detect_surrounded_tiles(gw):
         network_set = set()
         open_network_set = set()
         start, not_line, perimeter = search_for_crossroads(gw, tuple(wall_set_copy)[0], (0, 0),
-                                                        direction_to_xy_dict, required, network_set, open_network_set)
+                                                           direction_to_xy_dict, required, network_set,
+                                                           open_network_set)
         line = not not_line
         if not line:
             if not perimeter:
@@ -303,6 +305,7 @@ def place_structure(gw, cursor, prev_pos, place_hold):
         :param prev_pos: Position of the cursor in the previous gametick
         :param place_hold: A variable that indicates whether the place key is being held down
     """
+
     def gate_placement_logic(gw):
         if (isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Wall) or
             isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Road)) and \
@@ -310,7 +313,7 @@ def place_structure(gw, cursor, prev_pos, place_hold):
             new_friends = set()
 
             for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
-                                                           (0, -1, 0, 1), (1, 0, -1, 0)):
+                                                      (0, -1, 0, 1), (1, 0, -1, 0)):
                 if not pos_oob(cursor.pos[0] + x, cursor.pos[1] + y, gw) and \
                         isinstance(gw.struct_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper) and \
                         direction in gw.struct_map[cursor.pos[0] + x][cursor.pos[1] + y].neighbours:
@@ -325,7 +328,7 @@ def place_structure(gw, cursor, prev_pos, place_hold):
             return False, None
 
     if isinstance(cursor.hold, Structure):
-        built, snapped = False, False
+        built, snapped, can_afford = False, False, True
         if gw.tile_type_map[cursor.pos[0]][cursor.pos[1]] != "water" or isinstance(cursor.hold, Road):
             if cursor.hold.build_cost <= gw.vault.gold:
                 if not isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Structure):
@@ -350,7 +353,7 @@ def place_structure(gw, cursor, prev_pos, place_hold):
                         gw.struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(tuple(new_friends), True)
                         built = True
             elif not place_hold:
-                gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
+                can_afford = False
 
         change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
         pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
@@ -360,7 +363,6 @@ def place_structure(gw, cursor, prev_pos, place_hold):
                 isinstance(gw.struct_map[prev_pos[0]][prev_pos[1]], Snapper):
             if gw.struct_map[cursor.pos[0]][cursor.pos[1]].snapsto[pos_change_dict[change][0]] == \
                     gw.struct_map[prev_pos[0]][prev_pos[1]].snapsto[pos_change_dict[change][1]]:
-
                 gw.struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
                 gw.struct_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
                 snapped = True
@@ -382,13 +384,15 @@ def place_structure(gw, cursor, prev_pos, place_hold):
                         abs(struct.pos[0] - cursor.pos[0]) + abs(struct.pos[0] - cursor.pos[0]) <= 6:
                     struct.update_profit(gw)
 
-        if not snapped and not built and not place_hold:
+        if not snapped and not built and not place_hold and can_afford:
             if not isinstance(cursor.hold, Snapper) or \
                     not isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Snapper):
                 gw.speech_channel.play(gw.sounds["Placement_Warning16"])
             elif not bool(set(cursor.hold.snapsto.values()) &
                           set(gw.struct_map[cursor.pos[0]][cursor.pos[1]].snapsto.values())):
                 gw.speech_channel.play(gw.sounds["Placement_Warning16"])
+        if not snapped and not built and not place_hold and not can_afford:
+            gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
     return
 
 
@@ -521,7 +525,7 @@ if __name__ == "__main__":
         #     else:
         #         struct.inside = False
 
-        if gw.vault.gold < 0:
+        if gw.vault.gold < -50:
             running = False
 
         gw.entities.draw(background)

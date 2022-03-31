@@ -92,7 +92,7 @@ class GlobalStatistics(Statistics):
         self.elapsed = 1
         self.start = time.time()
         self.end = 0
-        self.tribute = 25
+        self.tribute = 40
 
     def update_global_stats(self, gw):
         self.time_lapse(gw)
@@ -124,7 +124,7 @@ class GlobalStatistics(Statistics):
                     self.time[2] += 1
                     gw.vault.gold -= self.tribute
                     gw.sounds["ignite_oil"].play()
-                    self.tribute = int(self.tribute ** 1.5)
+                    self.tribute = int(self.tribute ** 1.2)
 
 
 class TileStatistics(Statistics):
@@ -153,8 +153,8 @@ class TileStatistics(Statistics):
 
 
 class Vault:
-    def __init__(self):
-        self.gold = 1000000
+    def __init__(self, gw):
+        self.gold = gw.STARTING_GOLD
 
 
 class Cursor(pg.sprite.Sprite):
@@ -256,10 +256,10 @@ class Tree(Structure):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
-class Cactus(Structure):
+class Farmland(Structure):
     def __init__(self, xy, gw):
         super().__init__(xy, gw)
-        self.surf = pg.transform.scale(pg.image.load("assets/cactus.png").convert(), (gw.tile_s, gw.tile_s))
+        self.surf = pg.transform.scale(pg.image.load("assets/farmland.png").convert(), (gw.tile_s, gw.tile_s))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
