@@ -103,7 +103,7 @@ class GlobalStatistics(Statistics):
         super().blit_stat(
             "Time: " + str(self.time[0]) + ":00, Day " + str(self.time[1] + 1) + ", Week " + str(self.time[2] + 1))
         super().blit_stat("Gold: " + str(gw.vault.gold) + "g")
-        super().blit_stat("TPS: " + str(round(self.elapsed * gw.TICK_RATE, 2)))
+        super().blit_stat("TPS: " + str(round(1 / self.elapsed * gw.TICK_RATE, 2)))
         super().blit_stat("Weekly Tribute: " + str(self.tribute) + "g")
 
         super().print_stats(gw)
@@ -124,7 +124,7 @@ class GlobalStatistics(Statistics):
                     self.time[2] += 1
                     gw.vault.gold -= self.tribute
                     gw.sounds["ignite_oil"].play()
-                    self.tribute = int(self.tribute ** 1.1)
+                    self.tribute = int(self.tribute ** 1.5)
 
 
 class TileStatistics(Statistics):
@@ -154,7 +154,7 @@ class TileStatistics(Statistics):
 
 class Vault:
     def __init__(self):
-        self.gold = 200
+        self.gold = 1000000
 
 
 class Cursor(pg.sprite.Sprite):

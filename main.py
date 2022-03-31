@@ -378,7 +378,8 @@ def place_structure(gw, cursor, prev_pos, place_hold):
                     struct.inside = True
                 else:
                     struct.inside = False
-                if isinstance(struct, House):
+                if isinstance(struct, House) and \
+                        abs(struct.pos[0] - cursor.pos[0]) + abs(struct.pos[0] - cursor.pos[0]) <= 6:
                     struct.update_profit(gw)
 
         if not snapped and not built and not place_hold:
@@ -431,7 +432,8 @@ def remove_structure(gw, remove_hold):
                 struct.inside = True
             else:
                 struct.inside = False
-            if isinstance(struct, House):
+            if isinstance(struct, House) and \
+                    abs(struct.pos[0] - cursor.pos[0]) + abs(struct.pos[0] - cursor.pos[0]) <= 6:
                 struct.update_profit(gw)
     else:
         removed = False
