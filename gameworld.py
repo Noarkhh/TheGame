@@ -49,14 +49,14 @@ class GameWorld:
     def __init__(self):
         self.SOUNDTRACK = False
         self.MOUSE_STEERING = True
-        self.WINDOWED = True
+        self.WINDOWED = False
         self.LAYOUT = pg.image.load("assets/maps/desert_delta_L.png")
         self.HEIGHT_TILES = self.LAYOUT.get_height()
         self.WIDTH_TILES = self.LAYOUT.get_width()
         self.WINDOW_HEIGHT = 720
         self.WINDOW_WIDTH = 1080
         self.TICK_RATE = 60
-        self.STARTING_GOLD = 300
+        self.STARTING_GOLD = 300000000
 
         self.tile_s = 30
         self.width_pixels = self.WIDTH_TILES * self.tile_s
@@ -76,6 +76,8 @@ class GameWorld:
         self.surrounded_tiles = [[0 for _ in range(self.HEIGHT_TILES)] for _ in range(self.WIDTH_TILES)]
         self.struct_map = [[0 for _ in range(self.HEIGHT_TILES)] for _ in range(self.WIDTH_TILES)]
         self.sounds, self.tracks = self.load_sounds()
+        self.background = Background(self)
+
 
     def set_window(self):
         """
@@ -125,15 +127,15 @@ class GameWorld:
         """
         color_to_type = {(0, 255, 0, 255): "grassland", (0, 0, 255, 255): "water", (255, 255, 0, 255): "desert"}
         tile_dict = {name: pg.transform.scale(pg.image.load("assets/tiles/" + name + "_tile.png").convert(),
-                                              (self.tile_s, self.tile_s)) for name in color_to_type.values()}
+                                              (60, 60)) for name in color_to_type.values()}
 
-        background = pg.Surface((self.WIDTH_TILES * self.tile_s, self.HEIGHT_TILES * self.tile_s))
+        background = pg.Surface((self.WIDTH_TILES * 60, self.HEIGHT_TILES * 60))
         tile_map = [[0 for _ in range(self.HEIGHT_TILES)] for _ in range(self.WIDTH_TILES)]
 
         for x in range(self.WIDTH_TILES):
             for y in range(self.HEIGHT_TILES):
                 tile_color = tuple(self.LAYOUT.get_at((x, y)))
-                background.blit(tile_dict[color_to_type[tile_color]], (x * self.tile_s, y * self.tile_s))
+                background.blit(tile_dict[color_to_type[tile_color]], (x * 60, y * 60))
                 tile_map[x][y] = color_to_type[tile_color]
                 # if tile_map[x][y] == "grassland" and randint(1, 16) == 1:
                 #     self.struct_map[x][y] = Tree([x, y])
@@ -165,3 +167,16 @@ class GameWorld:
             sound.set_volume(0.7)
 
         return sounds, tracks
+
+    def pos_oob(self, x, y):
+        """
+        Determines whether given coordinates are in bounds of the map.
+
+            :param x: X coordinate
+            :param y: Y coordinate
+        """
+        if x < 0: return True
+        if x > self.WIDTH_TILES - 1: return True
+        if y < 0: return True
+        if y > self.HEIGHT_TILES - 1: return True
+        return False

@@ -11,20 +11,32 @@ from pygame.locals import (RLEACCEL,
 class Background(pg.sprite.Sprite):
     def __init__(self, gw):
         super().__init__()
-        self.surf = gw.map_surf.copy()
-        self.surf_raw = gw.map_surf.copy()
+        self.surf = pg.transform.scale(gw.map_surf.copy(), (gw.width_pixels, gw.height_pixels))
+        self.surf_raw = self.surf.copy()
         self.surf_rendered = self.surf.subsurface((0, 0, gw.WINDOW_WIDTH, gw.WINDOW_HEIGHT))
         self.rect = self.surf_rendered.get_rect()
 
     def move_screen(self, gw, cursor):
-        if cursor.rect.right >= self.rect.right <= gw.width_pixels - gw.tile_s / 2:
-            self.rect.move_ip(gw.tile_s / 2, 0)
-        if cursor.rect.left <= self.rect.left >= 0 + gw.tile_s / 2:
-            self.rect.move_ip(-gw.tile_s / 2, 0)
-        if cursor.rect.bottom >= self.rect.bottom <= gw.height_pixels - gw.tile_s / 2:
-            self.rect.move_ip(0, gw.tile_s / 2)
-        if cursor.rect.top <= self.rect.top >= 0 + gw.tile_s / 2:
-            self.rect.move_ip(0, -gw.tile_s / 2)
+        if not gw.MOUSE_STEERING:
+            if cursor.rect.right >= self.rect.right <= gw.width_pixels - gw.tile_s / 2:
+                self.rect.move_ip(gw.tile_s / 2, 0)
+            if cursor.rect.left <= self.rect.left >= 0 + gw.tile_s / 2:
+                self.rect.move_ip(-gw.tile_s / 2, 0)
+            if cursor.rect.bottom >= self.rect.bottom <= gw.height_pixels - gw.tile_s / 2:
+                self.rect.move_ip(0, gw.tile_s / 2)
+            if cursor.rect.top <= self.rect.top >= 0 + gw.tile_s / 2:
+                self.rect.move_ip(0, -gw.tile_s / 2)
+        else:
+            if pg.mouse.get_pos()[0] >= gw.WINDOW_WIDTH - gw.tile_s / 2 and \
+                    self.rect.right <= gw.width_pixels - gw.tile_s / 2:
+                self.rect.move_ip(gw.tile_s / 2, 0)
+            if pg.mouse.get_pos()[0] <= 0 + gw.tile_s / 2 <= self.rect.left:
+                self.rect.move_ip(-gw.tile_s / 2, 0)
+            if pg.mouse.get_pos()[1] >= gw.WINDOW_HEIGHT - gw.tile_s / 2 and \
+                    self.rect.bottom <= gw.height_pixels - gw.tile_s / 2:
+                self.rect.move_ip(0, gw.tile_s / 2)
+            if pg.mouse.get_pos()[1] <= 0 + gw.tile_s / 2 <= self.rect.top:
+                self.rect.move_ip(0, -gw.tile_s / 2)
         self.surf_rendered = self.surf.subsurface(self.rect)
 
 
@@ -40,8 +52,8 @@ class Entities(pg.sprite.Group):
 class Statistics:
     def __init__(self):
         self.rect = None
-        self.font_size = 24
-        self.font = pg.font.SysFont('consolas', self.font_size)
+        self.font_size = 20
+        self.font = pg.font.Font('assets/Minecraft.otf', self.font_size)
         self.stat_window = pg.Surface((self.font_size * 20, self.font_size * 10))
         self.stat_window.fill((0, 0, 0))
         self.stat_background = pg.Surface((self.font_size * 20, self.font_size * 10))
@@ -64,9 +76,9 @@ class Statistics:
             stat_rect = stat_surf.get_rect(topleft=self.curr_coords)
 
         self.stat_window.blit(stat_surf, stat_rect)
-        layer = pg.Surface((stat_rect.width + 8, stat_rect.height + 8))
+        layer = pg.Surface((stat_rect.width + 8, stat_rect.height + 6))
         layer.fill((0, 0, 0))
-        self.stat_background.blit(layer, (stat_rect.x - 4, stat_rect.y - 4))
+        self.stat_background.blit(layer, (stat_rect.x - 5, stat_rect.y - 3))
         if self.screen_part in {"topleft", "topright"}:
             self.curr_coords[1] += self.stat_height
         else:
@@ -98,12 +110,12 @@ class GlobalStatistics(Statistics):
         self.time_lapse(gw)
         self.stat_window.fill((0, 0, 0))
         self.stat_background.fill((255, 255, 255))
-        self.curr_coords = [4, 4]
+        self.curr_coords = [4, 0]
 
         super().blit_stat(
             "Time: " + str(self.time[0]) + ":00, Day " + str(self.time[1] + 1) + ", Week " + str(self.time[2] + 1))
         super().blit_stat("Gold: " + str(gw.vault.gold) + "g")
-        super().blit_stat("TPS: " + str(round(1 / self.elapsed * gw.TICK_RATE, 2)))
+        super().blit_stat("TPS: " + str("{:.2f}".format(1 / self.elapsed * gw.TICK_RATE)))
         super().blit_stat("Weekly Tribute: " + str(self.tribute) + "g")
 
         super().print_stats(gw)
@@ -152,6 +164,11 @@ class TileStatistics(Statistics):
         super().print_stats(gw)
 
 
+class Menu(pg.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+
+
 class Vault:
     def __init__(self, gw):
         self.gold = gw.STARTING_GOLD
@@ -162,11 +179,12 @@ class Cursor(pg.sprite.Sprite):
         super().__init__()
         self.windup = [0 for _ in range(4)]
         self.cooldown = [0 for _ in range(4)]
-        self.surf = pg.transform.scale(pg.image.load("assets/cursor3.png").convert(), (gw.tile_s, gw.tile_s))
+        self.surf = pg.transform.scale(pg.image.load("assets/cursor2.png").convert(), (gw.tile_s, gw.tile_s))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
         self.pos = [0, 0]
         self.hold = None
+        self.ghost = None
 
     def update_arrows(self, gw, pressed_keys):
         cooltime = 20
@@ -204,27 +222,29 @@ class Cursor(pg.sprite.Sprite):
         self.cooldown = [x - 1 if x > 0 else 0 for x in self.cooldown]
         self.rect.x = self.pos[0] * gw.tile_s
         self.rect.y = self.pos[1] * gw.tile_s
+        if self.hold is not None:
+            self.ghost.update()
 
-    def update_mouse(self, gw, xy, bg):
-        self.pos[0] = (xy[0] + bg.rect.x) // gw.tile_s
-        self.pos[1] = (xy[1] + bg.rect.y) // gw.tile_s
+    def update_mouse(self, gw):
+        self.pos[0] = (pg.mouse.get_pos()[0] + gw.background.rect.x) // gw.tile_s
+        self.pos[1] = (pg.mouse.get_pos()[1] + gw.background.rect.y) // gw.tile_s
         self.rect.x = self.pos[0] * gw.tile_s
         self.rect.y = self.pos[1] * gw.tile_s
 
 
 class Ghost(pg.sprite.Sprite):
-    def __init__(self, xy, gw, surf):
+    def __init__(self, gw, cursor):
         super().__init__()
-        self.surf = surf
+        self.surf = cursor.hold.surf
         self.surf.set_alpha(128)
-        self.position = xy
-        self.rect = surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
+        self.pos = cursor.pos
+        self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
 
-    def update(self, gw, xy, surf):
-        self.position = xy
-        self.rect.right = gw.tile_s * (xy[0] + 1)
-        self.rect.bottom = gw.tile_s * (xy[1] + 1)
-        self.surf = surf
+    def update(self, gw, cursor):
+        self.pos = cursor.pos
+        self.rect.right = gw.tile_s * (self.pos[0] + 1)
+        self.rect.bottom = gw.tile_s * (self.pos[1] + 1)
+        self.surf = cursor.hold.surf
         self.surf.set_alpha(128)
 
 
@@ -232,7 +252,7 @@ class Structure(pg.sprite.Sprite):
     def __init__(self, xy, gw):
         super().__init__()
         self.surf = pg.Surface((gw.tile_s, gw.tile_s))
-        self.surf.fill((0, 0, 0))
+        self.surf_ratio = (1, 1)
         self.pos = xy.copy()
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
         self.base_profit = 0
@@ -240,13 +260,20 @@ class Structure(pg.sprite.Sprite):
         self.cooldown = gw.TICK_RATE * 24
         self.time_left = self.cooldown
         self.build_cost = 0
-        self.inside = False
+        if gw.surrounded_tiles[self.pos[0]][self.pos[1]] == 2:
+            self.inside = True
+        else:
+            self.inside = False
 
-    def get_profit(self, vault):
+    def get_profit(self, gw):
         self.time_left -= 1
         if self.time_left == 0:
             self.time_left = self.cooldown
-            vault.gold += self.profit
+            gw.vault.gold += self.profit
+
+    def update_zoom(self, gw):
+        self.surf = pg.transform.scale(self.surf, (self.surf_ratio[0] * gw.tile_s, self.surf_ratio[1] * gw.tile_s))
+        self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
 
 
 class Tree(Structure):
@@ -277,6 +304,7 @@ class House(Structure):
         super().__init__(xy, gw)
         self.surf = pg.transform.scale(pg.image.load("assets/house" + str(randint(1, 2)) + ".png").convert(),
                                        (gw.tile_s, gw.tile_s * 21 / 15))
+        self.surf_ratio = (1, 21 / 15)
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.base_profit = 10
@@ -288,7 +316,8 @@ class House(Structure):
         visited = {tuple(self.pos)}
         nearby_houses = 0
         for xy in ((-1, 0), (0, 1), (1, 0), (0, -1)):
-            if isinstance(gw.struct_map[self.pos[0] + xy[0]][self.pos[1] + xy[1]], Road):
+            if not gw.pos_oob(self.pos[0] + xy[0], self.pos[1] + xy[1]) and \
+                    isinstance(gw.struct_map[self.pos[0] + xy[0]][self.pos[1] + xy[1]], Road):
                 nearby_houses += self.detect_nearby_houses(gw, [self.pos[0] + xy[0], self.pos[1] + xy[1]], visited)
         self.profit += nearby_houses
         if self.inside:
@@ -329,6 +358,7 @@ class Tower(Structure):
     def __init__(self, xy, gw):
         super().__init__(xy, gw)
         self.surf = pg.transform.scale(pg.image.load("assets/big_tower.png").convert(), (gw.tile_s, 2 * gw.tile_s))
+        self.surf_ratio = (1, 2)
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
@@ -391,6 +421,7 @@ class Gate(Wall, Road):
             self.snapper_dict = gw.snapper_dict["hgates"]
             self.snapsto = {'N': "walls", 'E': "roads", 'S': "walls", 'W': "roads"}
         self.surf = self.snapper_dict[()].copy()
+        self.surf_ratio = (1, 20 / 15)
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.base_profit = -15
