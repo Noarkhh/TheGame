@@ -32,7 +32,6 @@ if __name__ == "__main__":
 
     gw.speech_channel.play(gw.sounds["General_Startgame"])
     running = True
-    print(gw.buttons)
     # ------ MAIN LOOP -------
     while running:
 
