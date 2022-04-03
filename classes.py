@@ -164,9 +164,97 @@ class TileStatistics(Statistics):
         super().print_stats(gw)
 
 
-class Menu(pg.sprite.Sprite):
-    def __init__(self):
+class Button(pg.sprite.Sprite):
+    def __init__(self, rect, hover_surf, press_surf, function, value):
         super().__init__()
+        self.rect = rect
+        self.hover_surf = hover_surf
+        self.press_surf = press_surf
+        self.function = function
+        self.value = value
+
+    def hovered(self, gw):
+        gw.screen.blit(self.hover_surf, self.rect)
+
+    def pressed(self, gw):
+        gw.screen.blit(self.press_surf, self.rect)
+
+    def press(self, gw, cursor, press_hold):
+        self.function(gw, cursor, self.value, press_hold)
+
+
+class HUD(pg.sprite.Sprite):
+    def __init__(self, gw):
+        super().__init__()
+
+
+class Minimap(HUD):
+    def __init__(self, gw):
+        super().__init__(gw)
+        self.frame = pg.image.load("assets/hud/map_frame.png").convert()
+        self.frame.set_colorkey((255, 255, 255), RLEACCEL)
+        self.surf = gw.LAYOUT.copy()
+        self.surf_raw = self.surf.copy()
+        self.rect = self.surf.get_rect(topright=(gw.WINDOW_WIDTH, 0))
+        self.visible_area = pg.surface.Surface((gw.WINDOW_WIDTH / gw.tile_s, gw.WINDOW_HEIGHT / gw.tile_s))
+        self.visible_area.fill((223, 17, 28))
+        cutout = pg.surface.Surface((gw.WINDOW_WIDTH / gw.tile_s - 4, gw.WINDOW_HEIGHT / gw.tile_s - 4))
+        cutout.fill((0, 0, 0))
+        self.visible_area.blit(cutout, (2, 2))
+        self.visible_area.set_colorkey((0, 0, 0), RLEACCEL)
+
+    def update_minimap(self, gw):
+        self.surf.blit(self.surf_raw, (0, 0))
+        self.surf.blit(self.visible_area, (gw.background.rect.x / gw.tile_s, gw.background.rect.y / gw.tile_s))
+        gw.screen.blit(self.surf, self.rect)
+        gw.screen.blit(self.frame, (self.rect.x - 16, self.rect.y))
+
+    def update_zoom(self, gw):
+        self.visible_area = pg.surface.Surface((gw.WINDOW_WIDTH / gw.tile_s, gw.WINDOW_HEIGHT / gw.tile_s))
+        self.visible_area.fill((223, 17, 28))
+        cutout = pg.surface.Surface((gw.WINDOW_WIDTH / gw.tile_s - 4, gw.WINDOW_HEIGHT / gw.tile_s - 4))
+        cutout.fill((0, 0, 0))
+        self.visible_area.blit(cutout, (2, 2))
+        self.visible_area.set_colorkey((0, 0, 0), RLEACCEL)
+
+
+class BuildMenu(HUD):
+    def __init__(self, gw):
+        super().__init__(gw)
+        self.surf = pg.Surface((76 + len(gw.key_structure_dict.values()) * 104, 136))
+        self.surf.fill((255, 255, 255))
+        self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2)
+        self.surf.blit(pg.image.load("assets/hud/hud_edge_horiz.png").convert(), (0, 0))
+        lowest = 0
+        self.hover_surf = pg.Surface((30, 30))
+        self.press_surf = pg.Surface((30, 60))
+        self.press_surf.fill((255, 0, 0))
+        self.build_list = []
+        self.rect_list = []
+        for i, building in enumerate(gw.key_structure_dict.values()):
+            new_build = building([0, 0], gw)
+            self.surf.blit(pg.image.load("assets/hud/hud_horiz_sep.png").convert(), (36 + i * 104, 0))
+            self.surf.blit(pg.image.load("assets/hud/hud_tile_horiz.png").convert(), (40 + i * 104, 0))
+
+            new_button = Button(pg.Rect((self.rect.x + 40 + i * 104, 0), (100, 108)), self.hover_surf, self.press_surf,
+                                self.assign, type(new_build))
+            gw.buttons.add(new_button)
+            # self.rect_list.append(pg.Rect((self.rect.x + 40 + i * 104, 0), (100, 108)))
+            # self.build_list.append(type(new_build))
+            height = 100 - 60 * new_build.surf_ratio[1]
+            self.surf.blit(pg.transform.scale(new_build.surf, (60, 60 * new_build.surf_ratio[1])),
+                           (60 + i * 104, 4 + height))
+            lowest = i
+        self.surf.blit(pg.image.load("assets/hud/hud_horiz_sep.png").convert(), (140 + lowest * 104, 0))
+        self.surf.blit(pg.transform.flip(pg.image.load("assets/hud/hud_edge_horiz.png").convert(), True, False),
+                       (144 + lowest * 104, 0))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.collide_rect = pg.Rect(self.rect.left + 4, 0, self.rect.width - 8, self.rect.height - 16)
+
+    def assign(self, gw, cursor, value, press_hold):
+        if not press_hold:
+            cursor.hold = value([0, 0], gw)
+            cursor.ghost = Ghost(gw, cursor)
 
 
 class Vault:
@@ -223,13 +311,18 @@ class Cursor(pg.sprite.Sprite):
         self.rect.x = self.pos[0] * gw.tile_s
         self.rect.y = self.pos[1] * gw.tile_s
         if self.hold is not None:
-            self.ghost.update()
+            self.ghost.update(gw, self)
+            gw.background.surf.blit(self.ghost.surf, self.ghost.rect)
 
-    def update_mouse(self, gw):
+    def update(self, gw):
         self.pos[0] = (pg.mouse.get_pos()[0] + gw.background.rect.x) // gw.tile_s
         self.pos[1] = (pg.mouse.get_pos()[1] + gw.background.rect.y) // gw.tile_s
         self.rect.x = self.pos[0] * gw.tile_s
         self.rect.y = self.pos[1] * gw.tile_s
+        gw.background.surf.blit(self.surf, self.rect)
+        if self.hold is not None:
+            self.ghost.update(gw, self)
+            gw.background.surf.blit(self.ghost.surf, self.ghost.rect)
 
 
 class Ghost(pg.sprite.Sprite):

@@ -18,6 +18,8 @@ if __name__ == "__main__":
     cursor = Cursor(gw)
     tile_statistics = TileStatistics(gw)
     global_statistics = GlobalStatistics()
+    build_menu = BuildMenu(gw)
+    minimap = Minimap(gw)
 
     prev_pos = (0, 0)
 
@@ -25,16 +27,27 @@ if __name__ == "__main__":
     place_hold, remove_hold = False, False
     display_stats = True
     structure_ghost = None
+    on_button = False
+    curr_button = None
 
     gw.speech_channel.play(gw.sounds["General_Startgame"])
     running = True
+    print(gw.buttons)
     # ------ MAIN LOOP -------
     while running:
 
         pressed_keys = pg.key.get_pressed()
         # checking events
         if gw.MOUSE_STEERING:
-            cursor.update_mouse(gw)
+            on_button = False
+            for button in gw.buttons:
+                if button.rect.collidepoint(pg.mouse.get_pos()):
+                    curr_button = button
+                    on_button = True
+
+            if not on_button:
+                cursor.update(gw)
+                curr_button = None
         else:
             cursor.update_arrows(gw, pressed_keys)
 
@@ -68,13 +81,16 @@ if __name__ == "__main__":
                     display_stats = not display_stats
 
                 if event.key == pg.K_KP_PLUS and gw.tile_s < 120:
-                    zoom(gw, 2, cursor)
+                    zoom(gw, 2, cursor, minimap)
 
                 if event.key == pg.K_KP_MINUS and gw.tile_s > 15:
-                    zoom(gw, 0.5, cursor)
+                    zoom(gw, 0.5, cursor, minimap)
 
         if pressed_keys[K_SPACE] or pg.mouse.get_pressed(num_buttons=3)[0]:  # placing down held structure
-            place_structure(gw, cursor, prev_pos, place_hold)
+            if not on_button:
+                place_structure(gw, cursor, prev_pos, place_hold)
+            else:
+                curr_button.press(gw, cursor, place_hold)
             place_hold = True
         else:
             place_hold = False
@@ -96,11 +112,11 @@ if __name__ == "__main__":
 
         gw.entities.draw(gw.background)
 
-        if cursor.hold is not None:
-            cursor.ghost.update(gw, cursor)
-            gw.background.surf.blit(cursor.ghost.surf, cursor.ghost.rect)
+        # if cursor.hold is not None:
+        #     cursor.ghost.update(gw, cursor)
+        #     gw.background.surf.blit(cursor.ghost.surf, cursor.ghost.rect)
 
-        gw.background.surf.blit(cursor.surf, cursor.rect)
+        # gw.background.surf.blit(cursor.surf, cursor.rect)
 
         if gw.SOUNDTRACK and not gw.soundtrack_channel.get_busy():
             gw.soundtrack_channel.play(gw.tracks[randint(0, 13)])
@@ -111,7 +127,13 @@ if __name__ == "__main__":
         if display_stats:
             global_statistics.update_global_stats(gw)
             tile_statistics.update_tile_stats(cursor.pos, gw)
-
+        gw.screen.blit(build_menu.surf, build_menu.rect)
+        minimap.update_minimap(gw)
+        if curr_button is not None:
+            if not place_hold:
+                curr_button.hovered(gw)
+            else:
+                curr_button.pressed(gw)
         gw.background.surf_rendered.blit(gw.background.surf_raw.subsurface(gw.background.rect), (0, 0))
         pg.display.flip()
 

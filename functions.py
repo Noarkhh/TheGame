@@ -420,13 +420,14 @@ def remove_structure(gw, cursor, remove_hold):
     return removed
 
 
-def zoom(gw, factor, cursor):
+def zoom(gw, factor, cursor, minimap):
     gw.tile_s = int(gw.tile_s * factor)
     gw.width_pixels = int(gw.width_pixels * factor)
     gw.height_pixels = int(gw.height_pixels * factor)
     gw.background.surf = pg.transform.scale(gw.background.surf, (gw.width_pixels, gw.height_pixels))
     gw.background.surf_raw = pg.transform.scale(gw.background.surf_raw, (gw.width_pixels, gw.height_pixels))
     cursor.surf = pg.transform.scale(cursor.surf, (gw.tile_s, gw.tile_s))
+    minimap.update_zoom(gw)
 
     if cursor.hold is not None:
         cursor.hold.surf = pg.transform.scale(cursor.hold.surf, (gw.tile_s, cursor.hold.surf_ratio[1] * gw.tile_s))

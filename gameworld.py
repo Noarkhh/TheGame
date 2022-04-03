@@ -49,7 +49,7 @@ class GameWorld:
     def __init__(self):
         self.SOUNDTRACK = False
         self.MOUSE_STEERING = True
-        self.WINDOWED = False
+        self.WINDOWED = True
         self.LAYOUT = pg.image.load("assets/maps/desert_delta_L.png")
         self.HEIGHT_TILES = self.LAYOUT.get_height()
         self.WIDTH_TILES = self.LAYOUT.get_width()
@@ -66,6 +66,7 @@ class GameWorld:
                                    pg.K_f: Farmland}
         self.entities = Entities()
         self.structs = pg.sprite.Group()
+        self.buttons = pg.sprite.Group()
         self.vault = Vault(self)
         self.soundtrack_channel = pg.mixer.Channel(5)
         self.speech_channel = pg.mixer.Channel(3)
@@ -77,7 +78,6 @@ class GameWorld:
         self.struct_map = [[0 for _ in range(self.HEIGHT_TILES)] for _ in range(self.WIDTH_TILES)]
         self.sounds, self.tracks = self.load_sounds()
         self.background = Background(self)
-
 
     def set_window(self):
         """
