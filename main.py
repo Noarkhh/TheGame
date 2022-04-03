@@ -24,11 +24,11 @@ if __name__ == "__main__":
     prev_pos = (0, 0)
 
     clock = pg.time.Clock()
-    place_hold, remove_hold = False, False
-    display_stats = True
+    press_hold, remove_hold = False, False
+    display_stats, display_build_menu = True, True
     structure_ghost = None
     on_button = False
-    curr_button = None
+    curr_button, prev_button = None, None
 
     gw.speech_channel.play(gw.sounds["General_Startgame"])
     running = True
@@ -85,21 +85,27 @@ if __name__ == "__main__":
                 if event.key == pg.K_KP_MINUS and gw.tile_s > 15:
                     zoom(gw, 0.5, cursor, minimap)
 
+                if event.key == pg.K_e:
+                    if display_build_menu:
+                        gw.buttons.remove(build_menu.buttons)
+                    else:
+                        build_menu = BuildMenu(gw)
+                    display_build_menu = not display_build_menu
+
         if pressed_keys[K_SPACE] or pg.mouse.get_pressed(num_buttons=3)[0]:  # placing down held structure
             if not on_button:
-                place_structure(gw, cursor, prev_pos, place_hold)
+                place_structure(gw, cursor, prev_pos, press_hold)
             else:
-                curr_button.press(gw, cursor, place_hold)
-            place_hold = True
+                curr_button.press(gw, cursor, press_hold)
+            press_hold = True
         else:
-            place_hold = False
+            press_hold = False
 
         if pressed_keys[K_x]:  # removing a structure
             if remove_structure(gw, cursor, remove_hold):
                 remove_hold = True
         else:
             remove_hold = False
-
         prev_pos = tuple(cursor.pos)
         gw.background.move_screen(gw, cursor)
 
@@ -110,6 +116,9 @@ if __name__ == "__main__":
             running = False
 
         gw.entities.draw(gw.background)
+        if curr_button is None:
+            cursor.draw(gw)
+
 
         # if cursor.hold is not None:
         #     cursor.ghost.update(gw, cursor)
@@ -126,13 +135,18 @@ if __name__ == "__main__":
         if display_stats:
             global_statistics.update_global_stats(gw)
             tile_statistics.update_tile_stats(cursor.pos, gw)
-        gw.screen.blit(build_menu.surf, build_menu.rect)
+        if display_build_menu:
+            gw.screen.blit(build_menu.surf, build_menu.rect)
         minimap.update_minimap(gw)
         if curr_button is not None:
-            if not place_hold:
+            if not press_hold:
+                if prev_button is not curr_button:
+                    gw.sounds["woodrollover" + str(randint(2, 5))].play()
                 curr_button.hovered(gw)
             else:
                 curr_button.pressed(gw)
+        prev_button = curr_button
+
         gw.background.surf_rendered.blit(gw.background.surf_raw.subsurface(gw.background.rect), (0, 0))
         pg.display.flip()
 

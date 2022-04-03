@@ -251,7 +251,7 @@ def count_road_network(gw, xy):
     return count
 
 
-def place_structure(gw, cursor, prev_pos, place_hold):
+def place_structure(gw, cursor, prev_pos, press_hold):
     """
     Function responsible for placing structures on the map.
     The structure that will be tested for placement is the one held by the cursor.
@@ -279,7 +279,7 @@ def place_structure(gw, cursor, prev_pos, place_hold):
         :param gw: Gameworld object
         :param cursor: Cursor object
         :param prev_pos: Position of the cursor in the previous gametick
-        :param place_hold: A variable that indicates whether the place key is being held down
+        :param press_hold: A variable that indicates whether the place key is being held down
     """
 
     def gate_placement_logic(gw):
@@ -319,7 +319,7 @@ def place_structure(gw, cursor, prev_pos, place_hold):
                     gw.struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
                     built = True
 
-                elif isinstance(cursor.hold, Gate) and not place_hold:
+                elif isinstance(cursor.hold, Gate) and not press_hold:
                     passed, new_friends = gate_placement_logic(gw)
                     if passed:
                         new_struct = type(cursor.hold)(cursor.pos, gw, cursor.hold.orient)
@@ -329,13 +329,13 @@ def place_structure(gw, cursor, prev_pos, place_hold):
                         gw.struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
                         gw.struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(tuple(new_friends), True)
                         built = True
-            elif not place_hold:
+            elif not press_hold:
                 can_afford = False
 
         change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
         pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
 
-        if isinstance(cursor.hold, Snapper) and change in pos_change_dict.keys() and place_hold and \
+        if isinstance(cursor.hold, Snapper) and change in pos_change_dict.keys() and press_hold and \
                 isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Snapper) and \
                 isinstance(gw.struct_map[prev_pos[0]][prev_pos[1]], Snapper):
             if gw.struct_map[cursor.pos[0]][cursor.pos[1]].snapsto[pos_change_dict[change][0]] == \
@@ -359,14 +359,14 @@ def place_structure(gw, cursor, prev_pos, place_hold):
                     if isinstance(y, House):
                         y.update_profit(gw)
 
-        if not snapped and not built and not place_hold and can_afford:
+        if not snapped and not built and not press_hold and can_afford:
             if not isinstance(cursor.hold, Snapper) or \
                     not isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Snapper):
                 gw.speech_channel.play(gw.sounds["Placement_Warning16"])
             elif not bool(set(cursor.hold.snapsto.values()) &
                           set(gw.struct_map[cursor.pos[0]][cursor.pos[1]].snapsto.values())):
                 gw.speech_channel.play(gw.sounds["Placement_Warning16"])
-        if not snapped and not built and not place_hold and not can_afford:
+        if not snapped and not built and not press_hold and not can_afford:
             gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
     return
 

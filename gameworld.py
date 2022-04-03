@@ -163,8 +163,9 @@ class GameWorld:
             tracks = []
         for track in tracks:
             track.set_volume(0.4)
-        for sound in sounds.values():
-            sound.set_volume(0.7)
+        for name, sound in sounds.items():
+            if not name.startswith("woodrollover"):
+                sound.set_volume(0.7)
 
         return sounds, tracks
 
