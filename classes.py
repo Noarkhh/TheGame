@@ -226,9 +226,10 @@ class BuildMenu(HUD):
         self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2)
         self.surf.blit(pg.image.load("assets/hud/hud_edge_horiz.png").convert(), (0, 0))
         lowest = 0
-        self.hover_surf = pg.Surface((30, 30))
-        self.press_surf = pg.Surface((30, 60))
-        self.press_surf.fill((255, 0, 0))
+        self.hover_surf = pg.image.load("assets/hud/hud_tile_hover.png").convert()
+        self.hover_surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.press_surf = pg.image.load("assets/hud/hud_tile_press.png").convert()
+        self.press_surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.build_list = []
         self.rect_list = []
         for i, building in enumerate(gw.key_structure_dict.values()):
