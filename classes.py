@@ -165,11 +165,13 @@ class TileStatistics(Statistics):
 
 
 class Button(pg.sprite.Sprite):
-    def __init__(self, rect, function, value, hover_surf=pg.Surface((0, 0)), press_surf=pg.Surface((0, 0))):
+    def __init__(self, rect, function, value=None, hover_surf=pg.Surface((0, 0)), press_surf=pg.Surface((0, 0))):
         super().__init__()
         self.rect = rect
         self.hover_surf = hover_surf
+        self.hover_surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.press_surf = press_surf
+        self.press_surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.function = function
         self.value = value
 
@@ -180,12 +182,37 @@ class Button(pg.sprite.Sprite):
         gw.screen.blit(self.press_surf, self.rect)
 
     def press(self, gw, cursor, press_hold):
-        self.function(gw, cursor, self.value, press_hold)
+        return self.function(gw, cursor, self.value, press_hold)
 
 
-class HUD(pg.sprite.Sprite):
+class HUD:
     def __init__(self, gw):
         super().__init__()
+
+
+class PauseMenu(HUD):
+    def __init__(self, gw):
+        super().__init__(gw)
+        self.surf = pg.transform.scale(pg.image.load("assets/hud/main_menu.png").convert(), (64 * 4, 88 * 4))
+        self.surf_dict = {"resume_hover": pg.transform.scale(
+            pg.image.load("assets/hud/pause_menu_resume_hover.png").convert(), (44 * 4, 14 * 4)),
+            "quit_hover": pg.transform.scale(
+                pg.image.load("assets/hud/pause_menu_quit_hover.png").convert(), (44 * 4, 14 * 4))}
+
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.rect = self.surf.get_rect(center=(gw.WINDOW_WIDTH / 2, gw.WINDOW_HEIGHT / 2))
+        self.buttons = {"resume": Button(pg.rect.Rect(
+            self.rect.left + 40, self.rect.top + 28, 176, 56), self.resume, hover_surf=self.surf_dict["resume_hover"],
+            press_surf=self.surf_dict["resume_hover"]),
+            "quit": Button(pg.rect.Rect(
+                self.rect.left + 40, self.rect.top + 268, 176, 56), self.quit, hover_surf=self.surf_dict["quit_hover"],
+                press_surf=self.surf_dict["quit_hover"])}
+
+    def resume(self, gw, cursor, value, press_hold):
+        return False, True
+
+    def quit(self, gw, cursor, value, press_hold):
+        return False, False
 
 
 class Minimap(HUD):
@@ -202,7 +229,6 @@ class Minimap(HUD):
         cutout.fill((0, 0, 0))
         self.visible_area.blit(cutout, (2, 2))
         self.visible_area.set_colorkey((0, 0, 0), RLEACCEL)
-
 
     def update_minimap(self, gw):
         self.surf.blit(self.surf_raw, (0, 0))
@@ -231,7 +257,7 @@ class BuildMenu(HUD):
         self.hover_surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.press_surf = pg.transform.scale(pg.image.load("assets/hud/hud_tile_press.png").convert(), (100, 120))
         self.press_surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.buttons = []
+        self.buttons = set()
         for i, building in enumerate(gw.key_structure_dict.values()):
             new_build = building([0, 0], gw)
             self.surf.blit(pg.transform.scale(pg.image.load("assets/hud/hud_horiz_sep.png").convert(), (4, 120)),
@@ -242,7 +268,7 @@ class BuildMenu(HUD):
             new_button = Button(pg.Rect((self.rect.x + 40 + i * 104, 0), (100, 108)),
                                 self.assign, type(new_build), self.hover_surf, self.press_surf)
             gw.buttons.add(new_button)
-            self.buttons.append(new_button)
+            self.buttons.add(new_button)
             # self.rect_list.append(pg.Rect((self.rect.x + 40 + i * 104, 0), (100, 108)))
             # self.build_list.append(type(new_build))
             height = 100 - 60 * new_build.surf_ratio[1]

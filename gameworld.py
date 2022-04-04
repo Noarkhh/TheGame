@@ -66,7 +66,7 @@ class GameWorld:
                                    pg.K_f: Farmland}
         self.entities = Entities()
         self.structs = pg.sprite.Group()
-        self.buttons = pg.sprite.Group()
+        self.buttons = set()
         self.vault = Vault(self)
         self.soundtrack_channel = pg.mixer.Channel(5)
         self.speech_channel = pg.mixer.Channel(3)

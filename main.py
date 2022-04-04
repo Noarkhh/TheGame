@@ -63,9 +63,6 @@ if __name__ == "__main__":
                 if event.key == K_n:
                     cursor.hold = None
 
-                if event.key == K_ESCAPE:
-                    running = False
-
                 if event.key == K_q and isinstance(cursor.hold, Gate):
                     cursor.hold.rotate(gw)
 
@@ -87,10 +84,38 @@ if __name__ == "__main__":
 
                 if event.key == pg.K_e:
                     if display_build_menu:
-                        gw.buttons.remove(build_menu.buttons)
+                        gw.buttons.difference_update(build_menu.buttons)
                     else:
                         build_menu = BuildMenu(gw)
                     display_build_menu = not display_build_menu
+
+                if event.key == K_ESCAPE:
+                    menu_open = True
+                    pause_menu = PauseMenu(gw)
+                    prev_button = None
+                    while menu_open:
+                        on_button = False
+                        curr_button = None
+                        gw.screen.blit(pause_menu.surf, pause_menu.rect)
+                        for button in pause_menu.buttons.values():
+                            if button.rect.collidepoint(pg.mouse.get_pos()):
+                                curr_button = button
+                                on_button = True
+                                curr_button.hovered(gw)
+                        if pg.mouse.get_pressed(num_buttons=3)[0] and on_button:
+                            curr_button.pressed(gw)
+                            menu_open, running = curr_button.press(gw, cursor, press_hold)
+                            gw.sounds["woodpush2"].play()
+                        if curr_button is not None and prev_button is not curr_button:
+                            gw.sounds["woodrollover" + str(randint(2, 5))].play()
+                        prev_button = curr_button
+
+
+                        for event in pg.event.get():
+                            if event.type == KEYDOWN and event.key == K_ESCAPE:
+                                menu_open = False
+                                break
+                        pg.display.flip()
 
         if pressed_keys[K_SPACE] or pg.mouse.get_pressed(num_buttons=3)[0]:  # placing down held structure
             if not on_button:
