@@ -251,11 +251,11 @@ def count_road_network(gw, xy):
     return count
 
 
-def place_structure(gw, cursor, prev_pos, press_hold):
+def place_structure(gw, prev_pos, press_hold):
     """
     Function responsible for placing structures on the map.
-    The structure that will be tested for placement is the one held by the cursor.
-    The tile that the structure will be tested for placement on is the one that the cursor's on.
+    The structure that will be tested for placement is the one held by the gw.cursor.
+    The tile that the structure will be tested for placement on is the one that the gw.cursor's on.
 
     Logic:
     - The structure cannot be placed on water tiles unless it's a Road.
@@ -266,7 +266,7 @@ def place_structure(gw, cursor, prev_pos, press_hold):
        have to be in the right orientation so that the placement is valid.
 
     - If the structure is a Snapper and the conditions are met, two neighbouring Snappers can connect.
-      > The placement key had to be held down while the cursor was moving between two tiles.
+      > The placement key had to be held down while the gw.cursor was moving between two tiles.
       > The snapper on the previous tile must be able to snap to the snapper on the current tile, and vice versa.
         The validity is determined by both snappers' attributes snapsto.
 
@@ -277,24 +277,24 @@ def place_structure(gw, cursor, prev_pos, press_hold):
     If a structure has been placed or two structures were snapped, a building sound effect is played.
 
         :param gw: Gameworld object
-        :param cursor: Cursor object
-        :param prev_pos: Position of the cursor in the previous gametick
+        :param gw.cursor: Cursor object
+        :param prev_pos: Position of the gw.cursor in the previous gametick
         :param press_hold: A variable that indicates whether the place key is being held down
     """
 
     def gate_placement_logic(gw):
-        if (isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Wall) or
-            isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Road)) and \
-                not isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Gate):
+        if (isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Wall) or
+            isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Road)) and \
+                not isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Gate):
             new_friends = set()
 
             for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
                                                       (0, -1, 0, 1), (1, 0, -1, 0)):
-                if not gw.pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
-                        isinstance(gw.struct_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper) and \
-                        direction in gw.struct_map[cursor.pos[0] + x][cursor.pos[1] + y].neighbours:
-                    if cursor.hold.snapsto[direction_rev] != \
-                            gw.struct_map[cursor.pos[0] + x][cursor.pos[1] + y].snapsto[direction]:
+                if not gw.pos_oob(gw.cursor.pos[0] + x, gw.cursor.pos[1] + y) and \
+                        isinstance(gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y], Snapper) and \
+                        direction in gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y].neighbours:
+                    if gw.cursor.hold.snapsto[direction_rev] != \
+                            gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y].snapsto[direction]:
                         return False, None
                     else:
                         new_friends.add(direction_rev)
@@ -304,77 +304,77 @@ def place_structure(gw, cursor, prev_pos, press_hold):
             return False, None
 
     new_struct = None
-    if isinstance(cursor.hold, Structure):
+    if isinstance(gw.cursor.hold, Structure):
         built, snapped, can_afford = False, False, True
-        if gw.tile_type_map[cursor.pos[0]][cursor.pos[1]] != "water" or isinstance(cursor.hold, Road):
-            if cursor.hold.build_cost <= gw.vault.gold:
-                if not isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Structure):
+        if gw.tile_type_map[gw.cursor.pos[0]][gw.cursor.pos[1]] != "water" or isinstance(gw.cursor.hold, Road):
+            if gw.cursor.hold.build_cost <= gw.vault.gold:
+                if not isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Structure):
 
-                    if isinstance(cursor.hold, Gate):
-                        new_struct = type(cursor.hold)(cursor.pos, gw, cursor.hold.orient)
+                    if isinstance(gw.cursor.hold, Gate):
+                        new_struct = type(gw.cursor.hold)(gw.cursor.pos, gw, gw.cursor.hold.orient)
                     else:
-                        new_struct = type(cursor.hold)(cursor.pos, gw)
+                        new_struct = type(gw.cursor.hold)(gw.cursor.pos, gw)
                     gw.structs.add(new_struct)
                     gw.entities.add(new_struct)
-                    gw.struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
+                    gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]] = new_struct
                     built = True
 
-                elif isinstance(cursor.hold, Gate) and not press_hold:
+                elif isinstance(gw.cursor.hold, Gate) and not press_hold:
                     passed, new_friends = gate_placement_logic(gw)
                     if passed:
-                        new_struct = type(cursor.hold)(cursor.pos, gw, cursor.hold.orient)
+                        new_struct = type(gw.cursor.hold)(gw.cursor.pos, gw, gw.cursor.hold.orient)
                         gw.structs.add(new_struct)
                         gw.entities.add(new_struct)
-                        gw.struct_map[cursor.pos[0]][cursor.pos[1]].kill()
-                        gw.struct_map[cursor.pos[0]][cursor.pos[1]] = new_struct
-                        gw.struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(tuple(new_friends), True)
+                        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].kill()
+                        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]] = new_struct
+                        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(tuple(new_friends), True)
                         built = True
             elif not press_hold:
                 can_afford = False
 
-        change = tuple([a - b for a, b in zip(cursor.pos, prev_pos)])
+        change = tuple([a - b for a, b in zip(gw.cursor.pos, prev_pos)])
         pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
 
-        if isinstance(cursor.hold, Snapper) and change in pos_change_dict.keys() and press_hold and \
-                isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Snapper) and \
+        if isinstance(gw.cursor.hold, Snapper) and change in pos_change_dict.keys() and press_hold and \
+                isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Snapper) and \
                 isinstance(gw.struct_map[prev_pos[0]][prev_pos[1]], Snapper):
-            if gw.struct_map[cursor.pos[0]][cursor.pos[1]].snapsto[pos_change_dict[change][0]] == \
+            if gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].snapsto[pos_change_dict[change][0]] == \
                     gw.struct_map[prev_pos[0]][prev_pos[1]].snapsto[pos_change_dict[change][1]]:
-                gw.struct_map[cursor.pos[0]][cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
+                gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
                 gw.struct_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
                 snapped = True
 
         if built:
-            gw.vault.gold -= gw.struct_map[cursor.pos[0]][cursor.pos[1]].build_cost
-            if isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Wall):
-                gw.wall_set.add(tuple(cursor.pos))
+            gw.vault.gold -= gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].build_cost
+            if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Wall):
+                gw.wall_set.add(tuple(gw.cursor.pos))
         if snapped and not built:
             detect_surrounded_tiles(gw)
         if built or snapped:
             gw.sounds["drawbridge_control"].play()
-        if (snapped and isinstance(cursor.hold, Road)) or \
+        if (snapped and isinstance(gw.cursor.hold, Road)) or \
                 (built and (isinstance(new_struct, House) or isinstance(new_struct, Road))):
-            for x in gw.struct_map[max(0, cursor.pos[0] - 7):min(gw.WIDTH_TILES, cursor.pos[0] + 8)]:
-                for y in x[max(0, cursor.pos[1] - 7):min(gw.WIDTH_TILES, cursor.pos[1] + 8)]:
+            for x in gw.struct_map[max(0, gw.cursor.pos[0] - 7):min(gw.WIDTH_TILES, gw.cursor.pos[0] + 8)]:
+                for y in x[max(0, gw.cursor.pos[1] - 7):min(gw.WIDTH_TILES, gw.cursor.pos[1] + 8)]:
                     if isinstance(y, House):
                         y.update_profit(gw)
 
         if not snapped and not built and not press_hold and can_afford:
-            if not isinstance(cursor.hold, Snapper) or \
-                    not isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Snapper):
+            if not isinstance(gw.cursor.hold, Snapper) or \
+                    not isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Snapper):
                 gw.speech_channel.play(gw.sounds["Placement_Warning16"])
-            elif not bool(set(cursor.hold.snapsto.values()) &
-                          set(gw.struct_map[cursor.pos[0]][cursor.pos[1]].snapsto.values())):
+            elif not bool(set(gw.cursor.hold.snapsto.values()) &
+                          set(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].snapsto.values())):
                 gw.speech_channel.play(gw.sounds["Placement_Warning16"])
         if not snapped and not built and not press_hold and not can_afford:
             gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
     return
 
 
-def remove_structure(gw, cursor, remove_hold):
+def remove_structure(gw, remove_hold):
     """
     Function that is responsible for removing structures from the map.
-    The structure that will be removed is the one that is on a tile that the cursor's on.
+    The structure that will be removed is the one that is on a tile that the gw.cursor's on.
 
     If the structure that's being removed is a Snapper, all its connected Snapper neighbours
     are updated so that they no longer connect to the tile that the Structure was on.
@@ -385,55 +385,55 @@ def remove_structure(gw, cursor, remove_hold):
     If the remove key is not being held down, a demolition sound effect is played.
 
         :param gw: Gameworld object
-        :param cursor: Cursor object
+        :param gw.cursor: Cursor object
         :param remove_hold: A variable that indicates whether the remove key is being held down
     """
-    if isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Structure):
+    if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Structure):
         if not remove_hold:
             pg.mixer.find_channel(True).play(gw.sounds["buildingwreck_01"])
-        if isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Snapper):
+        if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Snapper):
             for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
                                                       (0, -1, 0, 1), (1, 0, -1, 0)):
-                if not gw.pos_oob(cursor.pos[0] + x, cursor.pos[1] + y) and \
-                        isinstance(gw.struct_map[cursor.pos[0] + x][cursor.pos[1] + y], Snapper) and \
-                        gw.struct_map[cursor.pos[0]][cursor.pos[1]].snapsto[direction_rev] == \
-                        gw.struct_map[cursor.pos[0] + x][cursor.pos[1] + y].snapsto[direction]:
-                    gw.struct_map[cursor.pos[0] + x][cursor.pos[1] + y].update_edges(direction, False)
+                if not gw.pos_oob(gw.cursor.pos[0] + x, gw.cursor.pos[1] + y) and \
+                        isinstance(gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y], Snapper) and \
+                        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].snapsto[direction_rev] == \
+                        gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y].snapsto[direction]:
+                    gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y].update_edges(direction, False)
 
-        if isinstance(gw.struct_map[cursor.pos[0]][cursor.pos[1]], Wall):
-            gw.wall_set.remove(tuple(cursor.pos))
+        if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Wall):
+            gw.wall_set.remove(tuple(gw.cursor.pos))
             detect_surrounded_tiles(gw)
         removed = True
 
-        gw.struct_map[cursor.pos[0]][cursor.pos[1]].kill()
-        gw.struct_map[cursor.pos[0]][cursor.pos[1]] = 0
+        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].kill()
+        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]] = 0
         for struct in gw.structs:
             if gw.surrounded_tiles[struct.pos[0]][struct.pos[1]] == 2:
                 struct.inside = True
             else:
                 struct.inside = False
             if isinstance(struct, House) and \
-                    abs(struct.pos[0] - cursor.pos[0]) + abs(struct.pos[0] - cursor.pos[0]) <= 6:
+                    abs(struct.pos[0] - gw.cursor.pos[0]) + abs(struct.pos[0] - gw.cursor.pos[0]) <= 6:
                 struct.update_profit(gw)
     else:
         removed = False
     return removed
 
 
-def zoom(gw, factor, cursor, minimap):
+def zoom(gw, factor, minimap):
     gw.tile_s = int(gw.tile_s * factor)
     gw.width_pixels = int(gw.width_pixels * factor)
     gw.height_pixels = int(gw.height_pixels * factor)
     gw.background.surf = pg.transform.scale(gw.background.surf, (gw.width_pixels, gw.height_pixels))
     gw.background.surf_raw = pg.transform.scale(gw.background.surf_raw, (gw.width_pixels, gw.height_pixels))
-    cursor.surf = pg.transform.scale(cursor.surf, (gw.tile_s, gw.tile_s))
+    gw.cursor.surf = pg.transform.scale(gw.cursor.surf, (gw.tile_s, gw.tile_s))
     minimap.update_zoom(gw)
 
-    if cursor.hold is not None:
-        cursor.hold.surf = pg.transform.scale(cursor.hold.surf, (gw.tile_s, cursor.hold.surf_ratio[1] * gw.tile_s))
-        cursor.ghost.surf = pg.transform.scale(cursor.hold.surf, (gw.tile_s, cursor.hold.surf_ratio[1] * gw.tile_s))
-        cursor.ghost.rect = cursor.ghost.surf.get_rect(bottomright=(gw.tile_s * (cursor.ghost.pos[0] + 1),
-                                                                    gw.tile_s * (cursor.ghost.pos[1] + 1)))
+    if gw.cursor.hold is not None:
+        gw.cursor.hold.surf = pg.transform.scale(gw.cursor.hold.surf, (gw.tile_s, gw.cursor.hold.surf_ratio[1] * gw.tile_s))
+        gw.cursor.ghost.surf = pg.transform.scale(gw.cursor.hold.surf, (gw.tile_s, gw.cursor.hold.surf_ratio[1] * gw.tile_s))
+        gw.cursor.ghost.rect = gw.cursor.ghost.surf.get_rect(bottomright=(gw.tile_s * (gw.cursor.ghost.pos[0] + 1),
+                                                                    gw.tile_s * (gw.cursor.ghost.pos[1] + 1)))
     for struct in gw.structs:
         struct.update_zoom(gw)
 

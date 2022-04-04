@@ -49,7 +49,7 @@ class GameWorld:
     def __init__(self):
         self.SOUNDTRACK = False
         self.MOUSE_STEERING = True
-        self.WINDOWED = True
+        self.WINDOWED = False
         self.LAYOUT = pg.image.load("assets/maps/desert_delta_L.png")
         self.HEIGHT_TILES = self.LAYOUT.get_height()
         self.WIDTH_TILES = self.LAYOUT.get_width()
@@ -58,9 +58,11 @@ class GameWorld:
         self.TICK_RATE = 60
         self.STARTING_GOLD = 300000000
 
+        self.screen = self.set_window()
         self.tile_s = 30
         self.width_pixels = self.WIDTH_TILES * self.tile_s
         self.height_pixels = self.HEIGHT_TILES * self.tile_s
+        self.cursor = Cursor(self)
         self.wall_set = set()
         self.key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid,
                                    pg.K_f: Farmland}
@@ -71,7 +73,6 @@ class GameWorld:
         self.soundtrack_channel = pg.mixer.Channel(5)
         self.speech_channel = pg.mixer.Channel(3)
 
-        self.screen = self.set_window()
         self.snapper_dict = self.fill_snappers_dict()
         self.map_surf, self.tile_type_map = self.load_map()
         self.surrounded_tiles = [[0 for _ in range(self.HEIGHT_TILES)] for _ in range(self.WIDTH_TILES)]

@@ -16,15 +16,15 @@ class Background(pg.sprite.Sprite):
         self.surf_rendered = self.surf.subsurface((0, 0, gw.WINDOW_WIDTH, gw.WINDOW_HEIGHT))
         self.rect = self.surf_rendered.get_rect()
 
-    def move_screen(self, gw, cursor):
+    def move_screen(self, gw):
         if not gw.MOUSE_STEERING:
-            if cursor.rect.right >= self.rect.right <= gw.width_pixels - gw.tile_s / 2:
+            if gw.cursor.rect.right >= self.rect.right <= gw.width_pixels - gw.tile_s / 2:
                 self.rect.move_ip(gw.tile_s / 2, 0)
-            if cursor.rect.left <= self.rect.left >= 0 + gw.tile_s / 2:
+            if gw.cursor.rect.left <= self.rect.left >= 0 + gw.tile_s / 2:
                 self.rect.move_ip(-gw.tile_s / 2, 0)
-            if cursor.rect.bottom >= self.rect.bottom <= gw.height_pixels - gw.tile_s / 2:
+            if gw.cursor.rect.bottom >= self.rect.bottom <= gw.height_pixels - gw.tile_s / 2:
                 self.rect.move_ip(0, gw.tile_s / 2)
-            if cursor.rect.top <= self.rect.top >= 0 + gw.tile_s / 2:
+            if gw.cursor.rect.top <= self.rect.top >= 0 + gw.tile_s / 2:
                 self.rect.move_ip(0, -gw.tile_s / 2)
         else:
             if pg.mouse.get_pos()[0] >= gw.WINDOW_WIDTH - gw.tile_s / 2 and \
@@ -181,13 +181,25 @@ class Button(pg.sprite.Sprite):
     def pressed(self, gw):
         gw.screen.blit(self.press_surf, self.rect)
 
-    def press(self, gw, cursor, press_hold):
-        return self.function(gw, cursor, self.value, press_hold)
+    def press(self, gw, press_hold):
+        return self.function(gw, self.value, press_hold)
 
 
 class HUD:
     def __init__(self, gw):
         super().__init__()
+
+
+class TopBar(HUD):
+    def __init__(self, gw):
+        super().__init__(gw)
+        self.surf = pg.surface.Surface((gw.WINDOW_WIDTH, 44))
+        self.rect = self.surf.get_rect()
+        self.bar_segment = pg.transform.scale(pg.image.load("assets/hud/main_bar_segment.png"), (4*27, 44))
+        curr_pos = 0
+        while curr_pos < gw.WINDOW_WIDTH:
+            self.surf.blit(self.bar_segment, (curr_pos, 0))
+            curr_pos += 4*27
 
 
 class PauseMenu(HUD):
@@ -208,10 +220,10 @@ class PauseMenu(HUD):
                 self.rect.left + 40, self.rect.top + 268, 176, 56), self.quit, hover_surf=self.surf_dict["quit_hover"],
                 press_surf=self.surf_dict["quit_hover"])}
 
-    def resume(self, gw, cursor, value, press_hold):
+    def resume(self, gw, value, press_hold):
         return False, True
 
-    def quit(self, gw, cursor, value, press_hold):
+    def quit(self, gw, value, press_hold):
         return False, False
 
 
@@ -222,7 +234,7 @@ class Minimap(HUD):
         self.frame.set_colorkey((255, 255, 255), RLEACCEL)
         self.surf = gw.LAYOUT.copy()
         self.surf_raw = self.surf.copy()
-        self.rect = self.surf.get_rect(topright=(gw.WINDOW_WIDTH, 0))
+        self.rect = self.surf.get_rect(topright=(gw.WINDOW_WIDTH, 44))
         self.visible_area = pg.surface.Surface((gw.WINDOW_WIDTH / gw.tile_s, gw.WINDOW_HEIGHT / gw.tile_s))
         self.visible_area.fill((223, 17, 28))
         cutout = pg.surface.Surface((gw.WINDOW_WIDTH / gw.tile_s - 4, gw.WINDOW_HEIGHT / gw.tile_s - 4))
@@ -250,28 +262,33 @@ class BuildMenu(HUD):
         super().__init__(gw)
         self.surf = pg.Surface((76 + len(gw.key_structure_dict.values()) * 104, 136))
         self.surf.fill((255, 255, 255))
-        self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2)
+        self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2, top=44)
         self.surf.blit(pg.transform.scale(pg.image.load("assets/hud/hud_edge_horiz.png").convert(), (36, 136)), (0, 0))
-        lowest = 0
-        self.hover_surf = pg.transform.scale(pg.image.load("assets/hud/hud_tile_hover.png").convert(), (100, 120))
+        self.hover_surf = pg.transform.scale(pg.image.load("assets/hud/hud_tile_horiz_hover.png").convert(), (108, 120))
         self.hover_surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.press_surf = pg.transform.scale(pg.image.load("assets/hud/hud_tile_press.png").convert(), (100, 120))
         self.press_surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.buttons = set()
+        lowest = 0
+
         for i, building in enumerate(gw.key_structure_dict.values()):
             new_build = building([0, 0], gw)
             self.surf.blit(pg.transform.scale(pg.image.load("assets/hud/hud_horiz_sep.png").convert(), (4, 120)),
                            (36 + i * 104, 0))
             self.surf.blit(pg.transform.scale(pg.image.load("assets/hud/hud_tile_horiz.png").convert(), (100, 120)),
                            (40 + i * 104, 0))
+            height = 100 - 60 * new_build.surf_ratio[1]
 
-            new_button = Button(pg.Rect((self.rect.x + 40 + i * 104, 0), (100, 108)),
-                                self.assign, type(new_build), self.hover_surf, self.press_surf)
+            curr_hover_surf = self.hover_surf.copy()
+            curr_hover_surf.blit(pg.transform.scale(new_build.surf, (60, 60 * new_build.surf_ratio[1])),
+                                 (24, 8 + height))
+
+            new_button = Button(pg.Rect((self.rect.x + 36 + i * 104, 44), (108, 108)),
+                                self.assign, type(new_build), curr_hover_surf, curr_hover_surf)
             gw.buttons.add(new_button)
             self.buttons.add(new_button)
             # self.rect_list.append(pg.Rect((self.rect.x + 40 + i * 104, 0), (100, 108)))
             # self.build_list.append(type(new_build))
-            height = 100 - 60 * new_build.surf_ratio[1]
             self.surf.blit(pg.transform.scale(new_build.surf, (60, 60 * new_build.surf_ratio[1])),
                            (60 + i * 104, 4 + height))
             lowest = i
@@ -282,10 +299,10 @@ class BuildMenu(HUD):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.collide_rect = pg.Rect(self.rect.left + 4, 0, self.rect.width - 8, self.rect.height - 16)
 
-    def assign(self, gw, cursor, value, press_hold):
+    def assign(self, gw, value, press_hold):
         if not press_hold:
-            cursor.hold = value([0, 0], gw)
-            cursor.ghost = Ghost(gw, cursor)
+            gw.cursor.hold = value([0, 0], gw)
+            gw.cursor.ghost = Ghost(gw)
             gw.sounds["woodpush2"].play()
 
 
@@ -355,23 +372,23 @@ class Cursor(pg.sprite.Sprite):
     def draw(self, gw):
         gw.background.surf.blit(self.surf, self.rect)
         if self.hold is not None:
-            self.ghost.update(gw, self)
+            self.ghost.update(gw)
             gw.background.surf.blit(self.ghost.surf, self.ghost.rect)
 
 
 class Ghost(pg.sprite.Sprite):
-    def __init__(self, gw, cursor):
+    def __init__(self, gw):
         super().__init__()
-        self.surf = cursor.hold.surf
+        self.surf = gw.cursor.hold.surf
         self.surf.set_alpha(128)
-        self.pos = cursor.pos
+        self.pos = gw.cursor.pos
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
 
-    def update(self, gw, cursor):
-        self.pos = cursor.pos
+    def update(self, gw):
+        self.pos = gw.cursor.pos
         self.rect.right = gw.tile_s * (self.pos[0] + 1)
         self.rect.bottom = gw.tile_s * (self.pos[1] + 1)
-        self.surf = cursor.hold.surf
+        self.surf = gw.cursor.hold.surf
         self.surf.set_alpha(128)
 
 
