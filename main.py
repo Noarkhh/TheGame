@@ -97,7 +97,7 @@ if __name__ == "__main__":
                         on_button = False
                         curr_button = None
                         gw.screen.blit(pause_menu.surf, pause_menu.rect)
-                        for button in pause_menu.buttons.values():
+                        for button in pause_menu.buttons:
                             if button.rect.collidepoint(pg.mouse.get_pos()):
                                 curr_button = button
                                 on_button = True
@@ -162,7 +162,8 @@ if __name__ == "__main__":
         if display_build_menu:
             gw.screen.blit(build_menu.surf, build_menu.rect)
         minimap.update_minimap(gw)
-        gw.screen.blit(top_bar.surf, top_bar.rect)
+        top_bar.update(gw, global_statistics)
+
         if curr_button is not None:
             if not press_hold:
                 if prev_button is not curr_button:

@@ -49,7 +49,7 @@ class GameWorld:
     def __init__(self):
         self.SOUNDTRACK = False
         self.MOUSE_STEERING = True
-        self.WINDOWED = False
+        self.WINDOWED = True
         self.LAYOUT = pg.image.load("assets/maps/desert_delta_L.png")
         self.HEIGHT_TILES = self.LAYOUT.get_height()
         self.WIDTH_TILES = self.LAYOUT.get_width()

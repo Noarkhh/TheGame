@@ -193,32 +193,72 @@ class HUD:
 class TopBar(HUD):
     def __init__(self, gw):
         super().__init__(gw)
+        self.font_size = 20
+        self.font = pg.font.Font('assets/Minecraft.otf', self.font_size)
         self.surf = pg.surface.Surface((gw.WINDOW_WIDTH, 44))
         self.rect = self.surf.get_rect()
         self.bar_segment = pg.transform.scale(pg.image.load("assets/hud/main_bar_segment.png"), (4*27, 44))
+        self.rightmost = 12
         curr_pos = 0
         while curr_pos < gw.WINDOW_WIDTH:
             self.surf.blit(self.bar_segment, (curr_pos, 0))
             curr_pos += 4*27
+        self.surf_raw = self.surf.copy()
+
+    def draw(self, text):
+        text_surf = self.font.render(text, False, (62, 61, 58), (255, 255, 255))
+        text_surf.set_colorkey((255, 255, 255))
+        self.surf.blit(text_surf, (self.rightmost, 8))
+        self.rightmost += text_surf.get_width() + 20
+
+    def update(self, gw, glob_stats):
+        self.surf.blit(self.surf_raw, (0, 0))
+        self.draw("Time: " + str(glob_stats.time[0]) + ":00, Day " + str(glob_stats.time[1] + 1)
+                  + ", Week " + str(glob_stats.time[2] + 1))
+        self.draw("Gold: " + str(gw.vault.gold) + "g")
+        self.draw("TPS: " + str("{:.2f}".format(1 / glob_stats.elapsed * gw.TICK_RATE)))
+        self.draw("Weekly Tribute: " + str(glob_stats.tribute) + "g")
+        gw.screen.blit(self.surf, self.rect)
+        self.rightmost = 12
 
 
 class PauseMenu(HUD):
     def __init__(self, gw):
         super().__init__(gw)
-        self.surf = pg.transform.scale(pg.image.load("assets/hud/main_menu.png").convert(), (64 * 4, 88 * 4))
+        self.font = pg.font.Font('assets/Minecraft.otf', 40)
+        self.button_names = ["Resume", "Save", "Load", "Options", "Quit"]
+        self.buttons = set()
+        self.surf = pg.transform.scale(pg.image.load("assets/hud/pause_menu.png").convert(), (64 * 4, 88 * 4))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.rect = self.surf.get_rect(center=(gw.WINDOW_WIDTH / 2, gw.WINDOW_HEIGHT / 2))
+
         self.surf_dict = {"resume_hover": pg.transform.scale(
             pg.image.load("assets/hud/pause_menu_resume_hover.png").convert(), (44 * 4, 14 * 4)),
             "quit_hover": pg.transform.scale(
                 pg.image.load("assets/hud/pause_menu_quit_hover.png").convert(), (44 * 4, 14 * 4))}
+        for h, button_name in enumerate(self.button_names):
+            button_surf = pg.transform.scale(pg.image.load("assets/hud/pause_menu_button.png").convert(),
+                                             (44 * 4, 14 * 4))
+            button_surf.set_colorkey((255, 255, 255), RLEACCEL)
+            text_surf = self.font.render(button_name, False, (62, 61, 58), (255, 255, 255))
+            text_surf.set_colorkey((255, 255, 255), RLEACCEL)
+            text_rect = text_surf.get_rect(centerx=button_surf.get_width() / 2, top=4)
+            button_surf.blit(text_surf, text_rect)
+            self.surf.blit(button_surf, (40, 28 + 60 * h))
 
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.rect = self.surf.get_rect(center=(gw.WINDOW_WIDTH / 2, gw.WINDOW_HEIGHT / 2))
-        self.buttons = {"resume": Button(pg.rect.Rect(
-            self.rect.left + 40, self.rect.top + 28, 176, 56), self.resume, hover_surf=self.surf_dict["resume_hover"],
-            press_surf=self.surf_dict["resume_hover"]),
-            "quit": Button(pg.rect.Rect(
-                self.rect.left + 40, self.rect.top + 268, 176, 56), self.quit, hover_surf=self.surf_dict["quit_hover"],
-                press_surf=self.surf_dict["quit_hover"])}
+            hover_surf = pg.transform.scale(pg.image.load("assets/hud/pause_menu_button_hover.png").convert(),
+                                            (44 * 4, 14 * 4))
+            hover_surf.blit(text_surf, (text_rect.x, text_rect.y + 4))
+            self.buttons.add(Button(pg.rect.Rect(self.rect.left + 40, self.rect.top + 28 + 60 * h,
+                                                 button_surf.get_width(), button_surf.get_height()), self.resume,
+                                    hover_surf=hover_surf, press_surf=hover_surf))
+
+        # self.buttons = {"resume": Button(pg.rect.Rect(
+        #     self.rect.left + 40, self.rect.top + 28, 176, 56), self.resume, hover_surf=self.surf_dict["resume_hover"],
+        #     press_surf=self.surf_dict["resume_hover"]),
+        #     "quit": Button(pg.rect.Rect(
+        #         self.rect.left + 40, self.rect.top + 268, 176, 56), self.quit, hover_surf=self.surf_dict["quit_hover"],
+        #         press_surf=self.surf_dict["quit_hover"])}
 
     def resume(self, gw, value, press_hold):
         return False, True
