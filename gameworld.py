@@ -50,7 +50,7 @@ class GameWorld:
         self.SOUNDTRACK = False
         self.MOUSE_STEERING = True
         self.WINDOWED = True
-        self.LAYOUT = pg.image.load("assets/maps/desert_delta_L.png")
+        self.LAYOUT = pg.image.load("assets/maps/desert_river_M.png")
         self.HEIGHT_TILES = self.LAYOUT.get_height()
         self.WIDTH_TILES = self.LAYOUT.get_width()
         self.WINDOW_HEIGHT = 720
@@ -66,10 +66,13 @@ class GameWorld:
         self.wall_set = set()
         self.key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid,
                                    pg.K_f: Farmland}
+        self.string_type_dict = {"house": House, "tower": Tower, "road": Road, "wall": Wall, "gate": Gate,
+                                 "obama": Pyramid, "farmland": Farmland}
         self.entities = Entities()
         self.structs = pg.sprite.Group()
         self.buttons = set()
         self.vault = Vault(self)
+        self.global_statistics = GlobalStatistics()
         self.soundtrack_channel = pg.mixer.Channel(5)
         self.speech_channel = pg.mixer.Channel(3)
 
@@ -182,3 +185,34 @@ class GameWorld:
         if y < 0: return True
         if y > self.HEIGHT_TILES - 1: return True
         return False
+
+    def to_json(self):
+        return {
+            "cursor": self.cursor.to_json(),
+            "struct_map": [[struct.to_json() if isinstance(struct, Structure) else 0 for struct in x]
+                           for x in self.struct_map],
+            "global_statistics": self.global_statistics.to_json(),
+            "structs": [struct.to_json() for struct in self.structs],
+            "entities": [entity.to_json() for entity in self.entities],
+            # "buttons": [button.to_json() for button in self.buttons],
+            "wall_set": tuple(self.wall_set)
+        }
+
+    def from_json(self, json_dict):
+        # self.struct_map = [[struct.from_json(gw, json_dict) if struct != 0 else 0 for struct in x]
+        #                    for x in json_dict["struct_map"]]
+        for i, x in enumerate(json_dict["struct_map"]):
+            for j, y in enumerate(x):
+                if y != 0:
+                    if self.string_type_dict[y["type"]] != Gate:
+                        loaded_struct = self.string_type_dict[y["type"]](y["pos"], self)
+                    else:
+                        loaded_struct = self.string_type_dict[y["type"]](y["pos"], self, y["orient"])
+                    loaded_struct.from_json(y)
+                    self.struct_map[i][j] = loaded_struct
+                    self.structs.add(loaded_struct)
+                    self.entities.add(loaded_struct)
+
+        self.global_statistics = GlobalStatistics()
+        self.global_statistics.from_json(json_dict["global_statistics"])
+        self.wall_set = {tuple(elem) for elem in json_dict["wall_set"]}

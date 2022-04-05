@@ -2,109 +2,6 @@ from collections import defaultdict
 from classes import *
 
 
-# def detect_wall_loops(xy):
-#     def find_connected_nodes(A, node_xy, direction_to_xy_dict, required, current_walls, origin, i):
-#         # print(current_walls, node_xy)
-#         current_walls.append(node_xy)
-#         if len(gw.struct_map[node_xy[0]][node_xy[1]].neighbours) >= 3:
-#             return current_walls, node_xy, True
-#
-#         if len(gw.struct_map[node_xy[0]][node_xy[1]].neighbours) <= 1 or A[node_xy[0]][node_xy[1]] == False:
-#             return 0, 0, False
-#         A[node_xy[0]][node_xy[1]] = False
-#
-#         for direction in gw.struct_map[node_xy[0]][node_xy[1]].neighbours:
-#             next = direction_to_xy_dict[direction]
-#             if A[node_xy[0] + next[0]][node_xy[1] + next[1]] and \
-#                     bool(set(gw.struct_map[node_xy[0] + next[0]][node_xy[1] + next[1]].snapsto.values()) & required) and \
-#                     ((node_xy[0] + next[0], node_xy[1] + next[1]) != origin or i <= 0):
-#                 return find_connected_nodes(A, (node_xy[0] + next[0], node_xy[1] + next[1]), direction_to_xy_dict,
-#                                      required, current_walls, origin, i-1)
-#         return 0, 0, False
-#
-#     def DFScycle(graph, v, e, visited_v, visited_e, cycle):
-#         global cycle_start
-#         global flag
-#         flag = True
-#         cycle_start = None
-#         visited_v.add(v)
-#         if e is not None:
-#             visited_e.add(e)
-#
-#         for neighbour_v, neighbour_e in graph[v]:
-#             if neighbour_e not in visited_e:
-#                 if neighbour_v not in visited_v:
-#                     if DFScycle(graph, neighbour_v, neighbour_e, visited_v, visited_e, cycle):
-#                         if flag:
-#                             cycle.append(neighbour_e)
-#                         if v == cycle_start:
-#                             flag = False
-#                         return True
-#                 else:
-#                     cycle_start = neighbour_v
-#                     cycle.append(neighbour_e)
-#                     visited_e.add(neighbour_e)
-#                     return True
-#         return False
-#
-#     A = [[True if isinstance(y, Wall) else 0 for y in x] for x in gw.struct_map]
-#     B = [[1 if isinstance(y, Wall) and len(y.neighbours) >= 3 else 0 for y in x] for x in gw.struct_map]
-#     walls_in_edge = []
-#     node_list = []
-#     for xi, x in enumerate(B):
-#         for yj, y in enumerate(x):
-#             if y == 1:
-#                 node_list.append((xi, yj))
-#
-#     edge_dict = {}
-#     edge_list = []
-#     graph = defaultdict(list)
-#     required = set(gw.struct_map[xy[0]][xy[1]].snapsto.values())
-#     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
-#
-#     i = 0
-#     for node in node_list:
-#         for direction in gw.struct_map[node[0]][node[1]].neighbours:
-#             current_walls = walls_in_edge.copy()
-#             current_walls.append(node)
-#             edge, second_node, found = (find_connected_nodes(A, (node[0] + direction_to_xy_dict[direction][0],
-#                                      node[1] + direction_to_xy_dict[direction][1]),
-#                                  direction_to_xy_dict, required, current_walls, node, 2))
-#
-#             if found:
-#                 if node[0] > second_node[0]:
-#                     node_pair = (node, second_node)
-#                 elif node[0] < second_node[0]:
-#                     node_pair = (second_node, node)
-#                 else:
-#                     if node[1] > second_node[1]:
-#                         node_pair = (node, second_node)
-#                     else:
-#                         node_pair = (second_node, node)
-#                 if node_pair != tuple(edge):
-#                     edge_dict[(node_pair, i)] = edge
-#                     graph[node].append((second_node, (node_pair, i)))
-#                     graph[second_node].append((node, (node_pair, i)))
-#
-#                     edge_list.append([(node_pair, i), "white"])
-#                     i += 1
-#
-#     visited_e = set()
-#     all_cycles = list()
-#     for node in node_list:
-#         # for _ in range(len(gw.struct_map[node[0]][node[1]].neighbours)):
-#         visited_v = set()
-#         visited_e = set()
-#         cycle = list()
-#         DFScycle(graph, node, None, visited_v, visited_e, cycle)
-#         if cycle not in all_cycles:
-#             all_cycles.append(cycle)
-#
-#     for cycle in all_cycles:
-#         print(cycle)
-#     return graph
-
-
 def detect_surrounded_tiles(gw):
     """
     Function that detects which tiles are inside walls.
@@ -327,7 +224,7 @@ def place_structure(gw, prev_pos, press_hold):
                         gw.entities.add(new_struct)
                         gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].kill()
                         gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]] = new_struct
-                        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(tuple(new_friends), True)
+                        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(tuple(new_friends), 1)
                         built = True
             elif not press_hold:
                 can_afford = False
@@ -340,8 +237,8 @@ def place_structure(gw, prev_pos, press_hold):
                 isinstance(gw.struct_map[prev_pos[0]][prev_pos[1]], Snapper):
             if gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].snapsto[pos_change_dict[change][0]] == \
                     gw.struct_map[prev_pos[0]][prev_pos[1]].snapsto[pos_change_dict[change][1]]:
-                gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(pos_change_dict[change][0], True)
-                gw.struct_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], True)
+                gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(pos_change_dict[change][0], 1)
+                gw.struct_map[prev_pos[0]][prev_pos[1]].update_edges(pos_change_dict[change][1], 1)
                 snapped = True
 
         if built:
@@ -398,7 +295,7 @@ def remove_structure(gw, remove_hold):
                         isinstance(gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y], Snapper) and \
                         gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].snapsto[direction_rev] == \
                         gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y].snapsto[direction]:
-                    gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y].update_edges(direction, False)
+                    gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y].update_edges(direction, -1)
 
         if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Wall):
             gw.wall_set.remove(tuple(gw.cursor.pos))
@@ -454,3 +351,106 @@ def zoom(gw, factor, minimap):
         gw.background.rect.top = 0
     else:
         gw.background.rect.centery = int(gw.background.rect.centery * factor)
+
+
+# def detect_wall_loops(xy):
+#     def find_connected_nodes(A, node_xy, direction_to_xy_dict, required, current_walls, origin, i):
+#         # print(current_walls, node_xy)
+#         current_walls.append(node_xy)
+#         if len(gw.struct_map[node_xy[0]][node_xy[1]].neighbours) >= 3:
+#             return current_walls, node_xy, True
+#
+#         if len(gw.struct_map[node_xy[0]][node_xy[1]].neighbours) <= 1 or A[node_xy[0]][node_xy[1]] == False:
+#             return 0, 0, False
+#         A[node_xy[0]][node_xy[1]] = False
+#
+#         for direction in gw.struct_map[node_xy[0]][node_xy[1]].neighbours:
+#             next = direction_to_xy_dict[direction]
+#             if A[node_xy[0] + next[0]][node_xy[1] + next[1]] and \
+#                     bool(set(gw.struct_map[node_xy[0] + next[0]][node_xy[1] + next[1]].snapsto.values()) & required) and \
+#                     ((node_xy[0] + next[0], node_xy[1] + next[1]) != origin or i <= 0):
+#                 return find_connected_nodes(A, (node_xy[0] + next[0], node_xy[1] + next[1]), direction_to_xy_dict,
+#                                      required, current_walls, origin, i-1)
+#         return 0, 0, False
+#
+#     def DFScycle(graph, v, e, visited_v, visited_e, cycle):
+#         global cycle_start
+#         global flag
+#         flag = True
+#         cycle_start = None
+#         visited_v.add(v)
+#         if e is not None:
+#             visited_e.add(e)
+#
+#         for neighbour_v, neighbour_e in graph[v]:
+#             if neighbour_e not in visited_e:
+#                 if neighbour_v not in visited_v:
+#                     if DFScycle(graph, neighbour_v, neighbour_e, visited_v, visited_e, cycle):
+#                         if flag:
+#                             cycle.append(neighbour_e)
+#                         if v == cycle_start:
+#                             flag = False
+#                         return True
+#                 else:
+#                     cycle_start = neighbour_v
+#                     cycle.append(neighbour_e)
+#                     visited_e.add(neighbour_e)
+#                     return True
+#         return False
+#
+#     A = [[True if isinstance(y, Wall) else 0 for y in x] for x in gw.struct_map]
+#     B = [[1 if isinstance(y, Wall) and len(y.neighbours) >= 3 else 0 for y in x] for x in gw.struct_map]
+#     walls_in_edge = []
+#     node_list = []
+#     for xi, x in enumerate(B):
+#         for yj, y in enumerate(x):
+#             if y == 1:
+#                 node_list.append((xi, yj))
+#
+#     edge_dict = {}
+#     edge_list = []
+#     graph = defaultdict(list)
+#     required = set(gw.struct_map[xy[0]][xy[1]].snapsto.values())
+#     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
+#
+#     i = 0
+#     for node in node_list:
+#         for direction in gw.struct_map[node[0]][node[1]].neighbours:
+#             current_walls = walls_in_edge.copy()
+#             current_walls.append(node)
+#             edge, second_node, found = (find_connected_nodes(A, (node[0] + direction_to_xy_dict[direction][0],
+#                                      node[1] + direction_to_xy_dict[direction][1]),
+#                                  direction_to_xy_dict, required, current_walls, node, 2))
+#
+#             if found:
+#                 if node[0] > second_node[0]:
+#                     node_pair = (node, second_node)
+#                 elif node[0] < second_node[0]:
+#                     node_pair = (second_node, node)
+#                 else:
+#                     if node[1] > second_node[1]:
+#                         node_pair = (node, second_node)
+#                     else:
+#                         node_pair = (second_node, node)
+#                 if node_pair != tuple(edge):
+#                     edge_dict[(node_pair, i)] = edge
+#                     graph[node].append((second_node, (node_pair, i)))
+#                     graph[second_node].append((node, (node_pair, i)))
+#
+#                     edge_list.append([(node_pair, i), "white"])
+#                     i += 1
+#
+#     visited_e = set()
+#     all_cycles = list()
+#     for node in node_list:
+#         # for _ in range(len(gw.struct_map[node[0]][node[1]].neighbours)):
+#         visited_v = set()
+#         visited_e = set()
+#         cycle = list()
+#         DFScycle(graph, node, None, visited_v, visited_e, cycle)
+#         if cycle not in all_cycles:
+#             all_cycles.append(cycle)
+#
+#     for cycle in all_cycles:
+#         print(cycle)
+#     return graph

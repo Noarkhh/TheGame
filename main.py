@@ -16,7 +16,6 @@ if __name__ == "__main__":
     gw = GameWorld()
 
     tile_statistics = TileStatistics(gw)
-    global_statistics = GlobalStatistics()
     build_menu = BuildMenu(gw)
     minimap = Minimap(gw)
     top_bar = TopBar(gw)
@@ -93,6 +92,7 @@ if __name__ == "__main__":
                     menu_open = True
                     pause_menu = PauseMenu(gw)
                     prev_button = None
+                    load = False
                     while menu_open:
                         on_button = False
                         curr_button = None
@@ -104,11 +104,21 @@ if __name__ == "__main__":
                                 curr_button.hovered(gw)
                         if pg.mouse.get_pressed(num_buttons=3)[0] and on_button:
                             curr_button.pressed(gw)
-                            menu_open, running = curr_button.press(gw, press_hold)
-                            gw.sounds["woodpush2"].play()
+                            menu_open, running, load = curr_button.press(gw, press_hold)
+                            if not press_hold:
+                                gw.sounds["woodpush2"].play()
+                            press_hold = True
+                        else:
+                            press_hold = False
                         if curr_button is not None and prev_button is not curr_button:
                             gw.sounds["woodrollover" + str(randint(2, 5))].play()
                         prev_button = curr_button
+                        if load:
+                            with open("saves/savefile.json", "r") as f:
+                                gw = GameWorld()
+                                gw.from_json(json.load(f))
+                                if display_build_menu:
+                                    build_menu = BuildMenu(gw)
 
                         for event in pg.event.get():
                             if event.type == KEYDOWN and event.key == K_ESCAPE:
@@ -157,12 +167,12 @@ if __name__ == "__main__":
         gw.screen.blit(gw.background.surf_rendered, (0, 0))
 
         if display_stats:
-            global_statistics.update_global_stats(gw)
+            gw.global_statistics.update_global_stats(gw)
             tile_statistics.update_tile_stats(gw.cursor.pos, gw)
         if display_build_menu:
             gw.screen.blit(build_menu.surf, build_menu.rect)
         minimap.update_minimap(gw)
-        top_bar.update(gw, global_statistics)
+        top_bar.update(gw)
 
         if curr_button is not None:
             if not press_hold:
