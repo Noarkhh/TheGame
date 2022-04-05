@@ -2,6 +2,7 @@ import pygame as pg
 from random import randint
 import time
 import json
+from datetime import date
 from pygame.locals import (RLEACCEL,
                            K_UP,
                            K_DOWN,
@@ -194,14 +195,7 @@ class Button(pg.sprite.Sprite):
         gw.screen.blit(self.press_surf, self.rect)
 
     def press(self, gw, args):
-        return self.function(gw, self.value, args)
-
-    # def to_json(self):
-    #     return {
-    #         "rect": (self.rect.left, self.rect.top, self.rect.width, self.rect.height),
-    #         "function": self.function,
-    #         "value": self.value
-    #     }
+        return self.function(gw, self, self.value, args)
 
 
 class HUD:
@@ -245,48 +239,94 @@ class PauseMenu(HUD):
     def __init__(self, gw):
         super().__init__(gw)
         self.font = pg.font.Font('assets/Minecraft.otf', 40)
+        self.small_font = pg.font.Font('assets/Minecraft.otf', 20)
+
         self.button_properties = [("Resume", self.resume), ("Save", self.save), ("Load", self.load),
                                   ("Options", self.options), ("Quit", self.quit)]
         self.buttons = set()
+        with open("saves/save_dates.json", "r") as f:
+            self.dates = json.load(f)
+        # self.dates = ["Empty slot"] * 5
         self.surf = pg.transform.scale(pg.image.load("assets/hud/pause_menu.png").convert(), (64 * 4, 88 * 4))
+        self.surf_raw = self.surf.copy()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect(center=(gw.WINDOW_WIDTH / 2, gw.WINDOW_HEIGHT / 2))
 
         for h, (button_name, method) in enumerate(self.button_properties):
-            button_surf = pg.transform.scale(pg.image.load("assets/hud/pause_menu_button.png").convert(),
-                                             (44 * 4, 14 * 4))
-            button_surf.set_colorkey((255, 255, 255), RLEACCEL)
-            text_surf = self.font.render(button_name, False, (62, 61, 58), (255, 255, 255))
-            text_surf.set_colorkey((255, 255, 255), RLEACCEL)
-            text_rect = text_surf.get_rect(centerx=button_surf.get_width() / 2, top=4)
-            button_surf.blit(text_surf, text_rect)
-            self.surf.blit(button_surf, (40, 28 + 60 * h))
+            self.make_button(button_name, self.font, h, method, None,
+                             "assets/hud/pause_menu_button.png", "assets/hud/pause_menu_button_hover.png")
 
-            hover_surf = pg.transform.scale(pg.image.load("assets/hud/pause_menu_button_hover.png").convert(),
-                                            (44 * 4, 14 * 4))
-            hover_surf.blit(text_surf, (text_rect.x, text_rect.y + 4))
-            self.buttons.add(Button(pg.rect.Rect(self.rect.left + 40, self.rect.top + 28 + 60 * h,
-                                                 button_surf.get_width(), button_surf.get_height()), method,
-                                    hover_surf=hover_surf, press_surf=hover_surf))
+    def load_menu(self, gw, button=None, value=None, press_hold=None):
+        self.surf = self.surf_raw.copy()
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.buttons = set()
 
-    def resume(self, gw, value, press_hold):
-        return False, True, False
+        for h, (button_name, method) in enumerate(self.button_properties):
+            self.make_button(button_name, self.font, h, method, None,
+                             "assets/hud/pause_menu_button.png", "assets/hud/pause_menu_button_hover.png")
+        gw.screen.blit(self.surf, self.rect)
 
-    def save(self, gw, value, press_hold):
-        with open("saves/savefile.json", "w+") as f:
-            # json_dict = gw.to_json()
-            # print(gw.to_json())
-            json.dump(gw.to_json(), f, indent=2)
-        return True, True, False
+        return True, True, -1
 
-    def load(self, gw, value, glob_stats):
-        return False, True, True
+    def load_savefile_menu(self, gw, method):
+        gw.buttons.difference_update(self.buttons)
+        self.buttons = set()
+        self.surf.blit(self.surf_raw, (0, 0))
+        for h in range(5):
+            self.make_button(self.dates[h], self.small_font, h, method, h,
+                             "assets/hud/pause_menu_button_small.png", "assets/hud/pause_menu_button_small_hover.png")
+        self.make_button("Back", self.font, 4, self.load_menu, 0,
+                         "assets/hud/pause_menu_button.png", "assets/hud/pause_menu_button_hover.png")
 
-    def options(self, gw, value, press_hold):
-        return True, True, False
+    def make_button(self, name, font, offset, method, value, path, hover_path):
+        button_surf = pg.image.load(path).convert()
+        button_surf = pg.transform.scale(button_surf, (button_surf.get_width() * 4, button_surf.get_height() * 4))
+        button_surf.set_colorkey((255, 255, 255), RLEACCEL)
+        text_surf = font.render(name, False, (62, 61, 58), (255, 255, 255))
+        text_surf.set_colorkey((255, 255, 255), RLEACCEL)
+        text_rect = text_surf.get_rect(centerx=button_surf.get_width() / 2, top=4)
+        button_surf.blit(text_surf, text_rect)
+        button_rect = button_surf.get_rect(topleft=(40, 28 + (button_surf.get_height() + 4) * offset))
 
-    def quit(self, gw, value, press_hold):
-        return False, False, False
+        self.surf.blit(button_surf, button_rect)
+        hover_surf = pg.image.load(hover_path).convert()
+        hover_surf = pg.transform.scale(hover_surf, (hover_surf.get_width() * 4, hover_surf.get_height() * 4))
+        hover_surf.blit(text_surf, (text_rect.x, text_rect.y + 4))
+        self.buttons.add(Button(button_rect.move(self.rect.x, self.rect.y), method, value, hover_surf, hover_surf))
+
+    def resume(self, gw, button, value, press_hold):
+        return False, True, -1
+
+    def save(self, gw, button, value, press_hold):
+        def save_slot(gw, button, value, pause_menu):
+            pause_menu.dates[value] = time.strftime("%H:%M %d-%m-%y")
+            pause_menu.buttons.remove(button)
+            pause_menu.make_button(pause_menu.dates[value], pause_menu.small_font, value, save_slot, value,
+                                   "assets/hud/pause_menu_button_small.png",
+                                   "assets/hud/pause_menu_button_small_hover.png")
+            with open("saves/savefile" + str(value) + ".json", "w+") as f:
+                json.dump(gw.to_json(), f, indent=2)
+            with open("saves/save_dates.json", "w+") as f:
+                json.dump(pause_menu.dates, f)
+            return True, True, -1
+        self.load_savefile_menu(gw, save_slot)
+        return True, True, -1
+
+    def load(self, gw, button, value, glob_stats):
+        def load_slot(gw, button, value, pause_menu):
+            if pause_menu.dates[value] != "Empty slot":
+                return False, True, value
+            else:
+                return True, True, -1
+
+        self.load_savefile_menu(gw, load_slot)
+        return True, True, -1
+
+    def options(self, gw, button, value, press_hold):
+        return True, True, -1
+
+    def quit(self, gw, button, value, press_hold):
+        return False, False, -1
 
 
 class Minimap(HUD):
@@ -365,7 +405,7 @@ class BuildMenu(HUD):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.collide_rect = pg.Rect(self.rect.left + 4, 0, self.rect.width - 8, self.rect.height - 16)
 
-    def assign(self, gw, value, press_hold):
+    def assign(self, gw, button, value, press_hold):
         if not press_hold:
             gw.cursor.hold = value([0, 0], gw)
             gw.cursor.ghost = Ghost(gw)

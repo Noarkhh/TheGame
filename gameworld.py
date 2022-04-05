@@ -194,13 +194,11 @@ class GameWorld:
             "global_statistics": self.global_statistics.to_json(),
             "structs": [struct.to_json() for struct in self.structs],
             "entities": [entity.to_json() for entity in self.entities],
-            # "buttons": [button.to_json() for button in self.buttons],
             "wall_set": tuple(self.wall_set)
         }
 
     def from_json(self, json_dict):
-        # self.struct_map = [[struct.from_json(gw, json_dict) if struct != 0 else 0 for struct in x]
-        #                    for x in json_dict["struct_map"]]
+
         for i, x in enumerate(json_dict["struct_map"]):
             for j, y in enumerate(x):
                 if y != 0:

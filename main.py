@@ -19,6 +19,7 @@ if __name__ == "__main__":
     build_menu = BuildMenu(gw)
     minimap = Minimap(gw)
     top_bar = TopBar(gw)
+    pause_menu = PauseMenu(gw)
 
     prev_pos = (0, 0)
 
@@ -90,39 +91,49 @@ if __name__ == "__main__":
 
                 if event.key == K_ESCAPE:
                     menu_open = True
-                    pause_menu = PauseMenu(gw)
                     prev_button = None
-                    load = False
+                    load = -1
+                    pause_menu.load_menu(gw)
+
                     while menu_open:
+                        gw.screen.blit(pause_menu.surf, pause_menu.rect)
                         on_button = False
                         curr_button = None
-                        gw.screen.blit(pause_menu.surf, pause_menu.rect)
                         for button in pause_menu.buttons:
                             if button.rect.collidepoint(pg.mouse.get_pos()):
                                 curr_button = button
                                 on_button = True
                                 curr_button.hovered(gw)
-                        if pg.mouse.get_pressed(num_buttons=3)[0] and on_button:
-                            curr_button.pressed(gw)
-                            menu_open, running, load = curr_button.press(gw, press_hold)
-                            if not press_hold:
-                                gw.sounds["woodpush2"].play()
+                        if pg.mouse.get_pressed(num_buttons=3)[0]:
+                            if on_button:
+                                curr_button.pressed(gw)
+                                if not press_hold:
+                                    menu_open, running, load = curr_button.press(gw, pause_menu)
+                                    gw.sounds["woodpush2"].play()
                             press_hold = True
                         else:
                             press_hold = False
+
                         if curr_button is not None and prev_button is not curr_button:
                             gw.sounds["woodrollover" + str(randint(2, 5))].play()
                         prev_button = curr_button
-                        if load:
-                            with open("saves/savefile.json", "r") as f:
+                        if load >= 0:
+                            with open("saves/savefile" + str(load) + ".json", "r") as f:
                                 gw = GameWorld()
                                 gw.from_json(json.load(f))
-                                if display_build_menu:
-                                    build_menu = BuildMenu(gw)
+                            on_button = False
+                            if display_build_menu:
+                                build_menu = BuildMenu(gw)
 
                         for event in pg.event.get():
+                            if event.type == QUIT:
+                                menu_open = False
+                                running = False
+                                break
                             if event.type == KEYDOWN and event.key == K_ESCAPE:
                                 menu_open = False
+                                on_button = False
+                                gw.buttons.difference_update(pause_menu.buttons)
                                 break
                         pg.display.flip()
 
