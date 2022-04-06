@@ -1,8 +1,8 @@
 {
   "cursor": {
     "pos": [
-      16,
-      26
+      20,
+      11
     ]
   },
   "struct_map": [
@@ -4233,7 +4233,7 @@
   ],
   "global_statistics": {
     "time": [
-      1,
+      0,
       0,
       0
     ],

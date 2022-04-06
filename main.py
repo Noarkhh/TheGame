@@ -103,7 +103,10 @@ if __name__ == "__main__":
                             if button.rect.collidepoint(pg.mouse.get_pos()):
                                 curr_button = button
                                 on_button = True
-                                curr_button.hovered(gw)
+                                button.hovered(gw)
+                            if button.hold:
+                                button.hovered(gw)
+
                         if pg.mouse.get_pressed(num_buttons=3)[0]:
                             if on_button:
                                 curr_button.pressed(gw)
