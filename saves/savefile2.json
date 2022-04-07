@@ -1,8 +1,9 @@
 {
+  "layout_path": "assets/maps/desert_river_M.png",
   "cursor": {
     "pos": [
-      20,
-      11
+      14,
+      25
     ]
   },
   "struct_map": [
@@ -4234,12 +4235,13 @@
   "global_statistics": {
     "time": [
       0,
-      0,
+      1,
       0
     ],
     "tribute": 40
   },
   "structs": [],
   "entities": [],
-  "wall_set": []
+  "wall_set": [],
+  "gold": 300000000
 }

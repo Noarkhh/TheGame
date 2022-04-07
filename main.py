@@ -1,4 +1,5 @@
 from functions import *
+from hud import *
 from gameworld import GameWorld
 from pygame.locals import (K_SPACE,
                            KEYDOWN,
@@ -106,7 +107,8 @@ if __name__ == "__main__":
                                 button.hovered(gw)
                             if button.hold:
                                 button.hovered(gw)
-
+                        # if curr_button in pause_menu.buttons:
+                        #     print("aaa")
                         if pg.mouse.get_pressed(num_buttons=3)[0]:
                             if on_button:
                                 curr_button.pressed(gw)
@@ -122,8 +124,9 @@ if __name__ == "__main__":
                         prev_button = curr_button
                         if load >= 0:
                             with open("saves/savefile" + str(load) + ".json", "r") as f:
-                                gw = GameWorld()
+                                # gw = GameWorld()
                                 gw.from_json(json.load(f))
+                                detect_surrounded_tiles(gw)
                             on_button = False
                             if display_build_menu:
                                 build_menu = BuildMenu(gw)

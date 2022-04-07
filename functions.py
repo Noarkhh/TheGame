@@ -20,8 +20,8 @@ def detect_surrounded_tiles(gw):
         :param gw: Gameworld object
     """
 
-    def search_for_crossroads(gw, xy, prev, direction_to_xy_dict, required, network_set, open_network_set):
-        gw.wall_map[xy[0]][xy[1]] = True
+    def search_for_crossroads(gw, xy, prev, direction_to_xy_dict, required, network_set, open_network_set, wall_map):
+        wall_map[xy[0]][xy[1]] = True
         network_set.add(xy)
         open_network_set.add(xy)
         if len(gw.struct_map[xy[0]][xy[1]].neighbours) >= 3:
@@ -36,18 +36,18 @@ def detect_surrounded_tiles(gw):
             curr = tuple([a * -1 for a in next])
             if isinstance(gw.struct_map[xy[0] + next[0]][xy[1] + next[1]], Wall) and \
                     bool(set(gw.struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
-                if not gw.wall_map[xy[0] + next[0]][xy[1] + next[1]]:
+                if not wall_map[xy[0] + next[0]][xy[1] + next[1]]:
                     start, found, perimeter = search_for_crossroads(gw, (xy[0] + next[0], xy[1] + next[1]), curr,
                                                                     direction_to_xy_dict, required, network_set,
-                                                                    open_network_set)
+                                                                    open_network_set, wall_map)
                     if found:
                         return start, True, perimeter
                 elif next != prev:
                     return (xy[0] + next[0], xy[1] + next[1]), True, True
         return None, False, False
 
-    def get_wall_network(gw, xy, direction_to_xy_dict, required, network_set, open_network_set):
-        gw.wall_map[xy[0]][xy[1]] = True
+    def get_wall_network(gw, xy, direction_to_xy_dict, required, network_set, open_network_set, wall_map):
+        wall_map[xy[0]][xy[1]] = True
         network_set.add(xy)
         open_network_set.add(xy)
         # print(xy, network_set)
@@ -61,9 +61,9 @@ def detect_surrounded_tiles(gw):
             # curr = tuple([a * -1 for a in next])
             # print(xy, next, prev)
             if bool(set(gw.struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
-                if not gw.wall_map[xy[0] + next[0]][xy[1] + next[1]]:
+                if not wall_map[xy[0] + next[0]][xy[1] + next[1]]:
                     if get_wall_network(gw, (xy[0] + next[0], xy[1] + next[1]),
-                                        direction_to_xy_dict, required, network_set, open_network_set):
+                                        direction_to_xy_dict, required, network_set, open_network_set, wall_map):
                         if len(gw.struct_map[xy[0]][xy[1]].neighbours) <= 2:
                             network_set.remove(xy)
                             # print("rm: ", xy)
@@ -98,8 +98,8 @@ def detect_surrounded_tiles(gw):
 
     required = {"walls"}
     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
-    gw.wall_map = [[False for _ in range(gw.HEIGHT_TILES)] for _ in range(gw.WIDTH_TILES)]
-    gw.surrounded_tiles[0:-1] = [[0 for _ in range(gw.HEIGHT_TILES)] for _ in range(gw.WIDTH_TILES)]
+    wall_map = [[False for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
+    gw.surrounded_tiles[0:-1] = [[0 for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
     wall_set_copy = gw.wall_set.copy()
 
     while wall_set_copy:
@@ -107,16 +107,16 @@ def detect_surrounded_tiles(gw):
         open_network_set = set()
         start, not_line, perimeter = search_for_crossroads(gw, tuple(wall_set_copy)[0], (0, 0),
                                                            direction_to_xy_dict, required, network_set,
-                                                           open_network_set)
+                                                           open_network_set, wall_map)
         line = not not_line
         if not line:
             if not perimeter:
-                gw.wall_map = [[False for _ in range(gw.HEIGHT_TILES)] for _ in range(gw.WIDTH_TILES)]
+                wall_map = [[False for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
                 get_wall_network(gw, tuple(start), direction_to_xy_dict,
-                                 required, network_set, open_network_set)
+                                 required, network_set, open_network_set, wall_map)
             bottom_top_dict, right_left_dict = get_extremes(network_set)
             mark_safe_stripes(gw, bottom_top_dict, right_left_dict)
-        gw.wall_map = [[False for _ in range(gw.HEIGHT_TILES)] for _ in range(gw.WIDTH_TILES)]
+        wall_map = [[False for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
         wall_set_copy -= open_network_set
 
     return
@@ -129,7 +129,7 @@ def count_road_network(gw, xy):
         :param gw: Gameworld object
         :param xy: Coordinates of the selected road
     """
-    A = [[True for _ in range(gw.HEIGHT_TILES)] for _ in range(gw.WIDTH_TILES)]
+    A = [[True for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
     count = 0
     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
     required = set(gw.struct_map[xy[0]][xy[1]].snapsto.values())
@@ -251,8 +251,8 @@ def place_structure(gw, prev_pos, press_hold):
             gw.sounds["drawbridge_control"].play()
         if (snapped and isinstance(gw.cursor.hold, Road)) or \
                 (built and (isinstance(new_struct, House) or isinstance(new_struct, Road))):
-            for x in gw.struct_map[max(0, gw.cursor.pos[0] - 7):min(gw.WIDTH_TILES, gw.cursor.pos[0] + 8)]:
-                for y in x[max(0, gw.cursor.pos[1] - 7):min(gw.WIDTH_TILES, gw.cursor.pos[1] + 8)]:
+            for x in gw.struct_map[max(0, gw.cursor.pos[0] - 7):min(gw.width_tiles, gw.cursor.pos[0] + 8)]:
+                for y in x[max(0, gw.cursor.pos[1] - 7):min(gw.width_tiles, gw.cursor.pos[1] + 8)]:
                     if isinstance(y, House):
                         y.update_profit(gw)
 
