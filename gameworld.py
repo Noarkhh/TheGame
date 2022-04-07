@@ -50,14 +50,14 @@ class GameWorld:
     def __init__(self):
         self.SOUNDTRACK = False
         self.MOUSE_STEERING = True
-        self.WINDOWED = False
+        self.WINDOWED = True
         self.WINDOW_HEIGHT = 720
         self.WINDOW_WIDTH = 1080
         self.TICK_RATE = 60
         self.STARTING_GOLD = 300000000
         self.screen = self.set_window()
 
-        self.layout_path = "assets/maps/desert_delta_L.png"
+        self.layout_path = "assets/maps/desert_river_M.png"
         self.layout = pg.image.load(self.layout_path).convert()
         self.height_tiles = self.layout.get_height()
         self.width_tiles = self.layout.get_width()

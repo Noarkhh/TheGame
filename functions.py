@@ -111,12 +111,15 @@ def detect_surrounded_tiles(gw):
         line = not not_line
         if not line:
             if not perimeter:
-                wall_map = [[False for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
+                for wall in gw.wall_set:
+                    wall_map[wall[0]][wall[1]] = False
                 get_wall_network(gw, tuple(start), direction_to_xy_dict,
                                  required, network_set, open_network_set, wall_map)
             bottom_top_dict, right_left_dict = get_extremes(network_set)
             mark_safe_stripes(gw, bottom_top_dict, right_left_dict)
-        wall_map = [[False for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
+        # wall_map = [[False for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
+        for wall in gw.wall_set:
+            wall_map[wall[0]][wall[1]] = False
         wall_set_copy -= open_network_set
 
     return
@@ -174,7 +177,6 @@ def place_structure(gw, prev_pos, press_hold):
     If a structure has been placed or two structures were snapped, a building sound effect is played.
 
         :param gw: Gameworld object
-        :param gw.cursor: Cursor object
         :param prev_pos: Position of the gw.cursor in the previous gametick
         :param press_hold: A variable that indicates whether the place key is being held down
     """
@@ -247,8 +249,15 @@ def place_structure(gw, prev_pos, press_hold):
                 gw.wall_set.add(tuple(gw.cursor.pos))
         if snapped and not built:
             detect_surrounded_tiles(gw)
+            for struct in gw.structs:
+                if gw.surrounded_tiles[struct.pos[0]][struct.pos[1]] == 2:
+                    struct.inside = True
+                else:
+                    struct.inside = False
+
         if built or snapped:
             gw.sounds["drawbridge_control"].play()
+
         if (snapped and isinstance(gw.cursor.hold, Road)) or \
                 (built and (isinstance(new_struct, House) or isinstance(new_struct, Road))):
             for x in gw.struct_map[max(0, gw.cursor.pos[0] - 7):min(gw.width_tiles, gw.cursor.pos[0] + 8)]:
@@ -282,7 +291,6 @@ def remove_structure(gw, remove_hold):
     If the remove key is not being held down, a demolition sound effect is played.
 
         :param gw: Gameworld object
-        :param gw.cursor: Cursor object
         :param remove_hold: A variable that indicates whether the remove key is being held down
     """
     if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Structure):
