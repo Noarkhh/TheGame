@@ -3,7 +3,7 @@ import time
 import json
 import os
 from pygame.locals import RLEACCEL
-from classes import Ghost
+from classes import *
 
 
 class Button(pg.sprite.Sprite):
@@ -48,12 +48,14 @@ class HUD:
         self.surf.blit(button_surf, button_rect)
         hover_surf = self.button_dict[button_hover_key].copy()
         hover_surf.blit(contents_surf, (contents_rect.x, contents_rect.y + 4))
-        self.buttons.add(Button(button_rect.move(self.rect.x, self.rect.y), method, value, hover_surf, hover_surf, id))
+        button = Button(button_rect.move(self.rect.x, self.rect.y), method, value, hover_surf, hover_surf, id)
+        self.buttons.add(button)
+        return button
 
     def fill_dicts(self, button_names, icon_names, hud_type, icon_scale=4):
         for type, names, curr_dict, scale in zip(("button_", "icon_"),
-                                          (button_names, icon_names),
-                                          (self.button_dict, self.icon_dict),
+                                                 (button_names, icon_names),
+                                                 (self.button_dict, self.icon_dict),
                                                  (4, icon_scale)):
             for name in names:
                 curr_dict[type + name] = pg.image.load(
@@ -118,21 +120,11 @@ class PauseMenu(HUD):
         self.save = True
         self.fill_dicts(("", "hover", "small", "small_hover", "square", "square_hover"),
                         ("delete", "save", "back", "load"), "pause_menu")
-        # for type, names, curr_dict in zip(("button_", "icon_"),
-        #                                   (("", "hover", "small", "small_hover", "square", "square_hover"),
-        #                                    ("delete", "save", "back", "load")),
-        #                                   (self.button_dict, self.icon_dict)):
-        #     for name in names:
-        #         curr_dict[type + name] = pg.image.load("assets/hud/pause_menu_" + type + name + ".png").convert()
-        #         curr_dict[type + name] = pg.transform.scale(curr_dict[type + name], (
-        #             curr_dict[type + name].get_width() * 4, curr_dict[type + name].get_height() * 4))
-        #         curr_dict[type + name].set_colorkey((255, 255, 255))
 
         self.load_menu(gw)
 
     def load_menu(self, gw, button=None, value=None, press_hold=None):
         self.surf = self.surf_raw.copy()
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.buttons = set()
 
         for h, (button_name, method) in enumerate(self.button_properties):
@@ -260,38 +252,59 @@ class Minimap(HUD):
 class BuildMenu(HUD):
     def __init__(self, gw):
         super().__init__(gw)
-        self.surf = pg.Surface((176 + len(gw.key_structure_dict.values()) * 88, 136))
+        self.surf = pg.transform.scale(pg.image.load("assets/hud/build_menu.png").convert(), (704, 136))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+        self.surf_raw = self.surf.copy()
+
         self.surf.fill((255, 255, 255))
         self.fill_dicts(("tile", "tile_hover", "tile_press", "category", "category_hover"),
                         ("housing", "military", "mining", "transport", "manufacturing", "agriculture"), "build_menu", 2)
-
         self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2, top=44)
-        self.surf.blit(pg.transform.scale(pg.image.load("assets/hud/hud_edge_horiz.png").convert(), (36, 136)), (0, 0))
-        self.surf.blit(pg.transform.scale(pg.image.load("assets/hud/build_menu_category_tile.png").convert(),
-                                          (100, 120)), (36, 0))
+        self.category_dict = {"housing": (House,), "military": (Wall, Gate), "mining": (Pyramid,),
+                              "transport": (Road,), "manufacturing": (), "agriculture": (Tree,)}
+        self.build_buttons = set()
 
-        lowest = 0
-
-        for i, building in enumerate(gw.key_structure_dict.values()):
-            new_build = building([0, 0], gw)
-            height = 100 - 60 * new_build.surf_ratio[1]
-            self.make_button(pg.transform.scale(new_build.surf, (60, 60 * new_build.surf_ratio[1])), (136 + i * 88, 0),
-                             self.assign, type(new_build), "button_tile", "button_tile_hover", i, 4 + height)
-            lowest = i
-
-        self.surf.blit(pg.transform.flip(pg.transform.scale(pg.image.load("assets/hud/hud_edge_horiz.png").convert(),
-                                                            (36, 136)), True, False), (140 + (lowest + 1) * 88, 0))
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.collide_rect = pg.Rect(self.rect.left + 4, 0, self.rect.width - 8, self.rect.height - 16)
 
-        for i, icon in enumerate(self.icon_dict.values()):
-            self.make_button(icon, (52 + (i % 2) * 36, 4 + (i // 2) * 36), self.open_menu, None,
+        self.load_menu(gw)
+
+    def load_menu(self, gw):
+        self.surf.blit(self.surf_raw, (0, 0))
+        gw.buttons.difference_update(self.buttons)
+        self.buttons.clear()
+
+        for i, (category, icon) in enumerate(self.icon_dict.items()):
+            self.make_button(icon, (52 + (i % 2) * 36, 4 + (i // 2) * 36), self.open_category, category[5:],
                              "button_category", "button_category_hover", i)
 
         gw.buttons.update(self.buttons)
 
-    def open_menu(self, gw, button, value, press_hold):
+    def open_category(self, gw, button, value, press_hold):
         if not press_hold:
+            self.load_menu(gw)
+            gw.buttons.difference_update(self.build_buttons)
+            self.buttons.difference_update(self.build_buttons)
+
+            for i, building in enumerate(self.category_dict[value]):
+                new_build = building([0, 0], gw)
+                height = 100 - 60 * new_build.surf_ratio[1]
+                curr_button = self.make_button(pg.transform.scale(new_build.surf, (60, 60 * new_build.surf_ratio[1])),
+                                               (136 + i * 88, 0), self.assign, type(new_build),
+                                               "button_tile", "button_tile_hover", -i - 1, 4 + height)
+                self.build_buttons.add(curr_button)
+
+            for any_button in self.buttons:
+                if any_button.id == button.id:
+                    any_button.hold = True
+                else:
+                    any_button.hold = False
+
+            # print(button.value)
+            # for gw_button in gw.buttons:
+            #     print(gw_button.value)
+            # print("\n\n")
+            gw.buttons.update(self.buttons)
             gw.sounds["woodpush2"].play()
 
     def assign(self, gw, button, value, press_hold):

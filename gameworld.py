@@ -70,8 +70,7 @@ class GameWorld:
         self.sounds, self.tracks = self.load_sounds()
         self.surrounded_tiles = [[0 for _ in range(self.height_tiles)] for _ in range(self.width_tiles)]
         self.struct_map = [[0 for _ in range(self.height_tiles)] for _ in range(self.width_tiles)]
-        self.key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid,
-                                   pg.K_f: Farmland}
+        self.key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid}
         self.string_type_dict = {"house": House, "tower": Tower, "road": Road, "wall": Wall, "gate": Gate,
                                  "obama": Pyramid, "farmland": Farmland}
         self.soundtrack_channel = pg.mixer.Channel(5)

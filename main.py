@@ -41,6 +41,8 @@ if __name__ == "__main__":
         if gw.MOUSE_STEERING:
             on_button = False
             for button in gw.buttons:
+                if button.hold:
+                    button.hovered(gw)
                 if button.rect.collidepoint(pg.mouse.get_pos()):
                     curr_button = button
                     on_button = True
@@ -87,7 +89,7 @@ if __name__ == "__main__":
                     if display_build_menu:
                         gw.buttons.difference_update(build_menu.buttons)
                     else:
-                        build_menu = BuildMenu(gw)
+                        build_menu.load_menu(gw)
                     display_build_menu = not display_build_menu
 
                 if event.key == K_ESCAPE:
@@ -170,7 +172,6 @@ if __name__ == "__main__":
         if curr_button is None:
             gw.cursor.draw(gw)
 
-
         # if gw.cursor.hold is not None:
         #     gw.cursor.ghost.update(gw, gw.cursor)
         #     gw.background.surf.blit(gw.cursor.ghost.surf, gw.cursor.ghost.rect)
@@ -190,6 +191,10 @@ if __name__ == "__main__":
             gw.screen.blit(build_menu.surf, build_menu.rect)
         minimap.update_minimap(gw)
         top_bar.update(gw)
+
+        for button in gw.buttons:
+            if button.hold:
+                button.hovered(gw)
 
         if curr_button is not None:
             if not press_hold:
