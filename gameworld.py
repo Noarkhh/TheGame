@@ -1,5 +1,6 @@
 import os
 from classes import *
+from hud import *
 from pygame.locals import (RLEACCEL,
                            K_t,
                            K_h,
@@ -21,8 +22,8 @@ class GameWorld:
         SOUNDTRACK: Option to turn soundtrack on or off
         MOUSE_STEERING: Option to turn mouse steering on or off
         MOUSE_STEERING: Option to turn windowed mode on or off
-        LAYOUT: Image representing the terrain
-        HEIGHT_TILES, WIDTH_TILES: Map size in tiles
+        layout: Image representing the terrain
+        height_tiles, width_tiles: Map size in tiles
         WINDOW_HEIGHT, WINDOWS_WIDTH: Window size in pixels
         TICK_RATE: Amount of game ticks per second
 
@@ -50,33 +51,39 @@ class GameWorld:
         self.SOUNDTRACK = False
         self.MOUSE_STEERING = True
         self.WINDOWED = True
-        self.LAYOUT = pg.image.load("assets/maps/desert_delta_L.png")
-        self.HEIGHT_TILES = self.LAYOUT.get_height()
-        self.WIDTH_TILES = self.LAYOUT.get_width()
         self.WINDOW_HEIGHT = 720
         self.WINDOW_WIDTH = 1080
         self.TICK_RATE = 60
         self.STARTING_GOLD = 300000000
+        self.screen = self.set_window()
 
+        self.layout_path = "assets/maps/desert_river_M.png"
+        self.layout = pg.image.load(self.layout_path).convert()
+        self.height_tiles = self.layout.get_height()
+        self.width_tiles = self.layout.get_width()
         self.tile_s = 30
-        self.width_pixels = self.WIDTH_TILES * self.tile_s
-        self.height_pixels = self.HEIGHT_TILES * self.tile_s
-        self.wall_set = set()
+        self.width_pixels = self.width_tiles * self.tile_s
+        self.height_pixels = self.height_tiles * self.tile_s
+
+        self.snapper_dict = self.fill_snappers_dict()
+        self.map_surf, self.tile_type_map = self.load_map()
+        self.sounds, self.tracks = self.load_sounds()
+        self.surrounded_tiles = [[0 for _ in range(self.height_tiles)] for _ in range(self.width_tiles)]
+        self.struct_map = [[0 for _ in range(self.height_tiles)] for _ in range(self.width_tiles)]
         self.key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid,
                                    pg.K_f: Farmland}
-        self.entities = Entities()
-        self.structs = pg.sprite.Group()
-        self.buttons = pg.sprite.Group()
-        self.vault = Vault(self)
+        self.string_type_dict = {"house": House, "tower": Tower, "road": Road, "wall": Wall, "gate": Gate,
+                                 "obama": Pyramid, "farmland": Farmland}
         self.soundtrack_channel = pg.mixer.Channel(5)
         self.speech_channel = pg.mixer.Channel(3)
 
-        self.screen = self.set_window()
-        self.snapper_dict = self.fill_snappers_dict()
-        self.map_surf, self.tile_type_map = self.load_map()
-        self.surrounded_tiles = [[0 for _ in range(self.HEIGHT_TILES)] for _ in range(self.WIDTH_TILES)]
-        self.struct_map = [[0 for _ in range(self.HEIGHT_TILES)] for _ in range(self.WIDTH_TILES)]
-        self.sounds, self.tracks = self.load_sounds()
+        self.cursor = Cursor(self)
+        self.wall_set = set()
+        self.entities = Entities()
+        self.structs = pg.sprite.Group()
+        self.buttons = set()
+        self.vault = Vault(self)
+        self.global_statistics = GlobalStatistics()
         self.background = Background(self)
 
     def set_window(self):
@@ -129,12 +136,12 @@ class GameWorld:
         tile_dict = {name: pg.transform.scale(pg.image.load("assets/tiles/" + name + "_tile.png").convert(),
                                               (60, 60)) for name in color_to_type.values()}
 
-        background = pg.Surface((self.WIDTH_TILES * 60, self.HEIGHT_TILES * 60))
-        tile_map = [[0 for _ in range(self.HEIGHT_TILES)] for _ in range(self.WIDTH_TILES)]
+        background = pg.Surface((self.width_tiles * 60, self.height_tiles * 60))
+        tile_map = [[0 for _ in range(self.height_tiles)] for _ in range(self.width_tiles)]
 
-        for x in range(self.WIDTH_TILES):
-            for y in range(self.HEIGHT_TILES):
-                tile_color = tuple(self.LAYOUT.get_at((x, y)))
+        for x in range(self.width_tiles):
+            for y in range(self.height_tiles):
+                tile_color = tuple(self.layout.get_at((x, y)))
                 background.blit(tile_dict[color_to_type[tile_color]], (x * 60, y * 60))
                 tile_map[x][y] = color_to_type[tile_color]
                 # if tile_map[x][y] == "grassland" and randint(1, 16) == 1:
@@ -177,7 +184,50 @@ class GameWorld:
             :param y: Y coordinate
         """
         if x < 0: return True
-        if x > self.WIDTH_TILES - 1: return True
+        if x > self.width_tiles - 1: return True
         if y < 0: return True
-        if y > self.HEIGHT_TILES - 1: return True
+        if y > self.height_tiles - 1: return True
         return False
+
+    def to_json(self):
+        return {
+            "layout_path": self.layout_path,
+            "cursor": self.cursor.to_json(),
+            "struct_map": [[struct.to_json() if isinstance(struct, Structure) else 0 for struct in x]
+                           for x in self.struct_map],
+            "global_statistics": self.global_statistics.to_json(),
+            "structs": [struct.to_json() for struct in self.structs],
+            "entities": [entity.to_json() for entity in self.entities],
+            "wall_set": tuple(self.wall_set),
+            "gold": self.vault.gold
+        }
+
+    def from_json(self, json_dict):
+
+        self.tile_s = 30
+        self.entities.empty()
+        self.structs.empty()
+        self.buttons.clear()
+        self.cursor.hold = None
+
+        self.layout_path = json_dict["layout_path"]
+        self.layout = pg.image.load(self.layout_path).convert()
+        self.height_tiles = self.layout.get_height()
+        self.width_tiles = self.layout.get_width()
+
+        for i, x in enumerate(json_dict["struct_map"]):
+            for j, y in enumerate(x):
+                self.struct_map[i][j] = 0
+                if y != 0:
+                    if self.string_type_dict[y["type"]] != Gate:
+                        loaded_struct = self.string_type_dict[y["type"]](y["pos"], self)
+                    else:
+                        loaded_struct = self.string_type_dict[y["type"]](y["pos"], self, y["orient"])
+                    loaded_struct.from_json(y)
+                    self.struct_map[i][j] = loaded_struct
+                    self.structs.add(loaded_struct)
+                    self.entities.add(loaded_struct)
+
+        self.global_statistics.from_json(json_dict["global_statistics"])
+        self.wall_set = {tuple(elem) for elem in json_dict["wall_set"]}
+        self.vault.gold = json_dict["gold"]

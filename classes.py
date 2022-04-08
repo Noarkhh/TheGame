@@ -16,15 +16,15 @@ class Background(pg.sprite.Sprite):
         self.surf_rendered = self.surf.subsurface((0, 0, gw.WINDOW_WIDTH, gw.WINDOW_HEIGHT))
         self.rect = self.surf_rendered.get_rect()
 
-    def move_screen(self, gw, cursor):
+    def move_screen(self, gw):
         if not gw.MOUSE_STEERING:
-            if cursor.rect.right >= self.rect.right <= gw.width_pixels - gw.tile_s / 2:
+            if gw.cursor.rect.right >= self.rect.right <= gw.width_pixels - gw.tile_s / 2:
                 self.rect.move_ip(gw.tile_s / 2, 0)
-            if cursor.rect.left <= self.rect.left >= 0 + gw.tile_s / 2:
+            if gw.cursor.rect.left <= self.rect.left >= 0 + gw.tile_s / 2:
                 self.rect.move_ip(-gw.tile_s / 2, 0)
-            if cursor.rect.bottom >= self.rect.bottom <= gw.height_pixels - gw.tile_s / 2:
+            if gw.cursor.rect.bottom >= self.rect.bottom <= gw.height_pixels - gw.tile_s / 2:
                 self.rect.move_ip(0, gw.tile_s / 2)
-            if cursor.rect.top <= self.rect.top >= 0 + gw.tile_s / 2:
+            if gw.cursor.rect.top <= self.rect.top >= 0 + gw.tile_s / 2:
                 self.rect.move_ip(0, -gw.tile_s / 2)
         else:
             if pg.mouse.get_pos()[0] >= gw.WINDOW_WIDTH - gw.tile_s / 2 and \
@@ -138,6 +138,17 @@ class GlobalStatistics(Statistics):
                     gw.sounds["ignite_oil"].play()
                     self.tribute = int(self.tribute ** 1.2)
 
+    def to_json(self):
+        return {
+            "time": self.time,
+            "tribute": self.tribute
+        }
+
+    def from_json(self, json_dict):
+        self.time = json_dict["time"]
+        self.tribute = json_dict["tribute"]
+        return self
+
 
 class TileStatistics(Statistics):
     def __init__(self, gw):
@@ -162,105 +173,6 @@ class TileStatistics(Statistics):
         super().blit_stat(str(xy))
 
         super().print_stats(gw)
-
-
-class Button(pg.sprite.Sprite):
-    def __init__(self, rect, function, value, hover_surf=pg.Surface((0, 0)), press_surf=pg.Surface((0, 0))):
-        super().__init__()
-        self.rect = rect
-        self.hover_surf = hover_surf
-        self.press_surf = press_surf
-        self.function = function
-        self.value = value
-
-    def hovered(self, gw):
-        gw.screen.blit(self.hover_surf, self.rect)
-
-    def pressed(self, gw):
-        gw.screen.blit(self.press_surf, self.rect)
-
-    def press(self, gw, cursor, press_hold):
-        self.function(gw, cursor, self.value, press_hold)
-
-
-class HUD(pg.sprite.Sprite):
-    def __init__(self, gw):
-        super().__init__()
-
-
-class Minimap(HUD):
-    def __init__(self, gw):
-        super().__init__(gw)
-        self.frame = pg.image.load("assets/hud/map_frame.png").convert()
-        self.frame.set_colorkey((255, 255, 255), RLEACCEL)
-        self.surf = gw.LAYOUT.copy()
-        self.surf_raw = self.surf.copy()
-        self.rect = self.surf.get_rect(topright=(gw.WINDOW_WIDTH, 0))
-        self.visible_area = pg.surface.Surface((gw.WINDOW_WIDTH / gw.tile_s, gw.WINDOW_HEIGHT / gw.tile_s))
-        self.visible_area.fill((223, 17, 28))
-        cutout = pg.surface.Surface((gw.WINDOW_WIDTH / gw.tile_s - 4, gw.WINDOW_HEIGHT / gw.tile_s - 4))
-        cutout.fill((0, 0, 0))
-        self.visible_area.blit(cutout, (2, 2))
-        self.visible_area.set_colorkey((0, 0, 0), RLEACCEL)
-
-
-    def update_minimap(self, gw):
-        self.surf.blit(self.surf_raw, (0, 0))
-        self.surf.blit(self.visible_area, (gw.background.rect.x / gw.tile_s, gw.background.rect.y / gw.tile_s))
-        gw.screen.blit(self.surf, self.rect)
-        gw.screen.blit(self.frame, (self.rect.x - 16, self.rect.y))
-
-    def update_zoom(self, gw):
-        self.visible_area = pg.surface.Surface((gw.WINDOW_WIDTH / gw.tile_s, gw.WINDOW_HEIGHT / gw.tile_s))
-        self.visible_area.fill((223, 17, 28))
-        cutout = pg.surface.Surface((gw.WINDOW_WIDTH / gw.tile_s - 4, gw.WINDOW_HEIGHT / gw.tile_s - 4))
-        cutout.fill((0, 0, 0))
-        self.visible_area.blit(cutout, (2, 2))
-        self.visible_area.set_colorkey((0, 0, 0), RLEACCEL)
-
-
-class BuildMenu(HUD):
-    def __init__(self, gw):
-        super().__init__(gw)
-        self.surf = pg.Surface((76 + len(gw.key_structure_dict.values()) * 104, 136))
-        self.surf.fill((255, 255, 255))
-        self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2)
-        self.surf.blit(pg.transform.scale(pg.image.load("assets/hud/hud_edge_horiz.png").convert(), (36, 136)), (0, 0))
-        lowest = 0
-        self.hover_surf = pg.transform.scale(pg.image.load("assets/hud/hud_tile_hover.png").convert(), (100, 120))
-        self.hover_surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.press_surf = pg.transform.scale(pg.image.load("assets/hud/hud_tile_press.png").convert(), (100, 120))
-        self.press_surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.buttons = []
-        for i, building in enumerate(gw.key_structure_dict.values()):
-            new_build = building([0, 0], gw)
-            self.surf.blit(pg.transform.scale(pg.image.load("assets/hud/hud_horiz_sep.png").convert(), (4, 120)),
-                           (36 + i * 104, 0))
-            self.surf.blit(pg.transform.scale(pg.image.load("assets/hud/hud_tile_horiz.png").convert(), (100, 120)),
-                           (40 + i * 104, 0))
-
-            new_button = Button(pg.Rect((self.rect.x + 40 + i * 104, 0), (100, 108)),
-                                self.assign, type(new_build), self.hover_surf, self.press_surf)
-            gw.buttons.add(new_button)
-            self.buttons.append(new_button)
-            # self.rect_list.append(pg.Rect((self.rect.x + 40 + i * 104, 0), (100, 108)))
-            # self.build_list.append(type(new_build))
-            height = 100 - 60 * new_build.surf_ratio[1]
-            self.surf.blit(pg.transform.scale(new_build.surf, (60, 60 * new_build.surf_ratio[1])),
-                           (60 + i * 104, 4 + height))
-            lowest = i
-        self.surf.blit(pg.transform.scale(pg.image.load("assets/hud/hud_horiz_sep.png").convert(), (4, 120)),
-                       (140 + lowest * 104, 0))
-        self.surf.blit(pg.transform.flip(pg.transform.scale(pg.image.load("assets/hud/hud_edge_horiz.png").convert(),
-                                                            (36, 136)), True, False), (144 + lowest * 104, 0))
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-        self.collide_rect = pg.Rect(self.rect.left + 4, 0, self.rect.width - 8, self.rect.height - 16)
-
-    def assign(self, gw, cursor, value, press_hold):
-        if not press_hold:
-            cursor.hold = value([0, 0], gw)
-            cursor.ghost = Ghost(gw, cursor)
-            gw.sounds["woodpush2"].play()
 
 
 class Vault:
@@ -301,14 +213,14 @@ class Cursor(pg.sprite.Sprite):
         if self.pos[0] < 0:
             self.pos[0] = 0
             bruh = True
-        if self.pos[0] > gw.WIDTH_TILES - 1:
-            self.pos[0] = gw.WIDTH_TILES - 1
+        if self.pos[0] > gw.width_tiles - 1:
+            self.pos[0] = gw.width_tiles - 1
             bruh = True
         if self.pos[1] < 0:
             self.pos[1] = 0
             bruh = True
-        if self.pos[1] > gw.HEIGHT_TILES - 1:
-            self.pos[1] = gw.HEIGHT_TILES - 1
+        if self.pos[1] > gw.height_tiles - 1:
+            self.pos[1] = gw.height_tiles - 1
             bruh = True
         if bruh:
             gw.speech_channel.play(gw.sounds["Insult" + str(randint(1, 20))])
@@ -329,23 +241,28 @@ class Cursor(pg.sprite.Sprite):
     def draw(self, gw):
         gw.background.surf.blit(self.surf, self.rect)
         if self.hold is not None:
-            self.ghost.update(gw, self)
+            self.ghost.update(gw)
             gw.background.surf.blit(self.ghost.surf, self.ghost.rect)
+
+    def to_json(self):
+        return {
+            "pos": self.pos
+        }
 
 
 class Ghost(pg.sprite.Sprite):
-    def __init__(self, gw, cursor):
+    def __init__(self, gw):
         super().__init__()
-        self.surf = cursor.hold.surf
+        self.surf = gw.cursor.hold.surf
         self.surf.set_alpha(128)
-        self.pos = cursor.pos
+        self.pos = gw.cursor.pos
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
 
-    def update(self, gw, cursor):
-        self.pos = cursor.pos
+    def update(self, gw):
+        self.pos = gw.cursor.pos
         self.rect.right = gw.tile_s * (self.pos[0] + 1)
         self.rect.bottom = gw.tile_s * (self.pos[1] + 1)
-        self.surf = cursor.hold.surf
+        self.surf = gw.cursor.hold.surf
         self.surf.set_alpha(128)
 
 
@@ -353,6 +270,11 @@ class Structure(pg.sprite.Sprite):
     def __init__(self, xy, gw):
         super().__init__()
         self.surf = pg.Surface((gw.tile_s, gw.tile_s))
+        self.image_path = ""
+        # self.string_type_dict = {"house": House, "tower": Tower, "road": Road, "wall": Wall, "gate": Gate,
+        #                          "obama": Pyramid, "farmland": Farmland}
+        self.type_string_dict = {val: key for key, val in gw.string_type_dict.items()}
+
         self.surf_ratio = (1, 1)
         self.pos = xy.copy()
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
@@ -376,24 +298,45 @@ class Structure(pg.sprite.Sprite):
         self.surf = pg.transform.scale(self.surf, (self.surf_ratio[0] * gw.tile_s, self.surf_ratio[1] * gw.tile_s))
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
 
+    def to_json(self):
+        return {
+            "type": self.type_string_dict[type(self)],
+            "image_path": self.image_path,
+            "rect": (self.rect.left, self.rect.top, self.rect.width, self.rect.height),
+            "pos": self.pos,
+            "profit": self.profit,
+            "time_left": self.time_left,
+            "inside": self.inside
+        }
+
+    def from_json(self, y):
+        self.rect = pg.rect.Rect(y["rect"])
+        self.profit = y["profit"]
+        self.time_left = y["time_left"]
+        self.inside = y["inside"]
+        return self
+
 
 class Tree(Structure):
     def __init__(self, xy, gw):
         super().__init__(xy, gw)
-        self.surf = pg.transform.scale(pg.image.load("assets/tree.png").convert(), (gw.tile_s, gw.tile_s))
+        self.image_path = "assets/tree.png"
+        self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, gw.tile_s))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
 class Farmland(Structure):
     def __init__(self, xy, gw):
         super().__init__(xy, gw)
-        self.surf = pg.transform.scale(pg.image.load("assets/farmland.png").convert(), (gw.tile_s, gw.tile_s))
+        self.image_path = "assets/farmland.png"
+        self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, gw.tile_s))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
 class Pyramid(Structure):
     def __init__(self, xy, gw):
         super().__init__(xy, gw)
+        self.image_path = "assets/obama.png"
         self.surf = pg.transform.scale(pg.image.load("assets/obama.png").convert(),
                                        (gw.tile_s * 4, gw.tile_s * 4))
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
@@ -403,7 +346,8 @@ class Pyramid(Structure):
 class House(Structure):
     def __init__(self, xy, gw):
         super().__init__(xy, gw)
-        self.surf = pg.transform.scale(pg.image.load("assets/house" + str(randint(1, 2)) + ".png").convert(),
+        self.image_path = "assets/house" + str(randint(1, 2)) + ".png"
+        self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(),
                                        (gw.tile_s, gw.tile_s * 21 / 15))
         self.surf_ratio = (1, 21 / 15)
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
@@ -423,11 +367,10 @@ class House(Structure):
         self.profit += nearby_houses
         if self.inside:
             self.profit *= 2
-        # print(visited, nearby_houses)
 
     def detect_nearby_houses(self, gw, xy, visited):
 
-        resolved = [[True for _ in range(gw.HEIGHT_TILES)] for _ in range(gw.WIDTH_TILES)]
+        resolved = [[True for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
         direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
         required = {"roads"}
         distance = 0
@@ -458,7 +401,8 @@ class House(Structure):
 class Tower(Structure):
     def __init__(self, xy, gw):
         super().__init__(xy, gw)
-        self.surf = pg.transform.scale(pg.image.load("assets/big_tower.png").convert(), (gw.tile_s, 2 * gw.tile_s))
+        self.image_path = "assets/big_tower.png"
+        self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, 2 * gw.tile_s))
         self.surf_ratio = (1, 2)
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
@@ -469,12 +413,13 @@ class Snapper(Structure):
         super().__init__(xy, gw)
         self.snapsto = {}
         self.neighbours = set()
+        self.snapper_dict_key = ""
         self.snapper_dict = {}
 
     def update_edges(self, direction, add):
-        if add:
+        if add == 1:
             self.neighbours.update(direction)
-        elif direction in self.neighbours:
+        elif add == -1 and direction in self.neighbours:
             self.neighbours.remove(direction)
 
         def assign_value(direct):
@@ -484,12 +429,24 @@ class Snapper(Structure):
             if direct == 'W': return 3
 
         directions = tuple(sorted(self.neighbours, key=assign_value))
-        self.surf = self.snapper_dict[directions]
+        self.surf = self.snapper_dict[directions].copy()
+
+    def to_json(self):
+        return {**super().to_json(), **{"snapper_dict_key": self.snapper_dict_key, "neighbours": list(self.neighbours)}}
+
+    def from_json(self, y):
+        super().from_json(y)
+        self.snapper_dict_key = y["snapper_dict_key"]
+        self.neighbours = set(y["neighbours"])
+        self.update_edges('N', 0)
+        return self
 
 
 class Road(Snapper):
     def __init__(self, xy, gw):
         super().__init__(xy, gw)
+        self.image_path = ""
+        self.snapper_dict_key = "roads"
         self.snapper_dict = gw.snapper_dict["roads"]
         self.surf = self.snapper_dict[()].copy()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
@@ -502,6 +459,8 @@ class Road(Snapper):
 class Wall(Snapper):
     def __init__(self, xy, gw):
         super().__init__(xy, gw)
+        self.image_path = ""
+        self.snapper_dict_key = "walls"
         self.snapper_dict = gw.snapper_dict["walls"]
         self.surf = self.snapper_dict[()].copy()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
@@ -515,10 +474,13 @@ class Gate(Wall, Road):
     def __init__(self, xy, gw, orientation="v"):
         super().__init__(xy, gw)
         self.orient = orientation
+        self.image_path = ""
         if orientation == "v":
+            self.snapper_dict_key = "vgates"
             self.snapper_dict = gw.snapper_dict["vgates"]
             self.snapsto = {'N': "roads", 'E': "walls", 'S': "roads", 'W': "walls"}
         else:
+            self.snapper_dict_key = "hgates"
             self.snapper_dict = gw.snapper_dict["hgates"]
             self.snapsto = {'N': "walls", 'E': "roads", 'S': "walls", 'W': "roads"}
         self.surf = self.snapper_dict[()].copy()
@@ -540,3 +502,6 @@ class Gate(Wall, Road):
                                        (gw.tile_s, gw.tile_s * 20 / 15))
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+    def to_json(self):
+        return {**super().to_json(), **{"orient": self.orient}}
