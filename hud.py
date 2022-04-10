@@ -4,6 +4,7 @@ import json
 import os
 from pygame.locals import RLEACCEL
 from classes import *
+from functions import detect_surrounded_tiles, zoom
 
 
 class Button(pg.sprite.Sprite):
@@ -25,8 +26,8 @@ class Button(pg.sprite.Sprite):
     def pressed(self, gw):
         gw.screen.blit(self.press_surf, self.rect)
 
-    def press(self, gw, args):
-        return self.function(gw, self, self.value, args)
+    def press(self, gw, *args):
+        return self.function(gw, self, self.value, *args)
 
 
 class HUD:
@@ -88,11 +89,11 @@ class TopBar(HUD):
 
     def update(self, gw):
         self.surf.blit(self.surf_raw, (0, 0))
-        self.draw("Time: " + str(gw.global_statistics.time[0]) + ":00, Day " + str(gw.global_statistics.time[1] + 1)
-                  + ", Week " + str(gw.global_statistics.time[2] + 1))
-        self.draw("Gold: " + str(gw.vault.gold) + "g")
-        self.draw("TPS: " + str("{:.2f}".format(1 / gw.global_statistics.elapsed * gw.TICK_RATE)))
-        self.draw("Weekly Tribute: " + str(gw.global_statistics.tribute) + "g")
+        self.draw("Time: " + str(gw.reality.time[0]) + ":00, Day " + str(gw.reality.time[1] + 1)
+                  + ", Week " + str(gw.reality.time[2] + 1))
+        self.draw("Gold: " + str(gw.reality.gold) + "g")
+        self.draw("TPS: " + str("{:.2f}".format(1 / gw.reality.elapsed * gw.TICK_RATE)))
+        self.draw("Weekly Tribute: " + str(gw.reality.tribute) + "g")
         gw.screen.blit(self.surf, self.rect)
         self.rightmost = 12
 
@@ -137,47 +138,56 @@ class PauseMenu(HUD):
         return True, True, -1
 
     def load_savefile_menu(self, gw):
-        def savefile_choose(gw, button, value, pause_menu):
-            def load_from_slot(gw, button, value, pause_menu):
-                if pause_menu.dates[value] != "Empty slot":
+        def savefile_choose(gw, button, value):
+            def load_from_slot(gw, button, value):
+                if gw.hud.pause_menu.dates[value] != "Empty slot":
+                    with open("saves/savefile" + str(value) + ".json", "r") as f:
+                        gw.from_json(json.load(f))
+                        detect_surrounded_tiles(gw)
+                        zoom(gw, 1)
                     return False, True, value
                 else:
                     return True, True, -1
 
-            def save_to_slot(gw, button, value, pause_menu):
-                pause_menu.dates[value] = time.strftime("%H:%M %d-%m-%y")
-                pause_menu.buttons.remove(button)
-                text_surf = self.font_small.render(pause_menu.dates[value], False, (62, 61, 58), (255, 255, 255))
+            def save_to_slot(gw, button, value):
+                gw.hud.pause_menu.dates[value] = time.strftime("%H:%M %d-%m-%y")
+                gw.hud.pause_menu.buttons.remove(button)
+                text_surf = self.font_small.render(gw.hud.pause_menu.dates[value], False, (62, 61, 58), (255, 255, 255))
                 text_surf.set_colorkey((255, 255, 255))
-                pause_menu.make_button(text_surf,
+                gw.hud.pause_menu.make_button(text_surf,
                                        (40, 28 + (self.button_dict["button_small"].get_height() + 4) * value),
                                        savefile_choose, value, "button_small", "button_small_hover")
                 with open("saves/savefile" + str(value) + ".json", "w+") as f:
                     json.dump(gw.to_json(), f, indent=2)
                 with open("saves/save_dates.json", "w+") as f:
-                    json.dump(pause_menu.dates, f)
+                    json.dump(gw.hud.pause_menu.dates, f)
                 self.load_savefile_menu(gw)
                 return True, True, -1
 
-            def del_save(gw, button, value, pause_menu):
-                pause_menu.dates[value] = "Empty slot"
-                os.remove("saves/savefile" + str(value) + ".json")
+            def del_save(gw, button, value):
+                gw.hud.pause_menu.dates[value] = "Empty slot"
+                with open("saves/save_dates.json", "w+") as f:
+                    json.dump(gw.hud.pause_menu.dates, f)
+                try:
+                    os.remove("saves/savefile" + str(value) + ".json")
+                except:
+                    pass
                 self.load_savefile_menu(gw)
 
                 return True, True, -1
 
             self.load_savefile_menu(gw)
-            if pause_menu.dates[value] != "Empty slot":
+            if gw.hud.pause_menu.dates[value] != "Empty slot":
                 self.make_button(self.icon_dict["icon_delete"], (40, 268), del_save, value,
                                  "button_square", "button_square_hover", 5)
             if self.save:
                 self.make_button(self.icon_dict["icon_save"], (100, 268), save_to_slot, value,
                                  "button_square", "button_square_hover", 6)
-            elif pause_menu.dates[value] != "Empty slot":
+            elif gw.hud.pause_menu.dates[value] != "Empty slot":
                 self.make_button(self.icon_dict["icon_load"], (100, 268), load_from_slot, value,
                                  "button_square", "button_square_hover", 7)
 
-            for any_button in pause_menu.buttons:
+            for any_button in gw.hud.pause_menu.buttons:
                 if any_button.id == button.id:
                     any_button.hold = True
                 else:
@@ -196,23 +206,23 @@ class PauseMenu(HUD):
         self.make_button(self.icon_dict["icon_back"], (160, 268), self.load_menu, 0,
                          "button_square", "button_square_hover")
 
-    def resume(self, gw, button, value, press_hold):
+    def resume(self, gw, button, value):
         return False, True, -1
 
-    def save(self, gw, button, value, press_hold):
+    def save(self, gw, button, value):
         self.save = True
         self.load_savefile_menu(gw)
         return True, True, -1
 
-    def load(self, gw, button, value, glob_stats):
+    def load(self, gw, button, value):
         self.save = False
         self.load_savefile_menu(gw)
         return True, True, -1
 
-    def options(self, gw, button, value, press_hold):
+    def options(self, gw, button, value):
         return True, True, -1
 
-    def quit(self, gw, button, value, press_hold):
+    def quit(self, gw, button, value):
         return False, False, -1
 
 
@@ -252,7 +262,7 @@ class Minimap(HUD):
 class BuildMenu(HUD):
     def __init__(self, gw):
         super().__init__(gw)
-        self.surf = pg.transform.scale(pg.image.load("assets/hud/build_menu.png").convert(), (704, 136))
+        self.surf = pg.transform.scale(pg.image.load("assets/hud/build_menu.png").convert(), (704, 156))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
         self.surf_raw = self.surf.copy()
@@ -261,7 +271,7 @@ class BuildMenu(HUD):
         self.fill_dicts(("tile", "tile_hover", "tile_press", "category", "category_hover"),
                         ("housing", "military", "mining", "transport", "manufacturing", "agriculture"), "build_menu", 2)
         self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2, top=44)
-        self.category_dict = {"housing": (House,), "military": (Wall, Gate), "mining": (Pyramid,),
+        self.category_dict = {"housing": (House,), "military": (Wall, Gate, Tower), "mining": (Mine, Pyramid),
                               "transport": (Road,), "manufacturing": (), "agriculture": (Tree,)}
         self.build_buttons = set()
 
@@ -269,26 +279,28 @@ class BuildMenu(HUD):
 
         self.load_menu(gw)
 
-    def load_menu(self, gw):
+    def load_menu(self, gw, manual_open=False):
         self.surf.blit(self.surf_raw, (0, 0))
         gw.buttons.difference_update(self.buttons)
         self.buttons.clear()
 
         for i, (category, icon) in enumerate(self.icon_dict.items()):
-            self.make_button(icon, (52 + (i % 2) * 36, 4 + (i // 2) * 36), self.open_category, category[5:],
-                             "button_category", "button_category_hover", i)
+            curr_button = self.make_button(icon, (52 + (i % 2) * 36, 4 + (i // 2) * 36), self.open_category,
+                                           category[5:], "button_category", "button_category_hover", i)
+            if i == 0 and not manual_open:
+                curr_button.press(gw, False, False)
 
         gw.buttons.update(self.buttons)
 
-    def open_category(self, gw, button, value, press_hold):
+    def open_category(self, gw, button, value, press_hold, manual_open=True):
         if not press_hold:
-            self.load_menu(gw)
+            self.load_menu(gw, True)
             gw.buttons.difference_update(self.build_buttons)
             self.buttons.difference_update(self.build_buttons)
 
             for i, building in enumerate(self.category_dict[value]):
                 new_build = building([0, 0], gw)
-                height = 100 - 60 * new_build.surf_ratio[1]
+                height = 120 - 60 * new_build.surf_ratio[1]
                 curr_button = self.make_button(pg.transform.scale(new_build.surf, (60, 60 * new_build.surf_ratio[1])),
                                                (136 + i * 88, 0), self.assign, type(new_build),
                                                "button_tile", "button_tile_hover", -i - 1, 4 + height)
@@ -305,7 +317,8 @@ class BuildMenu(HUD):
             #     print(gw_button.value)
             # print("\n\n")
             gw.buttons.update(self.buttons)
-            gw.sounds["woodpush2"].play()
+            if manual_open:
+                gw.sounds["woodpush2"].play()
 
     def assign(self, gw, button, value, press_hold):
         if not press_hold:

@@ -9,6 +9,9 @@ from pygame.locals import (RLEACCEL,
 
 
 class Background(pg.sprite.Sprite):
+    """
+
+    """
     def __init__(self, gw):
         super().__init__()
         self.surf = pg.transform.scale(gw.map_surf.copy(), (gw.width_pixels, gw.height_pixels))
@@ -94,60 +97,25 @@ class Statistics:
 
 
 class GlobalStatistics(Statistics):
-    def __init__(self):
+    def __init__(self, gw):
         super().__init__()
-        self.rect = self.stat_window.get_rect(topleft=(0, 0))
-        self.screen_part = "topleft"
-        self.curr_coords = [4, 4]
-        self.tick = 0
-        self.time = [0, 0, 0]
-        self.elapsed = 1
-        self.start = time.time()
-        self.end = 0
-        self.tribute = 40
+        self.rect = self.stat_window.get_rect(bottomleft=(0, gw.WINDOW_HEIGHT))
+        self.screen_part = "bottomleft"
+        self.curr_coords = [4, gw.WINDOW_HEIGHT - 4]
 
     def update_global_stats(self, gw):
-        self.time_lapse(gw)
+
         self.stat_window.fill((0, 0, 0))
         self.stat_background.fill((255, 255, 255))
-        self.curr_coords = [4, 0]
+        self.curr_coords = [4, self.stat_window.get_height() - 4]
 
         super().blit_stat(
-            "Time: " + str(self.time[0]) + ":00, Day " + str(self.time[1] + 1) + ", Week " + str(self.time[2] + 1))
-        super().blit_stat("Gold: " + str(gw.vault.gold) + "g")
-        super().blit_stat("TPS: " + str("{:.2f}".format(1 / self.elapsed * gw.TICK_RATE)))
-        super().blit_stat("Weekly Tribute: " + str(self.tribute) + "g")
+            "Time: " + str(gw.reality.time[0]) + ":00, Day " + str(gw.reality.time[1] + 1) + ", Week " + str(gw.reality.time[2] + 1))
+        super().blit_stat("Gold: " + str(gw.reality.gold) + "g")
+        super().blit_stat("TPS: " + str("{:.2f}".format(1 / gw.reality.elapsed * gw.TICK_RATE)))
+        super().blit_stat("Weekly Tribute: " + str(gw.reality.tribute) + "g")
 
         super().print_stats(gw)
-
-    def time_lapse(self, gw):
-        self.tick += 1
-        if self.tick >= gw.TICK_RATE:
-            self.tick = 0
-            self.time[0] += 1
-            self.end = time.time()
-            self.elapsed = self.end - self.start
-            self.start = time.time()
-            if self.time[0] >= 24:
-                self.time[0] = 0
-                self.time[1] += 1
-                if self.time[1] >= 7:
-                    self.time[1] = 0
-                    self.time[2] += 1
-                    gw.vault.gold -= self.tribute
-                    gw.sounds["ignite_oil"].play()
-                    self.tribute = int(self.tribute ** 1.2)
-
-    def to_json(self):
-        return {
-            "time": self.time,
-            "tribute": self.tribute
-        }
-
-    def from_json(self, json_dict):
-        self.time = json_dict["time"]
-        self.tribute = json_dict["tribute"]
-        return self
 
 
 class TileStatistics(Statistics):
@@ -175,9 +143,45 @@ class TileStatistics(Statistics):
         super().print_stats(gw)
 
 
-class Vault:
+class Reality:
     def __init__(self, gw):
+        self.time = 0
+        self.tick = 0
+        self.time = [0, 0, 0]
+        self.elapsed = 1
+        self.start = time.time()
+        self.end = 0
+        self.tribute = 40
         self.gold = gw.STARTING_GOLD
+
+    def time_lapse(self, gw):
+        self.tick += 1
+        if self.tick >= gw.TICK_RATE:
+            self.tick = 0
+            self.time[0] += 1
+            self.end = time.time()
+            self.elapsed = self.end - self.start
+            self.start = time.time()
+            if self.time[0] >= 24:
+                self.time[0] = 0
+                self.time[1] += 1
+                if self.time[1] >= 7:
+                    self.time[1] = 0
+                    self.time[2] += 1
+                    gw.reality.gold -= self.tribute
+                    gw.sounds["ignite_oil"].play()
+                    self.tribute = int(self.tribute ** 1.2)
+
+    def to_json(self):
+        return {
+            "time": self.time,
+            "tribute": self.tribute
+        }
+
+    def from_json(self, json_dict):
+        self.time = json_dict["time"]
+        self.tribute = json_dict["tribute"]
+        return self
 
 
 class Cursor(pg.sprite.Sprite):
@@ -292,7 +296,7 @@ class Structure(pg.sprite.Sprite):
         self.time_left -= 1
         if self.time_left == 0:
             self.time_left = self.cooldown
-            gw.vault.gold += self.profit
+            gw.reality.gold += self.profit
 
     def update_zoom(self, gw):
         self.surf = pg.transform.scale(self.surf, (self.surf_ratio[0] * gw.tile_s, self.surf_ratio[1] * gw.tile_s))
@@ -322,6 +326,16 @@ class Tree(Structure):
         super().__init__(xy, gw)
         self.image_path = "assets/tree.png"
         self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, gw.tile_s))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+
+class Mine(Structure):
+    def __init__(self, xy, gw):
+        super().__init__(xy, gw)
+        self.image_path = "assets/mine.png"
+        self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, gw.tile_s*2))
+        self.surf_ratio = (1, 2)
+        self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 

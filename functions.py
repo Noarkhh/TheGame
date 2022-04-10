@@ -206,7 +206,7 @@ def place_structure(gw, prev_pos, press_hold):
     if isinstance(gw.cursor.hold, Structure):
         built, snapped, can_afford = False, False, True
         if gw.tile_type_map[gw.cursor.pos[0]][gw.cursor.pos[1]] != "water" or isinstance(gw.cursor.hold, Road):
-            if gw.cursor.hold.build_cost <= gw.vault.gold:
+            if gw.cursor.hold.build_cost <= gw.reality.gold:
                 if not isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Structure):
 
                     if isinstance(gw.cursor.hold, Gate):
@@ -244,7 +244,7 @@ def place_structure(gw, prev_pos, press_hold):
                 snapped = True
 
         if built:
-            gw.vault.gold -= gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].build_cost
+            gw.reality.gold -= gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].build_cost
             if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Wall):
                 gw.wall_set.add(tuple(gw.cursor.pos))
         if snapped and not built:
@@ -325,14 +325,14 @@ def remove_structure(gw, remove_hold):
     return removed
 
 
-def zoom(gw, factor, minimap):
+def zoom(gw, factor):
     gw.tile_s = int(gw.tile_s * factor)
     gw.width_pixels = int(gw.width_pixels * factor)
     gw.height_pixels = int(gw.height_pixels * factor)
     gw.background.surf = pg.transform.scale(gw.background.surf, (gw.width_pixels, gw.height_pixels))
     gw.background.surf_raw = pg.transform.scale(gw.background.surf_raw, (gw.width_pixels, gw.height_pixels))
     gw.cursor.surf = pg.transform.scale(gw.cursor.surf, (gw.tile_s, gw.tile_s))
-    minimap.update_zoom(gw)
+    gw.hud.minimap.update_zoom(gw)
 
     if gw.cursor.hold is not None:
         gw.cursor.hold.surf = pg.transform.scale(gw.cursor.hold.surf, (gw.tile_s, gw.cursor.hold.surf_ratio[1] * gw.tile_s))

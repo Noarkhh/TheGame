@@ -16,13 +16,9 @@ if __name__ == "__main__":
     pg.mixer.init()
     gw = GameWorld()
 
-    tile_statistics = TileStatistics(gw)
-    build_menu = BuildMenu(gw)
-    minimap = Minimap(gw)
-    top_bar = TopBar(gw)
-    pause_menu = PauseMenu(gw)
-
     prev_pos = (0, 0)
+
+    # pg.mouse.set_cursor(pg.cursors.diamond)
 
     clock = pg.time.Clock()
     press_hold, remove_hold = False, False
@@ -80,42 +76,41 @@ if __name__ == "__main__":
                     display_stats = not display_stats
 
                 if event.key == pg.K_KP_PLUS and gw.tile_s < 120:
-                    zoom(gw, 2, minimap)
+                    zoom(gw, 2)
 
                 if event.key == pg.K_KP_MINUS and gw.tile_s > 15:
-                    zoom(gw, 0.5, minimap)
+                    zoom(gw, 0.5)
 
                 if event.key == pg.K_e:
                     if display_build_menu:
-                        gw.buttons.difference_update(build_menu.buttons)
+                        gw.buttons.difference_update(gw.hud.build_menu.buttons)
                     else:
-                        build_menu.load_menu(gw)
+                        gw.hud.build_menu.load_menu(gw)
                     display_build_menu = not display_build_menu
 
                 if event.key == K_ESCAPE:
                     menu_open = True
                     prev_button = None
+                    curr_button = None
+                    on_button = False
                     load = -1
-                    pause_menu.load_menu(gw)
+                    gw.hud.pause_menu.load_menu(gw)
 
                     while menu_open:
-                        gw.screen.blit(pause_menu.surf, pause_menu.rect)
-                        on_button = False
-                        curr_button = None
-                        for button in pause_menu.buttons:
+                        gw.screen.blit(gw.hud.pause_menu.surf, gw.hud.pause_menu.rect)
+                        for button in gw.hud.pause_menu.buttons:
                             if button.rect.collidepoint(pg.mouse.get_pos()):
                                 curr_button = button
                                 on_button = True
                                 button.hovered(gw)
                             if button.hold:
                                 button.hovered(gw)
-                        # if curr_button in pause_menu.buttons:
-                        #     print("aaa")
+
                         if pg.mouse.get_pressed(num_buttons=3)[0]:
                             if on_button:
                                 curr_button.pressed(gw)
                                 if not press_hold:
-                                    menu_open, running, load = curr_button.press(gw, pause_menu)
+                                    menu_open, running, load = curr_button.press(gw)
                                     gw.sounds["woodpush2"].play()
                             press_hold = True
                         else:
@@ -125,14 +120,12 @@ if __name__ == "__main__":
                             gw.sounds["woodrollover" + str(randint(2, 5))].play()
                         prev_button = curr_button
                         if load >= 0:
-                            with open("saves/savefile" + str(load) + ".json", "r") as f:
-                                # gw = GameWorld()
-                                gw.from_json(json.load(f))
-                                detect_surrounded_tiles(gw)
                             on_button = False
-                            if display_build_menu:
-                                build_menu = BuildMenu(gw)
+                            display_build_menu = False
+                            gw.buttons.difference_update(gw.hud.build_menu.buttons)
 
+                        on_button = False
+                        curr_button = None
                         for event in pg.event.get():
                             if event.type == QUIT:
                                 menu_open = False
@@ -140,9 +133,9 @@ if __name__ == "__main__":
                                 break
                             if event.type == KEYDOWN and event.key == K_ESCAPE:
                                 menu_open = False
-                                on_button = False
-                                gw.buttons.difference_update(pause_menu.buttons)
+                                gw.buttons.difference_update(gw.hud.pause_menu.buttons)
                                 break
+
                         pg.display.flip()
 
         if pressed_keys[K_SPACE] or pg.mouse.get_pressed(num_buttons=3)[0]:  # placing down held structure
@@ -165,18 +158,12 @@ if __name__ == "__main__":
         for struct in gw.structs:
             struct.get_profit(gw)
 
-        if gw.vault.gold < -50:
+        if gw.reality.gold < -50:
             running = False
 
         gw.entities.draw(gw.background)
         if curr_button is None:
             gw.cursor.draw(gw)
-
-        # if gw.cursor.hold is not None:
-        #     gw.cursor.ghost.update(gw, gw.cursor)
-        #     gw.background.surf.blit(gw.cursor.ghost.surf, gw.cursor.ghost.rect)
-
-        # gw.background.surf.blit(gw.cursor.surf, gw.cursor.rect)
 
         if gw.SOUNDTRACK and not gw.soundtrack_channel.get_busy():
             gw.soundtrack_channel.play(gw.tracks[randint(0, 13)])
@@ -185,12 +172,12 @@ if __name__ == "__main__":
         gw.screen.blit(gw.background.surf_rendered, (0, 0))
 
         if display_stats:
-            gw.global_statistics.update_global_stats(gw)
-            tile_statistics.update_tile_stats(gw.cursor.pos, gw)
+            gw.hud.global_statistics.update_global_stats(gw)
+            gw.hud.tile_statistics.update_tile_stats(gw.cursor.pos, gw)
         if display_build_menu:
-            gw.screen.blit(build_menu.surf, build_menu.rect)
-        minimap.update_minimap(gw)
-        top_bar.update(gw)
+            gw.screen.blit(gw.hud.build_menu.surf, gw.hud.build_menu.rect)
+        gw.hud.minimap.update_minimap(gw)
+        gw.hud.top_bar.update(gw)
 
         for button in gw.buttons:
             if button.hold:
@@ -199,12 +186,13 @@ if __name__ == "__main__":
         if curr_button is not None:
             if not press_hold:
                 if prev_button is not curr_button:
-                    gw.sounds["woodrollover" + str(randint(2, 5))].play()
+                    gw.sounds["metrollover" + str(randint(2, 7))].play()
                 curr_button.hovered(gw)
             else:
                 curr_button.pressed(gw)
         prev_button = curr_button
 
+        gw.reality.time_lapse(gw)
         gw.background.surf_rendered.blit(gw.background.surf_raw.subsurface(gw.background.rect), (0, 0))
         pg.display.flip()
 
