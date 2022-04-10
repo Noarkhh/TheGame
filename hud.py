@@ -8,7 +8,8 @@ from functions import detect_surrounded_tiles, zoom
 
 
 class Button(pg.sprite.Sprite):
-    def __init__(self, rect, function, value=None, hover_surf=pg.Surface((0, 0)), press_surf=pg.Surface((0, 0)), id=-1):
+    def __init__(self, rect, function, value=None, hover_surf=pg.Surface((0, 0)), press_surf=pg.Surface((0, 0)), id=-1,
+                 sound="woodrollover"):
         super().__init__()
         self.id = id
         self.rect = rect
@@ -18,6 +19,7 @@ class Button(pg.sprite.Sprite):
         self.press_surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.function = function
         self.value = value
+        self.sound = sound
         self.hold = False
 
     def hovered(self, gw):
@@ -25,6 +27,12 @@ class Button(pg.sprite.Sprite):
 
     def pressed(self, gw):
         gw.screen.blit(self.press_surf, self.rect)
+
+    def play_hover_sound(self, gw):
+        if self.sound == "woodrollover":
+            gw.sounds["woodrollover" + str(randint(2, 5))].play()
+        if self.sound == "metrollover":
+            gw.sounds["metrollover" + str(randint(2, 7))].play()
 
     def press(self, gw, *args):
         return self.function(gw, self, self.value, *args)
@@ -39,7 +47,7 @@ class HUD:
         self.icon_dict = {}
 
     def make_button(self, contents_surf, button_topleft, method, value, button_key,
-                    button_hover_key, id=-1, contents_height=4):
+                    button_hover_key, id=-1, contents_height=4, sound="woodrollover"):
         button_surf = self.button_dict[button_key].copy()
 
         contents_rect = contents_surf.get_rect(centerx=button_surf.get_width() / 2, top=contents_height)
@@ -49,7 +57,7 @@ class HUD:
         self.surf.blit(button_surf, button_rect)
         hover_surf = self.button_dict[button_hover_key].copy()
         hover_surf.blit(contents_surf, (contents_rect.x, contents_rect.y + 4))
-        button = Button(button_rect.move(self.rect.x, self.rect.y), method, value, hover_surf, hover_surf, id)
+        button = Button(button_rect.move(self.rect.x, self.rect.y), method, value, hover_surf, hover_surf, id, sound)
         self.buttons.add(button)
         return button
 
@@ -155,8 +163,8 @@ class PauseMenu(HUD):
                 text_surf = self.font_small.render(gw.hud.pause_menu.dates[value], False, (62, 61, 58), (255, 255, 255))
                 text_surf.set_colorkey((255, 255, 255))
                 gw.hud.pause_menu.make_button(text_surf,
-                                       (40, 28 + (self.button_dict["button_small"].get_height() + 4) * value),
-                                       savefile_choose, value, "button_small", "button_small_hover")
+                                              (40, 28 + (self.button_dict["button_small"].get_height() + 4) * value),
+                                              savefile_choose, value, "button_small", "button_small_hover")
                 with open("saves/savefile" + str(value) + ".json", "w+") as f:
                     json.dump(gw.to_json(), f, indent=2)
                 with open("saves/save_dates.json", "w+") as f:
@@ -286,9 +294,10 @@ class BuildMenu(HUD):
 
         for i, (category, icon) in enumerate(self.icon_dict.items()):
             curr_button = self.make_button(icon, (52 + (i % 2) * 36, 4 + (i // 2) * 36), self.open_category,
-                                           category[5:], "button_category", "button_category_hover", i)
+                                           category[5:], "button_category", "button_category_hover", i,
+                                           sound="metrollover")
             if i == 0 and not manual_open:
-                curr_button.press(gw, False, False)
+                self.open_category(gw, curr_button, category[5:], False, False)
 
         gw.buttons.update(self.buttons)
 

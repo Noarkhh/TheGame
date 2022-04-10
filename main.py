@@ -117,7 +117,7 @@ if __name__ == "__main__":
                             press_hold = False
 
                         if curr_button is not None and prev_button is not curr_button:
-                            gw.sounds["woodrollover" + str(randint(2, 5))].play()
+                            curr_button.play_hover_sound(gw)
                         prev_button = curr_button
                         if load >= 0:
                             on_button = False
@@ -186,7 +186,7 @@ if __name__ == "__main__":
         if curr_button is not None:
             if not press_hold:
                 if prev_button is not curr_button:
-                    gw.sounds["metrollover" + str(randint(2, 7))].play()
+                    curr_button.play_hover_sound(gw)
                 curr_button.hovered(gw)
             else:
                 curr_button.pressed(gw)
