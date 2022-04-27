@@ -59,7 +59,7 @@ class GameWorld:
     def __init__(self):
         self.SOUNDTRACK = False
         self.MOUSE_STEERING = True
-        self.WINDOWED = True
+        self.WINDOWED = False
         self.WINDOW_HEIGHT = 720
         self.WINDOW_WIDTH = 1080
         self.TICK_RATE = 60

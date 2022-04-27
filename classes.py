@@ -281,6 +281,7 @@ class Structure(pg.sprite.Sprite):
 
         self.surf_ratio = (1, 1)
         self.pos = xy.copy()
+        self.covered_tiles = {(0, 0)}
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
         self.base_profit = 0
         self.profit = self.base_profit
@@ -339,6 +340,17 @@ class Mine(Structure):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
+class Sawmill(Structure):
+    def __init__(self, xy, gw):
+        super().__init__(xy, gw)
+        self.image_path = "assets/sawmill.png"
+        self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s*2, gw.tile_s*2))
+        self.surf_ratio = (2, 2)
+        self.covered_tiles = {(0, 0), (-1, 0)}
+        self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+
+
 class Farmland(Structure):
     def __init__(self, xy, gw):
         super().__init__(xy, gw)
@@ -352,7 +364,9 @@ class Pyramid(Structure):
         super().__init__(xy, gw)
         self.image_path = "assets/obama.png"
         self.surf = pg.transform.scale(pg.image.load("assets/obama.png").convert(),
-                                       (gw.tile_s * 4, gw.tile_s * 4))
+                                       (gw.tile_s * 2, gw.tile_s * 2))
+        self.surf_ratio = (2, 2)
+        self.covered_tiles = {(0, 0), (-1, 0)}
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 

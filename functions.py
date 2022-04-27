@@ -205,17 +205,19 @@ def place_structure(gw, prev_pos, press_hold):
     new_struct = None
     if isinstance(gw.cursor.hold, Structure):
         built, snapped, can_afford = False, False, True
-        if gw.tile_type_map[gw.cursor.pos[0]][gw.cursor.pos[1]] != "water" or isinstance(gw.cursor.hold, Road):
+        if all([gw.tile_type_map[gw.cursor.pos[0] + rel[0]][gw.cursor.pos[1] + rel[1]] != "water" for rel in
+                gw.cursor.hold.covered_tiles]) or isinstance(gw.cursor.hold, Road):
             if gw.cursor.hold.build_cost <= gw.reality.gold:
-                if not isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Structure):
-
+                if not any([isinstance(gw.struct_map[gw.cursor.pos[0] + rel[0]][gw.cursor.pos[1] + rel[1]], Structure)
+                            for rel in gw.cursor.hold.covered_tiles]):
                     if isinstance(gw.cursor.hold, Gate):
                         new_struct = type(gw.cursor.hold)(gw.cursor.pos, gw, gw.cursor.hold.orient)
                     else:
                         new_struct = type(gw.cursor.hold)(gw.cursor.pos, gw)
                     gw.structs.add(new_struct)
                     gw.entities.add(new_struct)
-                    gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]] = new_struct
+                    for rel in new_struct.covered_tiles:
+                        gw.struct_map[gw.cursor.pos[0] + rel[0]][gw.cursor.pos[1] + rel[1]] = new_struct
                     built = True
 
                 elif isinstance(gw.cursor.hold, Gate) and not press_hold:
@@ -311,7 +313,9 @@ def remove_structure(gw, remove_hold):
         removed = True
 
         gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].kill()
-        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]] = 0
+        covered_tiles = gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].covered_tiles
+        for rel in covered_tiles:
+            gw.struct_map[gw.cursor.pos[0] + rel[0]][gw.cursor.pos[1] + rel[1]] = 0
         for struct in gw.structs:
             if gw.surrounded_tiles[struct.pos[0]][struct.pos[1]] == 2:
                 struct.inside = True
@@ -335,14 +339,16 @@ def zoom(gw, factor):
     gw.hud.minimap.update_zoom(gw)
 
     if gw.cursor.hold is not None:
-        gw.cursor.hold.surf = pg.transform.scale(gw.cursor.hold.surf, (gw.tile_s, gw.cursor.hold.surf_ratio[1] * gw.tile_s))
-        gw.cursor.ghost.surf = pg.transform.scale(gw.cursor.hold.surf, (gw.tile_s, gw.cursor.hold.surf_ratio[1] * gw.tile_s))
+        gw.cursor.hold.surf = pg.transform.scale(gw.cursor.hold.surf, (
+        gw.cursor.hold.surf_ratio[0] * gw.tile_s, gw.cursor.hold.surf_ratio[1] * gw.tile_s))
+        gw.cursor.ghost.surf = pg.transform.scale(gw.cursor.hold.surf, (
+        gw.cursor.hold.surf_ratio[0] * gw.tile_s, gw.cursor.hold.surf_ratio[1] * gw.tile_s))
         gw.cursor.ghost.rect = gw.cursor.ghost.surf.get_rect(bottomright=(gw.tile_s * (gw.cursor.ghost.pos[0] + 1),
-                                                                    gw.tile_s * (gw.cursor.ghost.pos[1] + 1)))
+                                                                          gw.tile_s * (gw.cursor.ghost.pos[1] + 1)))
     for struct in gw.structs:
         struct.update_zoom(gw)
 
-    for h, snap in zip((1, 1, 20/15, 20/15), gw.snapper_dict.values()):
+    for h, snap in zip((1, 1, 20 / 15, 20 / 15), gw.snapper_dict.values()):
         for name, spr in snap.items():
             snap[name] = pg.transform.scale(spr, (gw.tile_s, gw.tile_s * h))
 
@@ -359,7 +365,6 @@ def zoom(gw, factor):
         gw.background.rect.top = 0
     else:
         gw.background.rect.centery = int(gw.background.rect.centery * factor)
-
 
 # def detect_wall_loops(xy):
 #     def find_connected_nodes(A, node_xy, direction_to_xy_dict, required, current_walls, origin, i):

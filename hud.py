@@ -276,11 +276,11 @@ class BuildMenu(HUD):
         self.surf_raw = self.surf.copy()
 
         self.surf.fill((255, 255, 255))
-        self.fill_dicts(("tile", "tile_hover", "tile_press", "category", "category_hover"),
-                        ("housing", "military", "mining", "transport", "manufacturing", "agriculture"), "build_menu", 2)
+        self.fill_dicts(("tile", "tile_hover", "tile_big", "tile_big_hover", "category", "category_hover"),
+                        ("housing", "military", "transport", "manufacturing", "agriculture", "religion"), "build_menu", 2)
         self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2, top=44)
-        self.category_dict = {"housing": (House,), "military": (Wall, Gate, Tower), "mining": (Mine, Pyramid),
-                              "transport": (Road,), "manufacturing": (), "agriculture": (Tree,)}
+        self.category_dict = {"housing": (House,), "military": (Wall, Gate, Tower), "religion": (),
+                              "transport": (Road,), "manufacturing": (Sawmill, Mine, Pyramid), "agriculture": (Tree,)}
         self.build_buttons = set()
 
         self.collide_rect = pg.Rect(self.rect.left + 4, 0, self.rect.width - 8, self.rect.height - 16)
@@ -307,13 +307,23 @@ class BuildMenu(HUD):
             gw.buttons.difference_update(self.build_buttons)
             self.buttons.difference_update(self.build_buttons)
 
+            curr_button_pos_left = 136
             for i, building in enumerate(self.category_dict[value]):
                 new_build = building([0, 0], gw)
                 height = 120 - 60 * new_build.surf_ratio[1]
-                curr_button = self.make_button(pg.transform.scale(new_build.surf, (60, 60 * new_build.surf_ratio[1])),
-                                               (136 + i * 88, 0), self.assign, type(new_build),
-                                               "button_tile", "button_tile_hover", -i - 1, 4 + height)
+                if new_build.surf_ratio[0] <= 1:
+                    button_tile, button_tile_hover = "button_tile", "button_tile_hover"
+                else:
+                    button_tile, button_tile_hover = "button_tile_big", "button_tile_big_hover"
+                curr_button = self.make_button(
+                    pg.transform.scale(new_build.surf, (60 * new_build.surf_ratio[0], 60 * new_build.surf_ratio[1])),
+                    (curr_button_pos_left, 0), self.assign, type(new_build),
+                    button_tile, button_tile_hover, -i - 1, 4 + height)
                 self.build_buttons.add(curr_button)
+                if new_build.surf_ratio[0] <= 1:
+                    curr_button_pos_left += 88
+                else:
+                    curr_button_pos_left += 148
 
             for any_button in self.buttons:
                 if any_button.id == button.id:
