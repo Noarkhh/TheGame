@@ -110,10 +110,10 @@ class GlobalStatistics(Statistics):
         self.curr_coords = [4, self.stat_window.get_height() - 4]
 
         super().blit_stat(
-            "Time: " + str(gw.reality.time[0]) + ":00, Day " + str(gw.reality.time[1] + 1) + ", Week " + str(gw.reality.time[2] + 1))
-        super().blit_stat("Gold: " + str(gw.reality.gold) + "g")
-        super().blit_stat("TPS: " + str("{:.2f}".format(1 / gw.reality.elapsed * gw.TICK_RATE)))
-        super().blit_stat("Weekly Tribute: " + str(gw.reality.tribute) + "g")
+            "Time: " + str(gw.time_manager.time[0]) + ":00, Day " + str(gw.time_manager.time[1] + 1) + ", Week " + str(gw.time_manager.time[2] + 1))
+        super().blit_stat("Gold: " + str(gw.time_manager.gold) + "g")
+        super().blit_stat("TPS: " + str("{:.2f}".format(1 / gw.time_manager.elapsed * gw.TICK_RATE)))
+        super().blit_stat("Weekly Tribute: " + str(gw.time_manager.tribute) + "g")
 
         super().print_stats(gw)
 
@@ -143,7 +143,7 @@ class TileStatistics(Statistics):
         super().print_stats(gw)
 
 
-class Reality:
+class TimeManager:
     def __init__(self, gw):
         self.time = 0
         self.tick = 0
@@ -168,7 +168,7 @@ class Reality:
                 if self.time[1] >= 7:
                     self.time[1] = 0
                     self.time[2] += 1
-                    gw.reality.gold -= self.tribute
+                    gw.time_manager.gold -= self.tribute
                     gw.sounds["ignite_oil"].play()
                     self.tribute = int(self.tribute ** 1.2)
 
@@ -193,7 +193,8 @@ class Cursor(pg.sprite.Sprite):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
         self.pos = [0, 0]
-        self.hold = None
+        self.previous_pos = (0, 0)
+        self.held_structure = None
         self.ghost = None
 
     def update_arrows(self, gw, pressed_keys):
@@ -232,7 +233,7 @@ class Cursor(pg.sprite.Sprite):
         self.cooldown = [x - 1 if x > 0 else 0 for x in self.cooldown]
         self.rect.x = self.pos[0] * gw.tile_s
         self.rect.y = self.pos[1] * gw.tile_s
-        if self.hold is not None:
+        if self.held_structure is not None:
             self.ghost.update(gw, self)
             gw.background.surf.blit(self.ghost.surf, self.ghost.rect)
 
@@ -244,7 +245,7 @@ class Cursor(pg.sprite.Sprite):
 
     def draw(self, gw):
         gw.background.surf.blit(self.surf, self.rect)
-        if self.hold is not None:
+        if self.held_structure is not None:
             self.ghost.update(gw)
             gw.background.surf.blit(self.ghost.surf, self.ghost.rect)
 
@@ -257,7 +258,7 @@ class Cursor(pg.sprite.Sprite):
 class Ghost(pg.sprite.Sprite):
     def __init__(self, gw):
         super().__init__()
-        self.surf = gw.cursor.hold.surf
+        self.surf = gw.cursor.held_structure.surf
         self.surf.set_alpha(128)
         self.pos = gw.cursor.pos
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
@@ -266,7 +267,7 @@ class Ghost(pg.sprite.Sprite):
         self.pos = gw.cursor.pos
         self.rect.right = gw.tile_s * (self.pos[0] + 1)
         self.rect.bottom = gw.tile_s * (self.pos[1] + 1)
-        self.surf = gw.cursor.hold.surf
+        self.surf = gw.cursor.held_structure.surf
         self.surf.set_alpha(128)
 
 
@@ -288,6 +289,7 @@ class Structure(pg.sprite.Sprite):
         self.cooldown = gw.TICK_RATE * 24
         self.time_left = self.cooldown
         self.build_cost = 0
+        self.orientation = 'v'
         if gw.surrounded_tiles[self.pos[0]][self.pos[1]] == 2:
             self.inside = True
         else:
@@ -297,7 +299,7 @@ class Structure(pg.sprite.Sprite):
         self.time_left -= 1
         if self.time_left == 0:
             self.time_left = self.cooldown
-            gw.reality.gold += self.profit
+            gw.time_manager.gold += self.profit
 
     def update_zoom(self, gw):
         self.surf = pg.transform.scale(self.surf, (self.surf_ratio[0] * gw.tile_s, self.surf_ratio[1] * gw.tile_s))
@@ -389,7 +391,7 @@ class House(Structure):
         visited = {tuple(self.pos)}
         nearby_houses = 0
         for xy in ((-1, 0), (0, 1), (1, 0), (0, -1)):
-            if not gw.pos_oob(self.pos[0] + xy[0], self.pos[1] + xy[1]) and \
+            if not gw.is_out_of_bounds(self.pos[0] + xy[0], self.pos[1] + xy[1]) and \
                     isinstance(gw.struct_map[self.pos[0] + xy[0]][self.pos[1] + xy[1]], Road):
                 nearby_houses += self.detect_nearby_houses(gw, [self.pos[0] + xy[0], self.pos[1] + xy[1]], visited)
         self.profit += nearby_houses
@@ -443,6 +445,7 @@ class Snapper(Structure):
         self.neighbours = set()
         self.snapper_dict_key = ""
         self.snapper_dict = {}
+        self.direction_to_int_dict = {direction: i for i, direction in enumerate(('N', 'E', 'S', 'W'))}
 
     def update_edges(self, direction, add):
         if add == 1:
@@ -450,13 +453,7 @@ class Snapper(Structure):
         elif add == -1 and direction in self.neighbours:
             self.neighbours.remove(direction)
 
-        def assign_value(direct):
-            if direct == 'N': return 0
-            if direct == 'E': return 1
-            if direct == 'S': return 2
-            if direct == 'W': return 3
-
-        directions = tuple(sorted(self.neighbours, key=assign_value))
+        directions = tuple(sorted(self.neighbours, key=lambda x: self.direction_to_int_dict[x]))
         self.surf = self.snapper_dict[directions].copy()
 
     def to_json(self):
@@ -501,7 +498,7 @@ class Wall(Snapper):
 class Gate(Wall, Road):
     def __init__(self, xy, gw, orientation="v"):
         super().__init__(xy, gw)
-        self.orient = orientation
+        self.orientation = orientation
         self.image_path = ""
         if orientation == "v":
             self.snapper_dict_key = "vgates"
@@ -520,16 +517,16 @@ class Gate(Wall, Road):
         self.build_cost = 150
 
     def rotate(self, gw):
-        if self.orient == "v":
-            self.orient = "h"
+        if self.orientation == "v":
+            self.orientation = "h"
             self.snapsto = {'N': "walls", 'E': "roads", 'S': "walls", 'W': "roads"}
         else:
-            self.orient = "v"
+            self.orientation = "v"
             self.snapsto = {'N': "roads", 'E': "walls", 'S': "roads", 'W': "walls"}
-        self.surf = pg.transform.scale(pg.image.load("assets/" + self.orient + "gates/gate.png").convert(),
+        self.surf = pg.transform.scale(pg.image.load("assets/" + self.orientation + "gates/gate.png").convert(),
                                        (gw.tile_s, gw.tile_s * 20 / 15))
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
     def to_json(self):
-        return {**super().to_json(), **{"orient": self.orient}}
+        return {**super().to_json(), **{"orient": self.orientation}}

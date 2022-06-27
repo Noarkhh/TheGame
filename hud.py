@@ -20,13 +20,13 @@ class Button(pg.sprite.Sprite):
         self.function = function
         self.value = value
         self.sound = sound
-        self.hold = False
+        self.is_held_down = False
+        self.is_locked = False
 
     def hovered(self, gw):
         gw.screen.blit(self.hover_surf, self.rect)
-
-    def pressed(self, gw):
-        gw.screen.blit(self.press_surf, self.rect)
+        if self.is_held_down:
+            gw.screen.blit(self.press_surf, self.rect)
 
     def play_hover_sound(self, gw):
         if self.sound == "woodrollover":
@@ -36,6 +36,45 @@ class Button(pg.sprite.Sprite):
 
     def press(self, gw, *args):
         return self.function(gw, self, self.value, *args)
+
+
+class ButtonHandler:
+    def __init__(self, gw):
+        self.held_button = None
+        self.hovered_button = None
+        self.previous_button = None
+
+    def handle_button_press(self, gw, event):
+        press_result = None
+        if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+            if self.hovered_button is not None:
+                self.hovered_button.is_held_down = True
+                self.held_button = self.hovered_button
+                gw.sounds["woodpush2"].play()
+        if event.type == pg.MOUSEBUTTONUP and event.button == 1:
+            if self.held_button is not None:
+                if self.hovered_button is self.held_button:
+                    press_result = self.hovered_button.press(gw)
+                if not self.held_button.is_locked:
+                    self.held_button.is_held_down = False
+            self.held_button = None
+        return press_result
+
+    def handle_hovered_buttons(self, gw, active_buttons):
+
+        self.hovered_button = None
+        for button in active_buttons:
+            if button.rect.collidepoint(pg.mouse.get_pos()):
+                self.hovered_button = button
+                button.hovered(gw)
+            if button.is_held_down:
+                button.hovered(gw)
+
+        if gw.button_handler.previous_button is not None and gw.button_handler.hovered_button is not None and \
+                gw.button_handler.previous_button.id != gw.button_handler.hovered_button.id:
+            gw.button_handler.hovered_button.play_hover_sound(gw)
+
+        gw.button_handler.previous_button = gw.button_handler.hovered_button
 
 
 class HUD:
@@ -97,11 +136,11 @@ class TopBar(HUD):
 
     def update(self, gw):
         self.surf.blit(self.surf_raw, (0, 0))
-        self.draw("Time: " + str(gw.reality.time[0]) + ":00, Day " + str(gw.reality.time[1] + 1)
-                  + ", Week " + str(gw.reality.time[2] + 1))
-        self.draw("Gold: " + str(gw.reality.gold) + "g")
-        self.draw("TPS: " + str("{:.2f}".format(1 / gw.reality.elapsed * gw.TICK_RATE)))
-        self.draw("Weekly Tribute: " + str(gw.reality.tribute) + "g")
+        self.draw("Time: " + str(gw.time_manager.time[0]) + ":00, Day " + str(gw.time_manager.time[1] + 1)
+                  + ", Week " + str(gw.time_manager.time[2] + 1))
+        self.draw("Gold: " + str(gw.time_manager.gold) + "g")
+        self.draw("TPS: " + str("{:.2f}".format(1 / gw.time_manager.elapsed * gw.TICK_RATE)))
+        self.draw("Weekly Tribute: " + str(gw.time_manager.tribute) + "g")
         gw.screen.blit(self.surf, self.rect)
         self.rightmost = 12
 
@@ -130,9 +169,9 @@ class PauseMenu(HUD):
         self.fill_dicts(("", "hover", "small", "small_hover", "square", "square_hover"),
                         ("delete", "save", "back", "load"), "pause_menu")
 
-        self.load_menu(gw)
+        self.load_pause_menu(gw)
 
-    def load_menu(self, gw, button=None, value=None, press_hold=None):
+    def load_pause_menu(self, gw, button=None, value=None, is_lmb_held_down=None):
         self.surf = self.surf_raw.copy()
         self.buttons = set()
 
@@ -140,10 +179,10 @@ class PauseMenu(HUD):
             text_surf = self.font.render(button_name, False, (62, 61, 58), (255, 255, 255))
             text_surf.set_colorkey((255, 255, 255))
             self.make_button(text_surf, (40, 28 + (self.button_dict["button_"].get_height() + 4) * h),
-                             method, None, "button_", "button_hover", h)
+                             method, None, "button_", "button_hover", h, 8)
         gw.screen.blit(self.surf, self.rect)
 
-        return True, True, -1
+        return True, True
 
     def load_savefile_menu(self, gw):
         def savefile_choose(gw, button, value):
@@ -153,9 +192,11 @@ class PauseMenu(HUD):
                         gw.from_json(json.load(f))
                         detect_surrounded_tiles(gw)
                         zoom(gw, 1)
-                    return False, True, value
+                        gw.hud.is_build_menu_open = False
+                        gw.buttons.difference_update(gw.hud.build_menu.buttons)
+                    return False, True
                 else:
-                    return True, True, -1
+                    return True, True
 
             def save_to_slot(gw, button, value):
                 gw.hud.pause_menu.dates[value] = time.strftime("%H:%M %d-%m-%y")
@@ -170,7 +211,7 @@ class PauseMenu(HUD):
                 with open("saves/save_dates.json", "w+") as f:
                     json.dump(gw.hud.pause_menu.dates, f)
                 self.load_savefile_menu(gw)
-                return True, True, -1
+                return True, True
 
             def del_save(gw, button, value):
                 gw.hud.pause_menu.dates[value] = "Empty slot"
@@ -182,7 +223,7 @@ class PauseMenu(HUD):
                     pass
                 self.load_savefile_menu(gw)
 
-                return True, True, -1
+                return True, True
 
             self.load_savefile_menu(gw)
             if gw.hud.pause_menu.dates[value] != "Empty slot":
@@ -197,41 +238,43 @@ class PauseMenu(HUD):
 
             for any_button in gw.hud.pause_menu.buttons:
                 if any_button.id == button.id:
-                    any_button.hold = True
+                    any_button.is_held_down = True
+                    any_button.is_locked = True
                 else:
-                    any_button.hold = False
+                    any_button.is_held_down = False
+                    any_button.is_locked = False
             # button.hold = True
-            return True, True, -1
+            return True, True
 
         gw.buttons.difference_update(self.buttons)
-        self.buttons = set()
+        self.buttons.clear()
         self.surf.blit(self.surf_raw, (0, 0))
         for h in range(5):
             text_surf = self.font_small.render(self.dates[h], False, (62, 61, 58), (255, 255, 255))
             text_surf.set_colorkey((255, 255, 255))
             self.make_button(text_surf, (40, 28 + (self.button_dict["button_small"].get_height() + 4) * h),
                              savefile_choose, h, "button_small", "button_small_hover", h)
-        self.make_button(self.icon_dict["icon_back"], (160, 268), self.load_menu, 0,
+        self.make_button(self.icon_dict["icon_back"], (160, 268), self.load_pause_menu, 0,
                          "button_square", "button_square_hover")
 
-    def resume(self, gw, button, value):
-        return False, True, -1
+    def resume(self, *args):
+        return False, True
 
-    def save(self, gw, button, value):
+    def save(self, gw, *args):
         self.save = True
         self.load_savefile_menu(gw)
-        return True, True, -1
+        return True, True
 
-    def load(self, gw, button, value):
+    def load(self, gw, *args):
         self.save = False
         self.load_savefile_menu(gw)
-        return True, True, -1
+        return True, True
 
-    def options(self, gw, button, value):
-        return True, True, -1
+    def options(self, *args):
+        return True, True
 
-    def quit(self, gw, button, value):
-        return False, False, -1
+    def quit(self, *args):
+        return False, False
 
 
 class Minimap(HUD):
@@ -277,7 +320,8 @@ class BuildMenu(HUD):
 
         self.surf.fill((255, 255, 255))
         self.fill_dicts(("tile", "tile_hover", "tile_big", "tile_big_hover", "category", "category_hover"),
-                        ("housing", "military", "transport", "manufacturing", "agriculture", "religion"), "build_menu", 2)
+                        ("housing", "military", "transport", "manufacturing", "agriculture", "religion"), "build_menu",
+                        2)
         self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2, top=44)
         self.category_dict = {"housing": (House,), "military": (Wall, Gate, Tower), "religion": (),
                               "transport": (Road,), "manufacturing": (Sawmill, Mine, Pyramid), "agriculture": (Tree,)}
@@ -297,50 +341,50 @@ class BuildMenu(HUD):
                                            category[5:], "button_category", "button_category_hover", i,
                                            sound="metrollover")
             if i == 0 and not manual_open:
-                self.open_category(gw, curr_button, category[5:], False, False)
+                self.open_category(gw, curr_button, category[5:], False)
 
         gw.buttons.update(self.buttons)
 
-    def open_category(self, gw, button, value, press_hold, manual_open=True):
-        if not press_hold:
-            self.load_menu(gw, True)
-            gw.buttons.difference_update(self.build_buttons)
-            self.buttons.difference_update(self.build_buttons)
+    def open_category(self, gw, button, value, manual_open=True):
+        self.load_menu(gw, True)
+        gw.buttons.difference_update(self.build_buttons)
+        self.buttons.difference_update(self.build_buttons)
 
-            curr_button_pos_left = 136
-            for i, building in enumerate(self.category_dict[value]):
-                new_build = building([0, 0], gw)
-                height = 120 - 60 * new_build.surf_ratio[1]
-                if new_build.surf_ratio[0] <= 1:
-                    button_tile, button_tile_hover = "button_tile", "button_tile_hover"
-                else:
-                    button_tile, button_tile_hover = "button_tile_big", "button_tile_big_hover"
-                curr_button = self.make_button(
-                    pg.transform.scale(new_build.surf, (60 * new_build.surf_ratio[0], 60 * new_build.surf_ratio[1])),
-                    (curr_button_pos_left, 0), self.assign, type(new_build),
-                    button_tile, button_tile_hover, -i - 1, 4 + height)
-                self.build_buttons.add(curr_button)
-                if new_build.surf_ratio[0] <= 1:
-                    curr_button_pos_left += 88
-                else:
-                    curr_button_pos_left += 148
+        curr_button_pos_left = 136
+        for i, building in enumerate(self.category_dict[value]):
+            new_build = building([0, 0], gw)
+            height = 120 - 60 * new_build.surf_ratio[1]
+            if new_build.surf_ratio[0] <= 1:
+                button_tile, button_tile_hover = "button_tile", "button_tile_hover"
+            else:
+                button_tile, button_tile_hover = "button_tile_big", "button_tile_big_hover"
+            curr_button = self.make_button(
+                pg.transform.scale(new_build.surf, (60 * new_build.surf_ratio[0], 60 * new_build.surf_ratio[1])),
+                (curr_button_pos_left, 0), self.assign, type(new_build),
+                button_tile, button_tile_hover, -i - 1, 4 + height)
+            self.build_buttons.add(curr_button)
+            if new_build.surf_ratio[0] <= 1:
+                curr_button_pos_left += 88
+            else:
+                curr_button_pos_left += 148
 
-            for any_button in self.buttons:
-                if any_button.id == button.id:
-                    any_button.hold = True
-                else:
-                    any_button.hold = False
+        for any_button in self.buttons:
+            if any_button.id == button.id:
+                any_button.is_held_down = True
+                any_button.is_locked = True
+            else:
+                any_button.is_held_down = False
+                any_button.is_locked = False
 
-            # print(button.value)
-            # for gw_button in gw.buttons:
-            #     print(gw_button.value)
-            # print("\n\n")
-            gw.buttons.update(self.buttons)
-            if manual_open:
-                gw.sounds["woodpush2"].play()
+        # print(button.value)
+        # for gw_button in gw.buttons:
+        #     print(gw_button.value)
+        # print("\n\n")
+        gw.buttons.update(self.buttons)
+        # if manual_open:
+        #     gw.sounds["woodpush2"].play()
 
-    def assign(self, gw, button, value, press_hold):
-        if not press_hold:
-            gw.cursor.hold = value([0, 0], gw)
-            gw.cursor.ghost = Ghost(gw)
-            gw.sounds["woodpush2"].play()
+    def assign(self, gw, button, value):
+        gw.cursor.held_structure = value([0, 0], gw)
+        gw.cursor.ghost = Ghost(gw)
+        # gw.sounds["woodpush2"].play()

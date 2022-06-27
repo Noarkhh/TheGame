@@ -50,7 +50,7 @@ class GameWorld:
         entities: Sprite group of all sprites with expanded rendering functionality
         structs: Sprite group of all structures
         buttons: Set of all buttons
-        reality: Object that tracks all global variables
+        time_manager: Object that tracks all global variables
         background: Object that holds and handles the part of map currently being displayed
 
         hud: Object that handles HUD
@@ -59,7 +59,7 @@ class GameWorld:
     def __init__(self):
         self.SOUNDTRACK = False
         self.MOUSE_STEERING = True
-        self.WINDOWED = False
+        self.WINDOWED = True
         self.WINDOW_HEIGHT = 720
         self.WINDOW_WIDTH = 1080
         self.TICK_RATE = 60
@@ -92,7 +92,8 @@ class GameWorld:
         self.entities = Entities()
         self.structs = pg.sprite.Group()
         self.buttons = set()
-        self.reality = Reality(self)
+        self.time_manager = TimeManager(self)
+        self.button_handler = ButtonHandler(self)
         self.background = Background(self)
 
         self.hud = Hud(self)
@@ -187,7 +188,7 @@ class GameWorld:
 
         return sounds, tracks
 
-    def pos_oob(self, x, y):
+    def is_out_of_bounds(self, x, y):
         """
         Determines whether given coordinates are in bounds of the map.
 
@@ -211,11 +212,11 @@ class GameWorld:
             "cursor": self.cursor.to_json(),
             "struct_map": [[struct.to_json() if isinstance(struct, Structure) else 0 for struct in x]
                            for x in self.struct_map],
-            "reality": self.reality.to_json(),
+            "reality": self.time_manager.to_json(),
             "structs": [struct.to_json() for struct in self.structs],
             "entities": [entity.to_json() for entity in self.entities],
             "wall_set": tuple(self.wall_set),
-            "gold": self.reality.gold
+            "gold": self.time_manager.gold
         }
 
     def from_json(self, json_dict):
@@ -256,13 +257,16 @@ class GameWorld:
                     self.structs.add(loaded_struct)
                     self.entities.add(loaded_struct)
 
-        self.reality.from_json(json_dict["reality"])
+        self.time_manager.from_json(json_dict["reality"])
         self.wall_set = {tuple(elem) for elem in json_dict["wall_set"]}
-        self.reality.gold = json_dict["gold"]
+        self.time_manager.gold = json_dict["gold"]
 
 
 class Hud:
     def __init__(self, gw):
+        self.are_debug_stats_displayed = True
+        self.is_build_menu_open = True
+
         self.global_statistics = GlobalStatistics(gw)
         self.tile_statistics = TileStatistics(gw)
         self.build_menu = BuildMenu(gw)
