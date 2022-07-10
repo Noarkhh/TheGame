@@ -208,8 +208,7 @@ def place_structure(gw, is_lmb_held_down):
             if not any([isinstance(gw.struct_map[gw.cursor.pos[0] + rel[0]][gw.cursor.pos[1] + rel[1]], Structure)
                         for rel in gw.cursor.held_structure.covered_tiles]):
 
-                new_struct = type(gw.cursor.held_structure)(gw.cursor.pos, gw)
-                new_struct.orientation = gw.cursor.held_structure.orientation
+                new_struct = type(gw.cursor.held_structure)(gw.cursor.pos, gw, gw.cursor.held_structure.orientation)
                 gw.structs.add(new_struct)
                 gw.entities.add(new_struct)
                 for rel in new_struct.covered_tiles:
@@ -219,8 +218,7 @@ def place_structure(gw, is_lmb_held_down):
             elif isinstance(gw.cursor.held_structure, Gate) and not is_lmb_held_down:
                 can_build, directions_to_connect_to = can_build_gate_on_a_structure(gw)
                 if can_build:
-                    new_struct = type(gw.cursor.held_structure)(gw.cursor.pos, gw)
-                    new_struct.orientation = gw.cursor.held_structure.orientation
+                    new_struct = type(gw.cursor.held_structure)(gw.cursor.pos, gw, gw.cursor.held_structure.orientation)
                     gw.structs.add(new_struct)
                     gw.entities.add(new_struct)
 
@@ -266,11 +264,12 @@ def place_structure(gw, is_lmb_held_down):
                     y.update_profit(gw)
 
     if not snapped and not built and not is_lmb_held_down and can_afford:
-        if not isinstance(gw.cursor.held_structure, Snapper) or \
-                not isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Snapper):
+        if not (isinstance(gw.cursor.held_structure, Snapper) and
+                isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Snapper)):
             gw.speech_channel.play(gw.sounds["Placement_Warning16"])
-        elif not bool(set(gw.cursor.held_structure.snapsto.values()) &
-                      set(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].snapsto.values())):
+        elif not (bool(set(gw.cursor.held_structure.snapsto.values()) &
+                       set(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].snapsto.values())) and
+                  type(gw.cursor.held_structure) in (Wall, Road)):
             gw.speech_channel.play(gw.sounds["Placement_Warning16"])
 
     if not snapped and not built and not is_lmb_held_down and not can_afford:

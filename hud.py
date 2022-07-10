@@ -7,7 +7,7 @@ from classes import *
 from functions import detect_surrounded_tiles, zoom
 
 
-class Button(pg.sprite.Sprite):
+class Button:
     def __init__(self, rect, function, value=None, hover_surf=pg.Surface((0, 0)), press_surf=pg.Surface((0, 0)), id=-1,
                  sound="woodrollover"):
         super().__init__()
@@ -70,8 +70,10 @@ class ButtonHandler:
             if button.is_held_down:
                 button.hovered(gw)
 
-        if gw.button_handler.previous_button is not None and gw.button_handler.hovered_button is not None and \
-                gw.button_handler.previous_button.id != gw.button_handler.hovered_button.id:
+        if gw.button_handler.hovered_button is not None and \
+                ((gw.button_handler.previous_button is not None and
+                  gw.button_handler.previous_button.id != gw.button_handler.hovered_button.id) or
+                 gw.button_handler.previous_button is None):
             gw.button_handler.hovered_button.play_hover_sound(gw)
 
         gw.button_handler.previous_button = gw.button_handler.hovered_button
@@ -173,13 +175,13 @@ class PauseMenu(HUD):
 
     def load_pause_menu(self, gw, button=None, value=None, is_lmb_held_down=None):
         self.surf = self.surf_raw.copy()
-        self.buttons = set()
+        self.buttons.clear()
 
         for h, (button_name, method) in enumerate(self.button_properties):
             text_surf = self.font.render(button_name, False, (62, 61, 58), (255, 255, 255))
             text_surf.set_colorkey((255, 255, 255))
             self.make_button(text_surf, (40, 28 + (self.button_dict["button_"].get_height() + 4) * h),
-                             method, None, "button_", "button_hover", h, 8)
+                             method, None, "button_", "button_hover", h, 4)
         gw.screen.blit(self.surf, self.rect)
 
         return True, True
@@ -328,8 +330,7 @@ class BuildMenu(HUD):
         self.build_buttons = set()
 
         self.collide_rect = pg.Rect(self.rect.left + 4, 0, self.rect.width - 8, self.rect.height - 16)
-
-        self.load_menu(gw)
+        # self.load_menu(gw)
 
     def load_menu(self, gw, manual_open=False):
         self.surf.blit(self.surf_raw, (0, 0))
@@ -338,17 +339,18 @@ class BuildMenu(HUD):
 
         for i, (category, icon) in enumerate(self.icon_dict.items()):
             curr_button = self.make_button(icon, (52 + (i % 2) * 36, 4 + (i // 2) * 36), self.open_category,
-                                           category[5:], "button_category", "button_category_hover", i,
-                                           sound="metrollover")
+                                           category.removeprefix("icon_"), "button_category", "button_category_hover",
+                                           i, sound="metrollover")
             if i == 0 and not manual_open:
-                self.open_category(gw, curr_button, category[5:], False)
+                self.open_category(gw, curr_button, category.removeprefix("icon_"))
 
         gw.buttons.update(self.buttons)
 
-    def open_category(self, gw, button, value, manual_open=True):
+    def open_category(self, gw, button, value):
         self.load_menu(gw, True)
         gw.buttons.difference_update(self.build_buttons)
         self.buttons.difference_update(self.build_buttons)
+        self.build_buttons.clear()
 
         curr_button_pos_left = 136
         for i, building in enumerate(self.category_dict[value]):

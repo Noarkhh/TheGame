@@ -272,7 +272,7 @@ class Ghost(pg.sprite.Sprite):
 
 
 class Structure(pg.sprite.Sprite):
-    def __init__(self, xy, gw):
+    def __init__(self, xy, gw, *args):
         super().__init__()
         self.surf = pg.Surface((gw.tile_s, gw.tile_s))
         self.image_path = ""
@@ -325,7 +325,7 @@ class Structure(pg.sprite.Sprite):
 
 
 class Tree(Structure):
-    def __init__(self, xy, gw):
+    def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = "assets/tree.png"
         self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, gw.tile_s))
@@ -333,7 +333,7 @@ class Tree(Structure):
 
 
 class Mine(Structure):
-    def __init__(self, xy, gw):
+    def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = "assets/mine.png"
         self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, gw.tile_s*2))
@@ -343,7 +343,7 @@ class Mine(Structure):
 
 
 class Sawmill(Structure):
-    def __init__(self, xy, gw):
+    def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = "assets/sawmill.png"
         self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s*2, gw.tile_s*2))
@@ -354,7 +354,7 @@ class Sawmill(Structure):
 
 
 class Farmland(Structure):
-    def __init__(self, xy, gw):
+    def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = "assets/farmland.png"
         self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, gw.tile_s))
@@ -362,7 +362,7 @@ class Farmland(Structure):
 
 
 class Pyramid(Structure):
-    def __init__(self, xy, gw):
+    def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = "assets/obama.png"
         self.surf = pg.transform.scale(pg.image.load("assets/obama.png").convert(),
@@ -374,7 +374,7 @@ class Pyramid(Structure):
 
 
 class House(Structure):
-    def __init__(self, xy, gw):
+    def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = "assets/house" + str(randint(1, 2)) + ".png"
         self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(),
@@ -429,7 +429,7 @@ class House(Structure):
 
 
 class Tower(Structure):
-    def __init__(self, xy, gw):
+    def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = "assets/big_tower.png"
         self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, 2 * gw.tile_s))
@@ -468,7 +468,7 @@ class Snapper(Structure):
 
 
 class Road(Snapper):
-    def __init__(self, xy, gw):
+    def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = ""
         self.snapper_dict_key = "roads"
@@ -482,7 +482,7 @@ class Road(Snapper):
 
 
 class Wall(Snapper):
-    def __init__(self, xy, gw):
+    def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = ""
         self.snapper_dict_key = "walls"

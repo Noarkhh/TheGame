@@ -265,7 +265,7 @@ class GameWorld:
 class Hud:
     def __init__(self, gw):
         self.are_debug_stats_displayed = True
-        self.is_build_menu_open = True
+        self.is_build_menu_open = False
 
         self.global_statistics = GlobalStatistics(gw)
         self.tile_statistics = TileStatistics(gw)

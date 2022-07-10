@@ -64,14 +64,14 @@ if __name__ == "__main__":
                 if event.key == pg.K_e:
                     if gw.hud.is_build_menu_open:
                         gw.buttons.difference_update(gw.hud.build_menu.buttons)
+                        gw.hud.build_menu.buttons.clear()
                     else:
                         gw.hud.build_menu.load_menu(gw)
                     gw.hud.is_build_menu_open = not gw.hud.is_build_menu_open
 
                 if event.key == K_ESCAPE:
                     running = run_pause_menu_loop(gw)
-            if gw.button_handler.hovered_button is not None:
-                button_press_result = gw.button_handler.handle_button_press(gw, event)
+            button_press_result = gw.button_handler.handle_button_press(gw, event)
 
         if pg.mouse.get_pressed(num_buttons=3)[0] and gw.button_handler.hovered_button is None and \
                 gw.cursor.held_structure is not None:
@@ -116,6 +116,9 @@ if __name__ == "__main__":
         gw.hud.top_bar.update(gw)
 
         gw.button_handler.handle_hovered_buttons(gw, gw.buttons)
+        # for x in gw.buttons:
+        #     print(x.is_held_down, x.id, end=" ")
+        # print()
 
         gw.time_manager.time_lapse(gw)
         gw.background.surf_rendered.blit(gw.background.surf_raw.subsurface(gw.background.rect), (0, 0))
