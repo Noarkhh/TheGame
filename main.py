@@ -112,6 +112,7 @@ if __name__ == "__main__":
         if gw.hud.is_build_menu_open:
             gw.screen.blit(gw.hud.build_menu.surf, gw.hud.build_menu.rect)
 
+        gw.screen.blit(gw.hud.toolbar.surf, gw.hud.toolbar.rect)
         gw.hud.minimap.update_minimap(gw)
         gw.hud.top_bar.update(gw)
 

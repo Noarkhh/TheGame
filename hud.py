@@ -61,7 +61,6 @@ class ButtonHandler:
         return press_result
 
     def handle_hovered_buttons(self, gw, active_buttons):
-
         self.hovered_button = None
         for button in active_buttons:
             if button.rect.collidepoint(pg.mouse.get_pos()):
@@ -102,17 +101,17 @@ class HUD:
         self.buttons.add(button)
         return button
 
-    def fill_dicts(self, button_names, icon_names, hud_type, icon_scale=4):
+    def fill_dicts(self, button_names, icon_names, icon_scale=4):
         for type, names, curr_dict, scale in zip(("button_", "icon_"),
                                                  (button_names, icon_names),
                                                  (self.button_dict, self.icon_dict),
                                                  (4, icon_scale)):
             for name in names:
-                curr_dict[type + name] = pg.image.load(
-                    "assets/hud/" + hud_type + "_" + type + name + ".png").convert()
-                curr_dict[type + name] = pg.transform.scale(curr_dict[type + name], (
-                    curr_dict[type + name].get_width() * scale, curr_dict[type + name].get_height() * scale))
-                curr_dict[type + name].set_colorkey((255, 255, 255))
+                curr_dict[name] = pg.image.load(
+                    "assets/hud/" + type + name + ".png").convert()
+                curr_dict[name] = pg.transform.scale(curr_dict[name], (
+                    curr_dict[name].get_width() * scale, curr_dict[name].get_height() * scale))
+                curr_dict[name].set_colorkey((255, 255, 255))
 
 
 class TopBar(HUD):
@@ -153,8 +152,8 @@ class PauseMenu(HUD):
         self.font = pg.font.Font('assets/Minecraft.otf', 40)
         self.font_small = pg.font.Font('assets/Minecraft.otf', 20)
 
-        self.button_properties = [("Resume", self.resume), ("Save", self.save), ("Load", self.load),
-                                  ("Options", self.options), ("Quit", self.quit)]
+        self.button_properties = {"Resume": self.resume, "Save": self.save, "Load": self.load,
+                                  "Options": self.options, "Quit": self.quit}
         self.buttons = set()
         with open("saves/save_dates.json", "r") as f:
             self.dates = json.load(f)
@@ -165,23 +164,21 @@ class PauseMenu(HUD):
         self.surf_raw = self.surf.copy()
 
         self.rect = self.surf.get_rect(center=(gw.WINDOW_WIDTH / 2, gw.WINDOW_HEIGHT / 2))
-        self.button_dict = {}
-        self.icon_dict = {}
         self.save = True
-        self.fill_dicts(("", "hover", "small", "small_hover", "square", "square_hover"),
-                        ("delete", "save", "back", "load"), "pause_menu")
+        self.fill_dicts(("wide", "wide_hover", "wide_thin", "wide_thin_hover", "round_square", "round_square_hover"),
+                        ("delete", "save", "back", "load"))
 
         self.load_pause_menu(gw)
 
-    def load_pause_menu(self, gw, button=None, value=None, is_lmb_held_down=None):
+    def load_pause_menu(self, gw, *args):
         self.surf = self.surf_raw.copy()
         self.buttons.clear()
 
-        for h, (button_name, method) in enumerate(self.button_properties):
+        for h, (button_name, method) in enumerate(self.button_properties.items()):
             text_surf = self.font.render(button_name, False, (62, 61, 58), (255, 255, 255))
             text_surf.set_colorkey((255, 255, 255))
-            self.make_button(text_surf, (40, 28 + (self.button_dict["button_"].get_height() + 4) * h),
-                             method, None, "button_", "button_hover", h, 4)
+            self.make_button(text_surf, (40, 28 + (self.button_dict["wide"].get_height() + 4) * h),
+                             method, None, "wide", "wide_hover", h, 4)
         gw.screen.blit(self.surf, self.rect)
 
         return True, True
@@ -206,8 +203,8 @@ class PauseMenu(HUD):
                 text_surf = self.font_small.render(gw.hud.pause_menu.dates[value], False, (62, 61, 58), (255, 255, 255))
                 text_surf.set_colorkey((255, 255, 255))
                 gw.hud.pause_menu.make_button(text_surf,
-                                              (40, 28 + (self.button_dict["button_small"].get_height() + 4) * value),
-                                              savefile_choose, value, "button_small", "button_small_hover")
+                                              (40, 28 + (self.button_dict["wide_thin"].get_height() + 4) * value),
+                                              savefile_choose, value, "wide_thin", "wide_thin_hover")
                 with open("saves/savefile" + str(value) + ".json", "w+") as f:
                     json.dump(gw.to_json(), f, indent=2)
                 with open("saves/save_dates.json", "w+") as f:
@@ -229,14 +226,14 @@ class PauseMenu(HUD):
 
             self.load_savefile_menu(gw)
             if gw.hud.pause_menu.dates[value] != "Empty slot":
-                self.make_button(self.icon_dict["icon_delete"], (40, 268), del_save, value,
-                                 "button_square", "button_square_hover", 5)
+                self.make_button(self.icon_dict["delete"], (40, 268), del_save, value,
+                                 "round_square", "round_square_hover", 5)
             if self.save:
-                self.make_button(self.icon_dict["icon_save"], (100, 268), save_to_slot, value,
-                                 "button_square", "button_square_hover", 6)
+                self.make_button(self.icon_dict["save"], (100, 268), save_to_slot, value,
+                                 "round_square", "round_square_hover", 6)
             elif gw.hud.pause_menu.dates[value] != "Empty slot":
-                self.make_button(self.icon_dict["icon_load"], (100, 268), load_from_slot, value,
-                                 "button_square", "button_square_hover", 7)
+                self.make_button(self.icon_dict["load"], (100, 268), load_from_slot, value,
+                                 "round_square", "round_square_hover", 7)
 
             for any_button in gw.hud.pause_menu.buttons:
                 if any_button.id == button.id:
@@ -254,10 +251,10 @@ class PauseMenu(HUD):
         for h in range(5):
             text_surf = self.font_small.render(self.dates[h], False, (62, 61, 58), (255, 255, 255))
             text_surf.set_colorkey((255, 255, 255))
-            self.make_button(text_surf, (40, 28 + (self.button_dict["button_small"].get_height() + 4) * h),
-                             savefile_choose, h, "button_small", "button_small_hover", h)
-        self.make_button(self.icon_dict["icon_back"], (160, 268), self.load_pause_menu, 0,
-                         "button_square", "button_square_hover")
+            self.make_button(text_surf, (40, 28 + (self.button_dict["wide_thin"].get_height() + 4) * h),
+                             savefile_choose, h, "wide_thin", "wide_thin_hover", h)
+        self.make_button(self.icon_dict["back"], (160, 268), self.load_pause_menu, 0,
+                         "round_square", "round_square_hover")
 
     def resume(self, *args):
         return False, True
@@ -317,19 +314,15 @@ class BuildMenu(HUD):
         super().__init__(gw)
         self.surf = pg.transform.scale(pg.image.load("assets/hud/build_menu.png").convert(), (704, 156))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-
         self.surf_raw = self.surf.copy()
 
-        self.surf.fill((255, 255, 255))
-        self.fill_dicts(("tile", "tile_hover", "tile_big", "tile_big_hover", "category", "category_hover"),
-                        ("housing", "military", "transport", "manufacturing", "agriculture", "religion"), "build_menu",
-                        2)
+        self.fill_dicts(("tile", "tile_hover", "tile_big", "tile_big_hover", "round_small", "round_small_hover"),
+                        ("housing", "military", "transport", "manufacturing", "agriculture", "religion"), 2)
         self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2, top=44)
         self.category_dict = {"housing": (House,), "military": (Wall, Gate, Tower), "religion": (),
                               "transport": (Road,), "manufacturing": (Sawmill, Mine, Pyramid), "agriculture": (Tree,)}
         self.build_buttons = set()
 
-        self.collide_rect = pg.Rect(self.rect.left + 4, 0, self.rect.width - 8, self.rect.height - 16)
         # self.load_menu(gw)
 
     def load_menu(self, gw, manual_open=False):
@@ -339,10 +332,10 @@ class BuildMenu(HUD):
 
         for i, (category, icon) in enumerate(self.icon_dict.items()):
             curr_button = self.make_button(icon, (52 + (i % 2) * 36, 4 + (i // 2) * 36), self.open_category,
-                                           category.removeprefix("icon_"), "button_category", "button_category_hover",
+                                           category, "round_small", "round_small_hover",
                                            i, sound="metrollover")
             if i == 0 and not manual_open:
-                self.open_category(gw, curr_button, category.removeprefix("icon_"))
+                self.open_category(gw, curr_button, category)
 
         gw.buttons.update(self.buttons)
 
@@ -357,9 +350,9 @@ class BuildMenu(HUD):
             new_build = building([0, 0], gw)
             height = 120 - 60 * new_build.surf_ratio[1]
             if new_build.surf_ratio[0] <= 1:
-                button_tile, button_tile_hover = "button_tile", "button_tile_hover"
+                button_tile, button_tile_hover = "tile", "tile_hover"
             else:
-                button_tile, button_tile_hover = "button_tile_big", "button_tile_big_hover"
+                button_tile, button_tile_hover = "tile_big", "tile_big_hover"
             curr_button = self.make_button(
                 pg.transform.scale(new_build.surf, (60 * new_build.surf_ratio[0], 60 * new_build.surf_ratio[1])),
                 (curr_button_pos_left, 0), self.assign, type(new_build),
@@ -390,3 +383,38 @@ class BuildMenu(HUD):
         gw.cursor.held_structure = value([0, 0], gw)
         gw.cursor.ghost = Ghost(gw)
         # gw.sounds["woodpush2"].play()
+
+
+class Toolbar(HUD):
+    def __init__(self, gw):
+        super().__init__(gw)
+        self.surf = pg.transform.scale(pg.image.load("assets/hud/toolbar.png").convert(), (108, 300))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.surf_raw = self.surf.copy()
+
+        self.fill_dicts(("round_square", "round_square_hover", "round_small", "round_small_hover"), ("zoom_in", "zoom_out", "manufacturing", "housing"), 2)
+        self.fill_dicts((), ("back",))
+
+        self.rect = self.surf.get_rect(right=gw.WINDOW_WIDTH, top=184)
+
+        self.load_toolbar(gw)
+
+    def load_toolbar(self, gw):
+        self.surf.blit(self.surf_raw, (0, 0))
+        gw.buttons.difference_update(self.buttons)
+        self.buttons.clear()
+
+        for i, (value, icon) in enumerate(self.icon_dict.items()):
+            self.make_button(icon, (32 + (i % 2) * 40, 4 + (i // 2) * 40),
+                             self.foo, value, "round_small", "round_small_hover")
+            if i == 3:
+                break
+
+        for i in range(3):
+            self.make_button(self.icon_dict["back"], (40, 88 + (i * 64)),
+                             self.foo, i, "round_square", "round_square_hover")
+
+        gw.buttons.update(self.buttons)
+
+    def foo(self, *args):
+        pass

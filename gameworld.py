@@ -273,3 +273,4 @@ class Hud:
         self.minimap = Minimap(gw)
         self.top_bar = TopBar(gw)
         self.pause_menu = PauseMenu(gw)
+        self.toolbar = Toolbar(gw)
