@@ -192,7 +192,7 @@ class Cursor(pg.sprite.Sprite):
         self.surf = pg.transform.scale(pg.image.load("assets/cursor2.png").convert(), (gw.tile_s, gw.tile_s))
         self.surf_demolish = pg.transform.scale(pg.image.load("assets/cursor_demolish.png").convert(),
                                                 (gw.tile_s, gw.tile_s))
-        self.surf_demolish.set_alpha(192)
+        self.surf_demolish.set_alpha(128)
 
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.surf_demolish.set_colorkey((255, 255, 255), RLEACCEL)

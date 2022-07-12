@@ -327,10 +327,11 @@ def remove_structure(gw, remove_hold):
 
 
 def run_pause_menu_loop(gw, *args):
-    is_menu_open = True
-    gw.hud.pause_menu.load_pause_menu(gw)
 
-    while is_menu_open:
+    gw.hud.pause_menu.load_pause_menu(gw)
+    gw.hud.pause_menu.is_menu_open = True
+
+    while gw.hud.pause_menu.is_menu_open:
         gw.screen.blit(gw.hud.pause_menu.surf, gw.hud.pause_menu.rect)
 
         gw.button_handler.hovered_button = None
@@ -339,13 +340,14 @@ def run_pause_menu_loop(gw, *args):
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                return False
+                gw.hud.pause_menu.is_menu_open = False
+                gw.running = False
+                return
             if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                 gw.buttons.difference_update(gw.hud.pause_menu.buttons)
-                return True
-            press_result = gw.button_handler.handle_button_press(gw, event)
-            if press_result is not None:
-                is_menu_open, gw.running = press_result
+                gw.hud.pause_menu.is_menu_open = False
+                return
+            gw.button_handler.handle_button_press(gw, event)
 
         pg.display.flip()
 

@@ -165,6 +165,7 @@ class PauseMenu(HUD):
 
         self.rect = self.surf.get_rect(center=(gw.WINDOW_WIDTH / 2, gw.WINDOW_HEIGHT / 2))
         self.save = True
+        self.is_menu_open = True
         self.fill_dicts(("wide", "wide_hover", "wide_thin", "wide_thin_hover", "round_square", "round_square_hover"),
                         ("delete", "save", "back", "load"))
 
@@ -257,23 +258,22 @@ class PauseMenu(HUD):
                          "round_square", "round_square_hover")
 
     def resume(self, *args):
-        return False, True
+        self.is_menu_open = False
 
     def save(self, gw, *args):
         self.save = True
         self.load_savefile_menu(gw)
-        return True, True
 
     def load(self, gw, *args):
         self.save = False
         self.load_savefile_menu(gw)
-        return True, True
 
     def options(self, *args):
-        return True, True
+        pass
 
-    def quit(self, *args):
-        return False, False
+    def quit(self, gw, *args):
+        self.is_menu_open = False
+        gw.running = False
 
 
 class Minimap(HUD):

@@ -65,12 +65,7 @@ if __name__ == "__main__":
                     change_demolish_mode(gw, None, "toggle")
 
                 if event.key == pg.K_e:
-                    if gw.hud.is_build_menu_open:
-                        gw.buttons.difference_update(gw.hud.build_menu.buttons)
-                        gw.hud.build_menu.buttons.clear()
-                    else:
-                        gw.hud.build_menu.load_menu(gw)
-                    gw.hud.is_build_menu_open = not gw.hud.is_build_menu_open
+                    toggle_build_menu(gw)
 
                 if event.key == K_ESCAPE:
                     run_pause_menu_loop(gw)
