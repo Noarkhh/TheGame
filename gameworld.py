@@ -4,7 +4,7 @@ from hud import *
 from pygame.locals import (RLEACCEL,
                            K_t,
                            K_h,
-                           K_r,
+                           K_u,
                            K_w,
                            K_g)
 
@@ -66,6 +66,7 @@ class GameWorld:
         self.STARTING_GOLD = 300000000
 
         self.screen = self.set_window()
+        self.running = True
 
         self.layout_path = "assets/maps/desert_delta_L.png"
         self.layout = pg.image.load(self.layout_path).convert()
@@ -77,7 +78,7 @@ class GameWorld:
 
         self.snapper_dict = self.fill_snappers_dict()
         self.sounds, self.tracks = self.load_sounds()
-        self.key_structure_dict = {K_h: House, K_t: Tower, K_r: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid,
+        self.key_structure_dict = {K_h: House, K_t: Tower, K_u: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid,
                                    pg.K_m: Mine}
         self.string_type_dict = {"house": House, "tower": Tower, "road": Road, "wall": Wall, "gate": Gate,
                                  "obama": Pyramid, "farmland": Farmland, "mine": Mine}
@@ -265,7 +266,7 @@ class GameWorld:
 class Hud:
     def __init__(self, gw):
         self.are_debug_stats_displayed = True
-        self.is_build_menu_open = False
+        self.is_build_menu_open = True
 
         self.global_statistics = GlobalStatistics(gw)
         self.tile_statistics = TileStatistics(gw)

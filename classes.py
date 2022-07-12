@@ -187,64 +187,33 @@ class TimeManager:
 class Cursor(pg.sprite.Sprite):
     def __init__(self, gw):
         super().__init__()
-        self.windup = [0 for _ in range(4)]
-        self.cooldown = [0 for _ in range(4)]
+        self.is_in_demolish_mode = False
+
         self.surf = pg.transform.scale(pg.image.load("assets/cursor2.png").convert(), (gw.tile_s, gw.tile_s))
+        self.surf_demolish = pg.transform.scale(pg.image.load("assets/cursor_demolish.png").convert(),
+                                                (gw.tile_s, gw.tile_s))
+        self.surf_demolish.set_alpha(192)
+
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.surf_demolish.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
         self.pos = [0, 0]
-        self.previous_pos = (0, 0)
+        self.previous_pos = [0, 0]
         self.held_structure = None
         self.ghost = None
 
-    def update_arrows(self, gw, pressed_keys):
-        cooltime = 20
-        key_list = [True if pressed_keys[key] else False for key in (K_UP, K_DOWN, K_LEFT, K_RIGHT)]
-        iter_list = [(key, sign, xy) for key, sign, xy in zip(key_list, (-1, 1, -1, 1), (1, 1, 0, 0))]
-        for i, elem in enumerate(iter_list):
-            if elem[0]:
-                if self.cooldown[i] <= self.windup[i]:
-                    if self.windup[i] < cooltime - 8:
-                        self.windup[i] += 8
-                    else:
-                        self.windup[i] = cooltime
-                    self.pos[elem[2]] += elem[1]
-                    self.cooldown[i] = cooltime
-                    self.windup[i] -= 2
-            else:
-                self.windup[i] = 0
-                self.cooldown[i] = 0
-        bruh = False
-        if self.pos[0] < 0:
-            self.pos[0] = 0
-            bruh = True
-        if self.pos[0] > gw.width_tiles - 1:
-            self.pos[0] = gw.width_tiles - 1
-            bruh = True
-        if self.pos[1] < 0:
-            self.pos[1] = 0
-            bruh = True
-        if self.pos[1] > gw.height_tiles - 1:
-            self.pos[1] = gw.height_tiles - 1
-            bruh = True
-        if bruh:
-            gw.speech_channel.play(gw.sounds["Insult" + str(randint(1, 20))])
-
-        self.cooldown = [x - 1 if x > 0 else 0 for x in self.cooldown]
-        self.rect.x = self.pos[0] * gw.tile_s
-        self.rect.y = self.pos[1] * gw.tile_s
-        if self.held_structure is not None:
-            self.ghost.update(gw, self)
-            gw.background.surf.blit(self.ghost.surf, self.ghost.rect)
-
     def update(self, gw):
+        self.previous_pos = self.pos.copy()
         self.pos[0] = (pg.mouse.get_pos()[0] + gw.background.rect.x) // gw.tile_s
         self.pos[1] = (pg.mouse.get_pos()[1] + gw.background.rect.y) // gw.tile_s
         self.rect.x = self.pos[0] * gw.tile_s
         self.rect.y = self.pos[1] * gw.tile_s
 
     def draw(self, gw):
-        gw.background.surf.blit(self.surf, self.rect)
+        if self.is_in_demolish_mode:
+            gw.background.surf.blit(self.surf_demolish, self.rect)
+        else:
+            gw.background.surf.blit(self.surf, self.rect)
         if self.held_structure is not None:
             self.ghost.update(gw)
             gw.background.surf.blit(self.ghost.surf, self.ghost.rect)

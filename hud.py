@@ -4,7 +4,7 @@ import json
 import os
 from pygame.locals import RLEACCEL
 from classes import *
-from functions import detect_surrounded_tiles, zoom
+from functions import detect_surrounded_tiles, zoom, run_pause_menu_loop, toggle_build_menu, change_demolish_mode
 
 
 class Button:
@@ -53,10 +53,10 @@ class ButtonHandler:
                 gw.sounds["woodpush2"].play()
         if event.type == pg.MOUSEBUTTONUP and event.button == 1:
             if self.held_button is not None:
-                if self.hovered_button is self.held_button:
-                    press_result = self.hovered_button.press(gw)
                 if not self.held_button.is_locked:
                     self.held_button.is_held_down = False
+                if self.hovered_button is self.held_button:
+                    press_result = self.hovered_button.press(gw)
             self.held_button = None
         return press_result
 
@@ -152,8 +152,8 @@ class PauseMenu(HUD):
         self.font = pg.font.Font('assets/Minecraft.otf', 40)
         self.font_small = pg.font.Font('assets/Minecraft.otf', 20)
 
-        self.button_properties = {"Resume": self.resume, "Save": self.save, "Load": self.load,
-                                  "Options": self.options, "Quit": self.quit}
+        self.button_functions = {"Resume": self.resume, "Save": self.save, "Load": self.load,
+                                 "Options": self.options, "Quit": self.quit}
         self.buttons = set()
         with open("saves/save_dates.json", "r") as f:
             self.dates = json.load(f)
@@ -174,7 +174,7 @@ class PauseMenu(HUD):
         self.surf = self.surf_raw.copy()
         self.buttons.clear()
 
-        for h, (button_name, method) in enumerate(self.button_properties.items()):
+        for h, (button_name, method) in enumerate(self.button_functions.items()):
             text_surf = self.font.render(button_name, False, (62, 61, 58), (255, 255, 255))
             text_surf.set_colorkey((255, 255, 255))
             self.make_button(text_surf, (40, 28 + (self.button_dict["wide"].get_height() + 4) * h),
@@ -190,7 +190,7 @@ class PauseMenu(HUD):
                     with open("saves/savefile" + str(value) + ".json", "r") as f:
                         gw.from_json(json.load(f))
                         detect_surrounded_tiles(gw)
-                        zoom(gw, 1)
+                        zoom(gw, None, 1)
                         gw.hud.is_build_menu_open = False
                         gw.buttons.difference_update(gw.hud.build_menu.buttons)
                     return False, True
@@ -323,7 +323,7 @@ class BuildMenu(HUD):
                               "transport": (Road,), "manufacturing": (Sawmill, Mine, Pyramid), "agriculture": (Tree,)}
         self.build_buttons = set()
 
-        # self.load_menu(gw)
+        self.load_menu(gw)
 
     def load_menu(self, gw, manual_open=False):
         self.surf.blit(self.surf_raw, (0, 0))
@@ -371,18 +371,12 @@ class BuildMenu(HUD):
                 any_button.is_held_down = False
                 any_button.is_locked = False
 
-        # print(button.value)
-        # for gw_button in gw.buttons:
-        #     print(gw_button.value)
-        # print("\n\n")
         gw.buttons.update(self.buttons)
-        # if manual_open:
-        #     gw.sounds["woodpush2"].play()
 
     def assign(self, gw, button, value):
         gw.cursor.held_structure = value([0, 0], gw)
         gw.cursor.ghost = Ghost(gw)
-        # gw.sounds["woodpush2"].play()
+        change_demolish_mode(gw, None, "off")
 
 
 class Toolbar(HUD):
@@ -392,10 +386,16 @@ class Toolbar(HUD):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.surf_raw = self.surf.copy()
 
-        self.fill_dicts(("round_square", "round_square_hover", "round_small", "round_small_hover"), ("zoom_in", "zoom_out", "manufacturing", "housing"), 2)
-        self.fill_dicts((), ("back",))
+        self.fill_dicts(("round_square", "round_square_hover", "round_small", "round_small_hover"),
+                        ("zoom_in", "zoom_out", "statistics", "debug"), 2)
+        self.fill_dicts((), ("build", "demolish", "pause"))
+        self.small_button_functions = {"zoom_in": zoom, "zoom_out": zoom, "statistics": self.foo, "debug": self.foo}
+        self.big_button_functions = {"build": toggle_build_menu, "demolish": change_demolish_mode,
+                                     "pause": run_pause_menu_loop}
 
         self.rect = self.surf.get_rect(right=gw.WINDOW_WIDTH, top=184)
+
+        self.demolish_button = None
 
         self.load_toolbar(gw)
 
@@ -404,17 +404,18 @@ class Toolbar(HUD):
         gw.buttons.difference_update(self.buttons)
         self.buttons.clear()
 
-        for i, (value, icon) in enumerate(self.icon_dict.items()):
-            self.make_button(icon, (32 + (i % 2) * 40, 4 + (i // 2) * 40),
-                             self.foo, value, "round_small", "round_small_hover")
-            if i == 3:
-                break
+        for i, (icon, function) in enumerate(self.small_button_functions.items()):
+            self.make_button(self.icon_dict[icon], (32 + (i % 2) * 40, 4 + (i // 2) * 40),
+                             function, (2, 0.5, None, None)[i], "round_small", "round_small_hover", sound="metrollover")
 
-        for i in range(3):
-            self.make_button(self.icon_dict["back"], (40, 88 + (i * 64)),
-                             self.foo, i, "round_square", "round_square_hover")
+        for i, (icon, function) in enumerate(self.big_button_functions.items()):
+            new_button = self.make_button(self.icon_dict[icon], (40, 88 + (i * 64)),
+                                          function, (None, "toggle", None)[i], "round_square", "round_square_hover")
+            if icon == "demolish":
+                self.demolish_button = new_button
 
         gw.buttons.update(self.buttons)
 
     def foo(self, *args):
         pass
+

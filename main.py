@@ -7,7 +7,7 @@ from pygame.locals import (K_SPACE,
                            K_ESCAPE,
                            K_n,
                            K_x,
-                           K_q,
+                           K_r,
                            K_F3)
 
 if __name__ == "__main__":
@@ -20,9 +20,9 @@ if __name__ == "__main__":
     is_lmb_held_down, remove_hold = False, False
 
     gw.speech_channel.play(gw.sounds["General_Startgame"])
-    running = True
+    gw.running = True
     # ------ MAIN LOOP -------
-    while running:
+    while gw.running:
 
         pressed_keys = pg.key.get_pressed()
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
         for event in pg.event.get():
             if event.type == QUIT:
-                running = False
+                gw.running = False
             if event.type == KEYDOWN:
 
                 if event.key in gw.key_structure_dict:  # picking up a chosen structure
@@ -42,7 +42,7 @@ if __name__ == "__main__":
                 if event.key == K_n:
                     gw.cursor.held_structure = None
 
-                if event.key == K_q and isinstance(gw.cursor.held_structure, Gate):
+                if event.key == K_r and isinstance(gw.cursor.held_structure, Gate):
                     gw.cursor.held_structure.rotate(gw)
 
                 if event.key == pg.K_c and isinstance((gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]]), House):
@@ -55,11 +55,14 @@ if __name__ == "__main__":
                 if event.key == K_F3:
                     gw.hud.are_debug_stats_displayed = not gw.hud.are_debug_stats_displayed
 
-                if event.key == pg.K_KP_PLUS and gw.tile_s < 120:
-                    zoom(gw, 2)
+                if event.key == pg.K_KP_PLUS:
+                    zoom(gw, None, 2)
 
-                if event.key == pg.K_KP_MINUS and gw.tile_s > 15:
-                    zoom(gw, 0.5)
+                if event.key == pg.K_KP_MINUS:
+                    zoom(gw, None, 0.5)
+
+                if event.key == K_x:
+                    change_demolish_mode(gw, None, "toggle")
 
                 if event.key == pg.K_e:
                     if gw.hud.is_build_menu_open:
@@ -70,29 +73,25 @@ if __name__ == "__main__":
                     gw.hud.is_build_menu_open = not gw.hud.is_build_menu_open
 
                 if event.key == K_ESCAPE:
-                    running = run_pause_menu_loop(gw)
+                    run_pause_menu_loop(gw)
             button_press_result = gw.button_handler.handle_button_press(gw, event)
 
-        if pg.mouse.get_pressed(num_buttons=3)[0] and gw.button_handler.hovered_button is None and \
-                gw.cursor.held_structure is not None:
-            place_structure(gw, is_lmb_held_down)
+        if pg.mouse.get_pressed(num_buttons=3)[0] and gw.button_handler.hovered_button is None:
+            if not gw.cursor.is_in_demolish_mode and gw.cursor.held_structure is not None:
+                place_structure(gw, is_lmb_held_down)
+            elif gw.cursor.is_in_demolish_mode:
+                remove_structure(gw, is_lmb_held_down)
             is_lmb_held_down = True
         else:
             is_lmb_held_down = False
 
-        if pressed_keys[K_x]:  # removing a structure
-            if remove_structure(gw, remove_hold):
-                remove_hold = True
-        else:
-            remove_hold = False
-        gw.cursor.previous_pos = tuple(gw.cursor.pos)
         gw.background.move_screen(gw)
 
         for struct in gw.structs:
             struct.get_profit(gw)
 
         if gw.time_manager.gold < -50:
-            running = False
+            gw.running = False
 
         gw.entities.draw(gw.background)
         if gw.button_handler.hovered_button is None:

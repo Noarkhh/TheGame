@@ -326,9 +326,8 @@ def remove_structure(gw, remove_hold):
     return removed
 
 
-def run_pause_menu_loop(gw):
+def run_pause_menu_loop(gw, *args):
     is_menu_open = True
-    running = True
     gw.hud.pause_menu.load_pause_menu(gw)
 
     while is_menu_open:
@@ -346,13 +345,41 @@ def run_pause_menu_loop(gw):
                 return True
             press_result = gw.button_handler.handle_button_press(gw, event)
             if press_result is not None:
-                is_menu_open, running = press_result
+                is_menu_open, gw.running = press_result
 
         pg.display.flip()
-    return running
 
 
-def zoom(gw, factor):
+def toggle_build_menu(gw, *args):
+    if gw.hud.is_build_menu_open:
+        gw.buttons.difference_update(gw.hud.build_menu.buttons)
+        gw.hud.build_menu.buttons.clear()
+    else:
+        gw.hud.build_menu.load_menu(gw)
+    gw.hud.is_build_menu_open = not gw.hud.is_build_menu_open
+
+
+def change_demolish_mode(gw, button, mode):
+    if mode == "toggle":
+        gw.cursor.is_in_demolish_mode = not gw.cursor.is_in_demolish_mode
+    elif mode == "on":
+        gw.cursor.is_in_demolish_mode = True
+    elif mode == "off":
+        gw.cursor.is_in_demolish_mode = False
+
+    if gw.cursor.is_in_demolish_mode:
+        gw.cursor.held_structure = None
+        gw.hud.toolbar.demolish_button.is_locked = True
+        gw.hud.toolbar.demolish_button.is_held_down = True
+    else:
+        gw.hud.toolbar.demolish_button.is_locked = False
+        gw.hud.toolbar.demolish_button.is_held_down = False
+
+
+def zoom(gw, button, factor):
+    if (gw.tile_s <= 15 and factor < 1) or (gw.tile_s >= 120 and factor > 1):
+        return
+
     gw.tile_s = int(gw.tile_s * factor)
     gw.width_pixels = int(gw.width_pixels * factor)
     gw.height_pixels = int(gw.height_pixels * factor)
