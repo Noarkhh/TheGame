@@ -1,8 +1,7 @@
 from functions import *
 from hud import *
 from gameworld import GameWorld
-from pygame.locals import (K_SPACE,
-                           KEYDOWN,
+from pygame.locals import (KEYDOWN,
                            QUIT,
                            K_ESCAPE,
                            K_n,
@@ -38,6 +37,7 @@ if __name__ == "__main__":
                     gw.cursor.held_structure = gw.key_structure_dict[event.key]([0, 0], gw)
                     gw.cursor.ghost = Ghost(gw)
                     gw.sounds["menusl_" + str(randint(1, 3))].play()
+                    change_demolish_mode(gw, None, "off")
 
                 if event.key == K_n:
                     gw.cursor.held_structure = None
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         else:
             is_lmb_held_down = False
 
-        gw.background.move_screen(gw)
+        gw.scene.move_screen(gw)
 
         for struct in gw.structs:
             struct.get_profit(gw)
@@ -88,7 +88,7 @@ if __name__ == "__main__":
         if gw.time_manager.gold < -50:
             gw.running = False
 
-        gw.entities.draw(gw.background)
+        gw.entities.draw(gw.scene)
         if gw.button_handler.hovered_button is None:
             gw.cursor.draw(gw)
 
@@ -98,7 +98,7 @@ if __name__ == "__main__":
         if randint(1, 200000) == 1:
             gw.sounds["Random_Events13"].play()
 
-        gw.screen.blit(gw.background.surf_rendered, (0, 0))
+        gw.screen.blit(gw.scene.surf_rendered, (0, 0))
 
         if gw.hud.are_debug_stats_displayed:
             gw.hud.global_statistics.update_global_stats(gw)
@@ -111,12 +111,9 @@ if __name__ == "__main__":
         gw.hud.top_bar.update(gw)
 
         gw.button_handler.handle_hovered_buttons(gw, gw.buttons)
-        # for x in gw.buttons:
-        #     print(x.is_held_down, x.id, end=" ")
-        # print()
 
         gw.time_manager.time_lapse(gw)
-        gw.background.surf_rendered.blit(gw.background.surf_raw.subsurface(gw.background.rect), (0, 0))
+        gw.scene.surf_rendered.blit(gw.scene.surf_raw.subsurface(gw.scene.rect), (0, 0))
         pg.display.flip()
 
         clock.tick(gw.TICK_RATE)

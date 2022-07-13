@@ -1,10 +1,98 @@
-import pygame as pg
-import time
 import json
 import os
-from pygame.locals import RLEACCEL
 from structures import *
 from functions import detect_surrounded_tiles, zoom, change_demolish_mode
+
+
+class Statistics:
+    def __init__(self):
+        self.rect = None
+        self.font_size = 20
+        self.font = pg.font.Font('assets/Minecraft.otf', self.font_size)
+        self.stat_window = pg.Surface((self.font_size * 20, self.font_size * 10))
+        self.stat_window.fill((0, 0, 0))
+        self.stat_scene = pg.Surface((self.font_size * 20, self.font_size * 10))
+        self.stat_scene.fill((255, 255, 255))
+        self.stat_height = self.font_size + 4
+        self.screen_part = ""
+        self.curr_coords = []
+
+    def blit_stat(self, stat):
+        stat_surf = self.font.render(stat, False, (255, 255, 255), (0, 0, 0))
+        if self.screen_part == "topleft":
+            stat_rect = stat_surf.get_rect(topleft=self.curr_coords)
+        elif self.screen_part == "topright":
+            stat_rect = stat_surf.get_rect(topright=self.curr_coords)
+        elif self.screen_part == "bottomleft":
+            stat_rect = stat_surf.get_rect(bottomleft=self.curr_coords)
+        elif self.screen_part == "bottomright":
+            stat_rect = stat_surf.get_rect(bottomright=self.curr_coords)
+        else:
+            stat_rect = stat_surf.get_rect(topleft=self.curr_coords)
+
+        self.stat_window.blit(stat_surf, stat_rect)
+        layer = pg.Surface((stat_rect.width + 8, stat_rect.height + 6))
+        layer.fill((0, 0, 0))
+        self.stat_scene.blit(layer, (stat_rect.x - 5, stat_rect.y - 3))
+        if self.screen_part in {"topleft", "topright"}:
+            self.curr_coords[1] += self.stat_height
+        else:
+            self.curr_coords[1] -= self.stat_height
+
+    def print_stats(self, gw):
+        self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
+        self.stat_scene.set_colorkey((255, 255, 255), RLEACCEL)
+        self.stat_scene.set_alpha(48)
+
+        gw.screen.blit(self.stat_scene, self.rect)
+        gw.screen.blit(self.stat_window, self.rect)
+
+
+class GlobalStatistics(Statistics):
+    def __init__(self, gw):
+        super().__init__()
+        self.rect = self.stat_window.get_rect(bottomleft=(0, gw.WINDOW_HEIGHT))
+        self.screen_part = "bottomleft"
+        self.curr_coords = [4, gw.WINDOW_HEIGHT - 4]
+
+    def update_global_stats(self, gw):
+        self.stat_window.fill((0, 0, 0))
+        self.stat_scene.fill((255, 255, 255))
+        self.curr_coords = [4, self.stat_window.get_height() - 4]
+
+        self.blit_stat(
+            "Time: " + str(gw.time_manager.time[0]) + ":00, Day " + str(gw.time_manager.time[1] + 1) + ", Week " + str(
+                gw.time_manager.time[2] + 1))
+        self.blit_stat("Gold: " + str(gw.time_manager.gold) + "g")
+        self.blit_stat("TPS: " + str("{:.2f}".format(1 / gw.time_manager.elapsed * gw.TICK_RATE)))
+        self.blit_stat("Weekly Tribute: " + str(gw.time_manager.tribute) + "g")
+
+        self.print_stats(gw)
+
+
+class TileStatistics(Statistics):
+    def __init__(self, gw):
+        super().__init__()
+        self.rect = self.stat_window.get_rect(bottomright=(gw.WINDOW_WIDTH, gw.WINDOW_HEIGHT))
+        self.screen_part = "bottomright"
+        self.curr_coords = [self.stat_window.get_width() - 4, self.stat_window.get_height() - 4]
+
+    def update_tile_stats(self, xy, gw):
+        self.stat_window.fill((0, 0, 0))
+        self.stat_scene.fill((255, 255, 255))
+        self.curr_coords = [self.stat_window.get_width() - 4, self.stat_window.get_height() - 4]
+
+        if isinstance(gw.struct_map[xy[0]][xy[1]], Structure):
+            self.blit_stat(
+                "time left: " + str("{:.2f}".format(gw.struct_map[xy[0]][xy[1]].time_left / gw.TICK_RATE)) + "s")
+            self.blit_stat("cooldown: " + str(gw.struct_map[xy[0]][xy[1]].cooldown / gw.TICK_RATE) + "s")
+            self.blit_stat("profit: " + str(gw.struct_map[xy[0]][xy[1]].profit) + "g")
+            self.blit_stat("inside: " + str(gw.struct_map[xy[0]][xy[1]].inside))
+            self.blit_stat(str(type(gw.struct_map[xy[0]][xy[1]]))[16:-2])
+        self.blit_stat(gw.tile_type_map[xy[0]][xy[1]])
+        self.blit_stat(str(xy))
+
+        self.print_stats(gw)
 
 
 class Button:
@@ -317,8 +405,8 @@ class Minimap(HUD):
 
     def update_minimap(self, gw):
         self.surf.blit(self.surf_raw, (0, 0))
-        self.surf.blit(self.visible_area, ((gw.background.rect.x / gw.tile_s) * (128 / gw.width_tiles),
-                                           (gw.background.rect.y / gw.tile_s) * (128 / gw.height_tiles)))
+        self.surf.blit(self.visible_area, ((gw.scene.rect.x / gw.tile_s) * (128 / gw.width_tiles),
+                                           (gw.scene.rect.y / gw.tile_s) * (128 / gw.height_tiles)))
         gw.screen.blit(self.surf, self.rect)
         gw.screen.blit(self.frame, (self.rect.x - 16, self.rect.y))
 
@@ -344,7 +432,7 @@ class BuildMenu(HUD):
         self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2, top=44)
         self.category_dict = {"housing": (House,), "military": (Wall, Gate, Tower), "religion": (),
                               "transport": (Road,), "manufacturing": (Sawmill, Mine, Pyramid), "agriculture": (Tree,)}
-        self.build_buttons = set()
+        self.structure_buttons = set()
         self.is_build_menu_open = True
 
         self.load_menu(gw)
@@ -373,9 +461,9 @@ class BuildMenu(HUD):
 
     def open_category(self, gw, button, value):
         self.load_menu(gw, True)
-        gw.buttons.difference_update(self.build_buttons)
-        self.buttons.difference_update(self.build_buttons)
-        self.build_buttons.clear()
+        gw.buttons.difference_update(self.structure_buttons)
+        self.buttons.difference_update(self.structure_buttons)
+        self.structure_buttons.clear()
 
         curr_button_pos_left = 136
         for i, building in enumerate(self.category_dict[value]):
@@ -389,7 +477,7 @@ class BuildMenu(HUD):
                 pg.transform.scale(new_build.surf, (60 * new_build.surf_ratio[0], 60 * new_build.surf_ratio[1])),
                 (curr_button_pos_left, 0), self.assign, type(new_build),
                 button_tile, button_tile_hover, -i - 1, 4 + height)
-            self.build_buttons.add(curr_button)
+            self.structure_buttons.add(curr_button)
             if new_build.surf_ratio[0] <= 1:
                 curr_button_pos_left += 88
             else:

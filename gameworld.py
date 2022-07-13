@@ -51,7 +51,7 @@ class GameWorld:
         structs: Sprite group of all structures
         buttons: Set of all buttons
         time_manager: Object that tracks all global variables
-        background: Object that holds and handles the part of map currently being displayed
+        scene: Object that holds and handles the part of map currently being displayed
 
         hud: Object that handles HUD
     """
@@ -95,7 +95,7 @@ class GameWorld:
         self.buttons = set()
         self.time_manager = TimeManager(self)
         self.button_handler = ButtonHandler(self)
-        self.background = Background(self)
+        self.scene = Scene(self)
 
         self.hud = Hud(self)
         self.hud.toolbar = Toolbar(self)
@@ -142,7 +142,7 @@ class GameWorld:
     def load_map(self):
         """
         Converts an image representing the layout of terrain to map of tile types and generates a
-        background surface.
+        scene surface.
 
             :return: Surface of the map terrain, 2-dimensional array of tile types
         """
@@ -150,13 +150,13 @@ class GameWorld:
         tile_dict = {name: pg.transform.scale(pg.image.load("assets/tiles/" + name + "_tile.png").convert(),
                                               (60, 60)) for name in color_to_type.values()}
 
-        background = pg.Surface((self.width_tiles * 60, self.height_tiles * 60))
+        scene = pg.Surface((self.width_tiles * 60, self.height_tiles * 60))
         tile_map = [[0 for _ in range(self.height_tiles)] for _ in range(self.width_tiles)]
 
         for x in range(self.width_tiles):
             for y in range(self.height_tiles):
                 tile_color = tuple(self.layout.get_at((x, y)))
-                background.blit(tile_dict[color_to_type[tile_color]], (x * 60, y * 60))
+                scene.blit(tile_dict[color_to_type[tile_color]], (x * 60, y * 60))
                 tile_map[x][y] = color_to_type[tile_color]
                 # if tile_map[x][y] == "grassland" and randint(1, 16) == 1:
                 #     self.struct_map[x][y] = Tree([x, y])
@@ -167,7 +167,7 @@ class GameWorld:
                 #     gw.structs.add(gw.struct_map[x][y])
                 #     gw.entities.add(gw.struct_map[x][y])
 
-        return background, tile_map
+        return scene, tile_map
 
     def load_sounds(self):
         """
@@ -242,7 +242,7 @@ class GameWorld:
         self.surrounded_tiles = [[0 for _ in range(self.height_tiles)] for _ in range(self.width_tiles)]
         self.struct_map = [[0 for _ in range(self.height_tiles)] for _ in range(self.width_tiles)]
         self.map_surf, self.tile_type_map = self.load_map()
-        self.background = Background(self)
+        self.scene = Scene(self)
 
         self.hud = Hud(self)
 

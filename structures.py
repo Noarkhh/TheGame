@@ -1,14 +1,10 @@
 import pygame as pg
 from random import randint
 import time
-from pygame.locals import (RLEACCEL,
-                           K_UP,
-                           K_DOWN,
-                           K_LEFT,
-                           K_RIGHT)
+from pygame.locals import RLEACCEL
 
 
-class Background(pg.sprite.Sprite):
+class Scene(pg.sprite.Sprite):
     """
 
     """
@@ -45,103 +41,12 @@ class Background(pg.sprite.Sprite):
 
 
 class Entities(pg.sprite.Group):
-    def draw(self, background):
+    def draw(self, scene):
         sprites = self.sprites()
         for spr in sorted(sprites, key=lambda spr: spr.pos[1]):
-            if spr.rect.colliderect(background.rect):
-                background.surf.blit(spr.surf, spr.rect)
+            if spr.rect.colliderect(scene.rect):
+                scene.surf.blit(spr.surf, spr.rect)
         self.lostsprites = []
-
-
-class Statistics:
-    def __init__(self):
-        self.rect = None
-        self.font_size = 20
-        self.font = pg.font.Font('assets/Minecraft.otf', self.font_size)
-        self.stat_window = pg.Surface((self.font_size * 20, self.font_size * 10))
-        self.stat_window.fill((0, 0, 0))
-        self.stat_background = pg.Surface((self.font_size * 20, self.font_size * 10))
-        self.stat_background.fill((255, 255, 255))
-        self.stat_height = self.font_size + 4
-        self.screen_part = ""
-        self.curr_coords = []
-
-    def blit_stat(self, stat):
-        stat_surf = self.font.render(stat, False, (255, 255, 255), (0, 0, 0))
-        if self.screen_part == "topleft":
-            stat_rect = stat_surf.get_rect(topleft=self.curr_coords)
-        elif self.screen_part == "topright":
-            stat_rect = stat_surf.get_rect(topright=self.curr_coords)
-        elif self.screen_part == "bottomleft":
-            stat_rect = stat_surf.get_rect(bottomleft=self.curr_coords)
-        elif self.screen_part == "bottomright":
-            stat_rect = stat_surf.get_rect(bottomright=self.curr_coords)
-        else:
-            stat_rect = stat_surf.get_rect(topleft=self.curr_coords)
-
-        self.stat_window.blit(stat_surf, stat_rect)
-        layer = pg.Surface((stat_rect.width + 8, stat_rect.height + 6))
-        layer.fill((0, 0, 0))
-        self.stat_background.blit(layer, (stat_rect.x - 5, stat_rect.y - 3))
-        if self.screen_part in {"topleft", "topright"}:
-            self.curr_coords[1] += self.stat_height
-        else:
-            self.curr_coords[1] -= self.stat_height
-
-    def print_stats(self, gw):
-        self.stat_window.set_colorkey((0, 0, 0), RLEACCEL)
-        self.stat_background.set_colorkey((255, 255, 255), RLEACCEL)
-        self.stat_background.set_alpha(48)
-
-        gw.screen.blit(self.stat_background, self.rect)
-        gw.screen.blit(self.stat_window, self.rect)
-
-
-class GlobalStatistics(Statistics):
-    def __init__(self, gw):
-        super().__init__()
-        self.rect = self.stat_window.get_rect(bottomleft=(0, gw.WINDOW_HEIGHT))
-        self.screen_part = "bottomleft"
-        self.curr_coords = [4, gw.WINDOW_HEIGHT - 4]
-
-    def update_global_stats(self, gw):
-        self.stat_window.fill((0, 0, 0))
-        self.stat_background.fill((255, 255, 255))
-        self.curr_coords = [4, self.stat_window.get_height() - 4]
-
-        super().blit_stat(
-            "Time: " + str(gw.time_manager.time[0]) + ":00, Day " + str(gw.time_manager.time[1] + 1) + ", Week " + str(
-                gw.time_manager.time[2] + 1))
-        super().blit_stat("Gold: " + str(gw.time_manager.gold) + "g")
-        super().blit_stat("TPS: " + str("{:.2f}".format(1 / gw.time_manager.elapsed * gw.TICK_RATE)))
-        super().blit_stat("Weekly Tribute: " + str(gw.time_manager.tribute) + "g")
-
-        super().print_stats(gw)
-
-
-class TileStatistics(Statistics):
-    def __init__(self, gw):
-        super().__init__()
-        self.rect = self.stat_window.get_rect(bottomright=(gw.WINDOW_WIDTH, gw.WINDOW_HEIGHT))
-        self.screen_part = "bottomright"
-        self.curr_coords = [self.stat_window.get_width() - 4, self.stat_window.get_height() - 4]
-
-    def update_tile_stats(self, xy, gw):
-        self.stat_window.fill((0, 0, 0))
-        self.stat_background.fill((255, 255, 255))
-        self.curr_coords = [self.stat_window.get_width() - 4, self.stat_window.get_height() - 4]
-
-        if isinstance(gw.struct_map[xy[0]][xy[1]], Structure):
-            super().blit_stat(
-                "time left: " + str("{:.2f}".format(gw.struct_map[xy[0]][xy[1]].time_left / gw.TICK_RATE)) + "s")
-            super().blit_stat("cooldown: " + str(gw.struct_map[xy[0]][xy[1]].cooldown / gw.TICK_RATE) + "s")
-            super().blit_stat("profit: " + str(gw.struct_map[xy[0]][xy[1]].profit) + "g")
-            super().blit_stat("inside: " + str(gw.struct_map[xy[0]][xy[1]].inside))
-            super().blit_stat(str(type(gw.struct_map[xy[0]][xy[1]]))[16:-2])
-        super().blit_stat(gw.tile_type_map[xy[0]][xy[1]])
-        super().blit_stat(str(xy))
-
-        super().print_stats(gw)
 
 
 class TimeManager:
@@ -205,19 +110,19 @@ class Cursor(pg.sprite.Sprite):
 
     def update(self, gw):
         self.previous_pos = self.pos.copy()
-        self.pos[0] = (pg.mouse.get_pos()[0] + gw.background.rect.x) // gw.tile_s
-        self.pos[1] = (pg.mouse.get_pos()[1] + gw.background.rect.y) // gw.tile_s
+        self.pos[0] = (pg.mouse.get_pos()[0] + gw.scene.rect.x) // gw.tile_s
+        self.pos[1] = (pg.mouse.get_pos()[1] + gw.scene.rect.y) // gw.tile_s
         self.rect.x = self.pos[0] * gw.tile_s
         self.rect.y = self.pos[1] * gw.tile_s
 
     def draw(self, gw):
         if self.is_in_demolish_mode:
-            gw.background.surf.blit(self.surf_demolish, self.rect)
+            gw.scene.surf.blit(self.surf_demolish, self.rect)
         else:
-            gw.background.surf.blit(self.surf, self.rect)
+            gw.scene.surf.blit(self.surf, self.rect)
         if self.held_structure is not None:
             self.ghost.update(gw)
-            gw.background.surf.blit(self.ghost.surf, self.ghost.rect)
+            gw.scene.surf.blit(self.ghost.surf, self.ghost.rect)
 
     def to_json(self):
         return {
@@ -281,17 +186,16 @@ class Structure(pg.sprite.Sprite):
     def can_be_placed(self, gw, is_lmb_held_down):
         if any([gw.tile_type_map[gw.cursor.pos[0] + rel[0]][gw.cursor.pos[1] + rel[1]] in self.unsuitable_tiles
                 for rel in self.covered_tiles]):
-            return False, "unsuitable_location"
+            return False, "unsuitable_location_tile"
 
         if any([isinstance(gw.struct_map[gw.cursor.pos[0] + rel[0]][gw.cursor.pos[1] + rel[1]], Structure)
-                for rel in gw.cursor.held_structure.covered_tiles]) and not self.can_override:
-            return False, "unsuitable_location"
+                for rel in gw.cursor.held_structure.covered_tiles]):
+            return False, "unsuitable_location_structure"
 
         if gw.cursor.held_structure.build_cost >= gw.time_manager.gold:
             return False, "could_not_afford"
 
-        if not self.can_override:
-            return True, "was_built"
+        return True, "was_built"
 
     def to_json(self):
         return {
@@ -527,6 +431,8 @@ class Gate(Wall, Road):
                 isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Gate):
             return False
 
+        self.directions_to_connect_to.clear()
+
         for direction, direction_reverse, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
                                                   (0, -1, 0, 1), (1, 0, -1, 0)):
             if not gw.is_out_of_bounds(gw.cursor.pos[0] + x, gw.cursor.pos[1] + y) and \
@@ -540,13 +446,14 @@ class Gate(Wall, Road):
         return True
 
     def can_be_placed(self, gw, is_lmb_held_down):
-        super().can_be_placed(gw, is_lmb_held_down)
+        was_built, message = super().can_be_placed(gw, is_lmb_held_down)
+        if message != "unsuitable_location_structure":
+            return was_built, message
+
         if not self.can_build_gate_on_a_structure(gw):
             return False, "unsuitable_location"
 
         return True, "was_overridden"
-
-
 
     def rotate(self, gw):
         if self.orientation == "v":
