@@ -75,7 +75,7 @@ if __name__ == "__main__":
             if not gw.cursor.is_in_demolish_mode and gw.cursor.held_structure is not None:
                 place_structure(gw, is_lmb_held_down)
             elif gw.cursor.is_in_demolish_mode:
-                remove_structure(gw, is_lmb_held_down)
+                remove_structure(gw)
             is_lmb_held_down = True
         else:
             is_lmb_held_down = False

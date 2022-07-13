@@ -185,7 +185,6 @@ def place_structure(gw, is_lmb_held_down):
     pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
 
     was_built, build_message = gw.cursor.held_structure.can_be_placed(gw, is_lmb_held_down)
-    print(was_built, build_message)
     if was_built:
         if build_message == "was_built":
             new_struct = type(gw.cursor.held_structure)(gw.cursor.pos, gw, gw.cursor.held_structure.orientation)
@@ -242,7 +241,7 @@ def place_structure(gw, is_lmb_held_down):
                     y.update_profit(gw)
 
 
-def remove_structure(gw, remove_hold):
+def remove_structure(gw):
     """
     Function that is responsible for removing structures from the map.
     The structure that will be removed is the one that is on a tile that the gw.cursor's on.
@@ -256,11 +255,9 @@ def remove_structure(gw, remove_hold):
     If the remove key is not being held down, a demolition sound effect is played.
 
         :param gw: Gameworld object
-        :param remove_hold: A variable that indicates whether the remove key is being held down
     """
     if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Structure):
-        if not remove_hold:
-            pg.mixer.find_channel(True).play(gw.sounds["buildingwreck_01"])
+        gw.fx_channel.play(gw.sounds["buildingwreck_01"])
         if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Snapper):
             for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
                                                       (0, -1, 0, 1), (1, 0, -1, 0)):

@@ -84,6 +84,7 @@ class GameWorld:
                                  "obama": Pyramid, "farmland": Farmland, "mine": Mine}
         self.soundtrack_channel = pg.mixer.Channel(5)
         self.speech_channel = pg.mixer.Channel(3)
+        self.fx_channel = pg.mixer.Channel(4)
 
         self.map_surf, self.tile_type_map = self.load_map()
         self.surrounded_tiles = [[0 for _ in range(self.height_tiles)] for _ in range(self.width_tiles)]
