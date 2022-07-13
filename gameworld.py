@@ -1,5 +1,5 @@
 import os
-from classes import *
+from structures import *
 from hud import *
 from pygame.locals import (RLEACCEL,
                            K_t,
@@ -98,6 +98,7 @@ class GameWorld:
         self.background = Background(self)
 
         self.hud = Hud(self)
+        self.hud.toolbar = Toolbar(self)
 
     def set_window(self):
         """
@@ -213,7 +214,7 @@ class GameWorld:
             "cursor": self.cursor.to_json(),
             "struct_map": [[struct.to_json() if isinstance(struct, Structure) else 0 for struct in x]
                            for x in self.struct_map],
-            "reality": self.time_manager.to_json(),
+            "time_manager": self.time_manager.to_json(),
             "structs": [struct.to_json() for struct in self.structs],
             "entities": [entity.to_json() for entity in self.entities],
             "wall_set": tuple(self.wall_set),
@@ -252,13 +253,13 @@ class GameWorld:
                     if self.string_type_dict[y["type"]] != Gate:
                         loaded_struct = self.string_type_dict[y["type"]](y["pos"], self)
                     else:
-                        loaded_struct = self.string_type_dict[y["type"]](y["pos"], self, y["orient"])
+                        loaded_struct = self.string_type_dict[y["type"]](y["pos"], self, y["oritnation"])
                     loaded_struct.from_json(y)
                     self.struct_map[i][j] = loaded_struct
                     self.structs.add(loaded_struct)
                     self.entities.add(loaded_struct)
 
-        self.time_manager.from_json(json_dict["reality"])
+        self.time_manager.from_json(json_dict["time_manager"])
         self.wall_set = {tuple(elem) for elem in json_dict["wall_set"]}
         self.time_manager.gold = json_dict["gold"]
 
@@ -266,7 +267,6 @@ class GameWorld:
 class Hud:
     def __init__(self, gw):
         self.are_debug_stats_displayed = True
-        self.is_build_menu_open = True
 
         self.global_statistics = GlobalStatistics(gw)
         self.tile_statistics = TileStatistics(gw)
@@ -274,4 +274,4 @@ class Hud:
         self.minimap = Minimap(gw)
         self.top_bar = TopBar(gw)
         self.pause_menu = PauseMenu(gw)
-        self.toolbar = Toolbar(gw)
+        self.toolbar = None

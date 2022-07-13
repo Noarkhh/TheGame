@@ -17,7 +17,7 @@ if __name__ == "__main__":
     gw = GameWorld()
     clock = pg.time.Clock()
 
-    is_lmb_held_down, remove_hold = False, False
+    is_lmb_held_down = False
 
     gw.speech_channel.play(gw.sounds["General_Startgame"])
     gw.running = True
@@ -65,10 +65,10 @@ if __name__ == "__main__":
                     change_demolish_mode(gw, None, "toggle")
 
                 if event.key == pg.K_e:
-                    toggle_build_menu(gw)
+                    gw.hud.build_menu.toggle_build_menu(gw)
 
                 if event.key == K_ESCAPE:
-                    run_pause_menu_loop(gw)
+                    gw.hud.pause_menu.run_pause_menu_loop(gw)
             button_press_result = gw.button_handler.handle_button_press(gw, event)
 
         if pg.mouse.get_pressed(num_buttons=3)[0] and gw.button_handler.hovered_button is None:
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         if gw.hud.are_debug_stats_displayed:
             gw.hud.global_statistics.update_global_stats(gw)
             gw.hud.tile_statistics.update_tile_stats(gw.cursor.pos, gw)
-        if gw.hud.is_build_menu_open:
+        if gw.hud.build_menu.is_build_menu_open:
             gw.screen.blit(gw.hud.build_menu.surf, gw.hud.build_menu.rect)
 
         gw.screen.blit(gw.hud.toolbar.surf, gw.hud.toolbar.rect)

@@ -3,8 +3,8 @@ import time
 import json
 import os
 from pygame.locals import RLEACCEL
-from classes import *
-from functions import detect_surrounded_tiles, zoom, run_pause_menu_loop, toggle_build_menu, change_demolish_mode
+from structures import *
+from functions import detect_surrounded_tiles, zoom, change_demolish_mode
 
 
 class Button:
@@ -184,6 +184,29 @@ class PauseMenu(HUD):
 
         return True, True
 
+    def run_pause_menu_loop(self, gw, *args):
+
+        self.load_pause_menu(gw)
+        self.is_menu_open = True
+
+        while self.is_menu_open:
+            gw.screen.blit(gw.hud.pause_menu.surf, gw.hud.pause_menu.rect)
+            gw.button_handler.hovered_button = None
+            gw.button_handler.handle_hovered_buttons(gw, gw.hud.pause_menu.buttons)
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    self.is_menu_open = False
+                    gw.running = False
+                    return
+                if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+                    gw.buttons.difference_update(gw.hud.pause_menu.buttons)
+                    self.is_menu_open = False
+                    return
+                gw.button_handler.handle_button_press(gw, event)
+
+            pg.display.flip()
+
     def load_savefile_menu(self, gw):
         def savefile_choose(gw, button, value):
             def load_from_slot(gw, button, value):
@@ -322,6 +345,7 @@ class BuildMenu(HUD):
         self.category_dict = {"housing": (House,), "military": (Wall, Gate, Tower), "religion": (),
                               "transport": (Road,), "manufacturing": (Sawmill, Mine, Pyramid), "agriculture": (Tree,)}
         self.build_buttons = set()
+        self.is_build_menu_open = True
 
         self.load_menu(gw)
 
@@ -338,6 +362,14 @@ class BuildMenu(HUD):
                 self.open_category(gw, curr_button, category)
 
         gw.buttons.update(self.buttons)
+
+    def toggle_build_menu(self, gw, *args):
+        if self.is_build_menu_open:
+            gw.buttons.difference_update(gw.hud.build_menu.buttons)
+            self.buttons.clear()
+        else:
+            self.load_menu(gw)
+        self.is_build_menu_open = not self.is_build_menu_open
 
     def open_category(self, gw, button, value):
         self.load_menu(gw, True)
@@ -390,8 +422,8 @@ class Toolbar(HUD):
                         ("zoom_in", "zoom_out", "statistics", "debug"), 2)
         self.fill_dicts((), ("build", "demolish", "pause"))
         self.small_button_functions = {"zoom_in": zoom, "zoom_out": zoom, "statistics": self.foo, "debug": self.foo}
-        self.big_button_functions = {"build": toggle_build_menu, "demolish": change_demolish_mode,
-                                     "pause": run_pause_menu_loop}
+        self.big_button_functions = {"build": gw.hud.build_menu.toggle_build_menu, "demolish": change_demolish_mode,
+                                     "pause": gw.hud.pause_menu.run_pause_menu_loop}
 
         self.rect = self.surf.get_rect(right=gw.WINDOW_WIDTH, top=184)
 

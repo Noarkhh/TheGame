@@ -12,6 +12,7 @@ class Background(pg.sprite.Sprite):
     """
 
     """
+
     def __init__(self, gw):
         super().__init__()
         self.surf = pg.transform.scale(gw.map_surf.copy(), (gw.width_pixels, gw.height_pixels))
@@ -104,13 +105,13 @@ class GlobalStatistics(Statistics):
         self.curr_coords = [4, gw.WINDOW_HEIGHT - 4]
 
     def update_global_stats(self, gw):
-
         self.stat_window.fill((0, 0, 0))
         self.stat_background.fill((255, 255, 255))
         self.curr_coords = [4, self.stat_window.get_height() - 4]
 
         super().blit_stat(
-            "Time: " + str(gw.time_manager.time[0]) + ":00, Day " + str(gw.time_manager.time[1] + 1) + ", Week " + str(gw.time_manager.time[2] + 1))
+            "Time: " + str(gw.time_manager.time[0]) + ":00, Day " + str(gw.time_manager.time[1] + 1) + ", Week " + str(
+                gw.time_manager.time[2] + 1))
         super().blit_stat("Gold: " + str(gw.time_manager.gold) + "g")
         super().blit_stat("TPS: " + str("{:.2f}".format(1 / gw.time_manager.elapsed * gw.TICK_RATE)))
         super().blit_stat("Weekly Tribute: " + str(gw.time_manager.tribute) + "g")
@@ -259,6 +260,9 @@ class Structure(pg.sprite.Sprite):
         self.time_left = self.cooldown
         self.build_cost = 0
         self.orientation = 'v'
+        self.unsuitable_tiles = {"water"}
+        self.can_override = False
+
         if gw.surrounded_tiles[self.pos[0]][self.pos[1]] == 2:
             self.inside = True
         else:
@@ -274,6 +278,21 @@ class Structure(pg.sprite.Sprite):
         self.surf = pg.transform.scale(self.surf, (self.surf_ratio[0] * gw.tile_s, self.surf_ratio[1] * gw.tile_s))
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
 
+    def can_be_placed(self, gw, is_lmb_held_down):
+        if any([gw.tile_type_map[gw.cursor.pos[0] + rel[0]][gw.cursor.pos[1] + rel[1]] in self.unsuitable_tiles
+                for rel in self.covered_tiles]):
+            return False, "unsuitable_location"
+
+        if any([isinstance(gw.struct_map[gw.cursor.pos[0] + rel[0]][gw.cursor.pos[1] + rel[1]], Structure)
+                for rel in gw.cursor.held_structure.covered_tiles]) and not self.can_override:
+            return False, "unsuitable_location"
+
+        if gw.cursor.held_structure.build_cost >= gw.time_manager.gold:
+            return False, "could_not_afford"
+
+        if not self.can_override:
+            return True, "was_built"
+
     def to_json(self):
         return {
             "type": self.type_string_dict[type(self)],
@@ -282,7 +301,8 @@ class Structure(pg.sprite.Sprite):
             "pos": self.pos,
             "profit": self.profit,
             "time_left": self.time_left,
-            "inside": self.inside
+            "inside": self.inside,
+            "orientation": self.orientation,
         }
 
     def from_json(self, y):
@@ -305,7 +325,7 @@ class Mine(Structure):
     def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = "assets/mine.png"
-        self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, gw.tile_s*2))
+        self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, gw.tile_s * 2))
         self.surf_ratio = (1, 2)
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
@@ -315,7 +335,7 @@ class Sawmill(Structure):
     def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = "assets/sawmill.png"
-        self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s*2, gw.tile_s*2))
+        self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s * 2, gw.tile_s * 2))
         self.surf_ratio = (2, 2)
         self.covered_tiles = {(0, 0), (-1, 0)}
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
@@ -425,6 +445,20 @@ class Snapper(Structure):
         directions = tuple(sorted(self.neighbours, key=lambda x: self.direction_to_int_dict[x]))
         self.surf = self.snapper_dict[directions].copy()
 
+    def can_be_snapped(self, gw, is_lmb_held_down, change, pos_change_dict):
+        if change not in pos_change_dict.keys():
+            return False, "unsuitable_change"
+
+        if not (isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Snapper) and
+                isinstance(gw.struct_map[gw.cursor.previous_pos[0]][gw.cursor.previous_pos[1]], Snapper)):
+            return False, "one_of_structures_cannot_snap"
+
+        if not gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].snapsto[pos_change_dict[change][0]] == \
+                gw.struct_map[gw.cursor.previous_pos[0]][gw.cursor.previous_pos[1]].snapsto[pos_change_dict[change][1]]:
+            return False, "didn't_match"
+
+        return True, "was_snapped"
+
     def to_json(self):
         return {**super().to_json(), **{"snapper_dict_key": self.snapper_dict_key, "neighbours": list(self.neighbours)}}
 
@@ -484,6 +518,35 @@ class Gate(Wall, Road):
         self.base_profit = -15
         self.profit = self.base_profit
         self.build_cost = 150
+        self.can_override = True
+        self.directions_to_connect_to = set()
+
+    def can_build_gate_on_a_structure(self, gw):
+        if (not isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Wall) and
+            not isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Road)) or \
+                isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Gate):
+            return False
+
+        for direction, direction_reverse, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
+                                                  (0, -1, 0, 1), (1, 0, -1, 0)):
+            if not gw.is_out_of_bounds(gw.cursor.pos[0] + x, gw.cursor.pos[1] + y) and \
+                    isinstance(gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y], Snapper) and \
+                    direction in gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y].neighbours:
+                if self.snapsto[direction_reverse] != \
+                        gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y].snapsto[direction]:
+                    return False
+                self.directions_to_connect_to.add(direction_reverse)
+
+        return True
+
+    def can_be_placed(self, gw, is_lmb_held_down):
+        super().can_be_placed(gw, is_lmb_held_down)
+        if not self.can_build_gate_on_a_structure(gw):
+            return False, "unsuitable_location"
+
+        return True, "was_overridden"
+
+
 
     def rotate(self, gw):
         if self.orientation == "v":
@@ -496,6 +559,3 @@ class Gate(Wall, Road):
                                        (gw.tile_s, gw.tile_s * 20 / 15))
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-
-    def to_json(self):
-        return {**super().to_json(), **{"orient": self.orientation}}
