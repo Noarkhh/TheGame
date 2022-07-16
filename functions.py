@@ -99,7 +99,7 @@ def detect_surrounded_tiles(gw):
     required = {"walls"}
     direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
     wall_map = [[False for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
-    gw.surrounded_tiles[0:-1] = [[0 for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
+    gw.surrounded_tiles[:] = [[0 for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
     wall_set_copy = gw.wall_set.copy()
 
     while wall_set_copy:
@@ -123,6 +123,35 @@ def detect_surrounded_tiles(gw):
         wall_set_copy -= open_network_set
 
     return
+
+
+def make_field(gw, start_corner, end_corner):
+    topleft_corner = (min(start_corner[0], end_corner[0]), min(start_corner[1], end_corner[1]))
+    bottomright_corner = (max(start_corner[0], end_corner[0]), max(start_corner[1], end_corner[1]))
+
+    def should_be_included(pos):
+        if gw.tile_type_map[pos[0]][pos[1]] in {"water", "desert"}:
+            return False
+        if pos[0] < topleft_corner[0] or pos[0] > bottomright_corner[0]:
+            return False
+        if pos[1] < topleft_corner[1] or pos[1] > bottomright_corner[1]:
+            return False
+        return True
+
+    def _make_field(pos):
+        new_struct = Road(pos, gw)
+        gw.structs.add(new_struct)
+        gw.entities.add(new_struct)
+        gw.struct_map[pos[0]][pos[1]] = new_struct
+
+        for direction in ([0, -1], [1, 0], [0, 1], [-1, 0]):
+            if not gw.is_out_of_bounds(pos[0] + direction[0], pos[1] + direction[1]) and \
+                    should_be_included((pos[0] + direction[0], pos[1] + direction[1])):
+                new_struct.update_edges(gw.xy_to_direction_dict[tuple(direction)], 1)
+                if gw.struct_map[pos[0] + direction[0]][pos[1] + direction[1]] == 0:
+                    _make_field([pos[0] + direction[0], pos[1] + direction[1]])
+    if gw.tile_type_map[start_corner[0]][start_corner[1]] not in {"water", "desert"}:
+        _make_field(start_corner)
 
 
 def count_road_network(gw, xy):
@@ -214,7 +243,8 @@ def place_structure(gw, is_lmb_held_down):
             gw.speech_channel.play(gw.sounds["Placement_Warning16"])
 
     if isinstance(gw.cursor.held_structure, Snapper):
-        was_snapped, snap_message = gw.cursor.held_structure.can_be_snapped(gw, is_lmb_held_down, change, pos_change_dict)
+        was_snapped, snap_message = gw.cursor.held_structure.can_be_snapped(gw, is_lmb_held_down, change,
+                                                                            pos_change_dict)
     else:
         was_snapped, snap_message = False, "not_a_snapper"
 

@@ -48,9 +48,8 @@ if __name__ == "__main__":
                 if event.key == pg.K_c and isinstance((gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]]), House):
                     gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_profit(gw)
 
-                if event.key == pg.K_j and isinstance((gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]]), Wall):
-                    for x in gw.surrounded_tiles:
-                        print(x)
+                if event.key == pg.K_j:
+                    make_field(gw, [85, 55], [95, 65])
 
                 if event.key == K_F3:
                     gw.hud.are_debug_stats_displayed = not gw.hud.are_debug_stats_displayed

@@ -82,6 +82,8 @@ class GameWorld:
                                    pg.K_m: Mine}
         self.string_type_dict = {"house": House, "tower": Tower, "road": Road, "wall": Wall, "gate": Gate,
                                  "obama": Pyramid, "farmland": Farmland, "mine": Mine}
+        self.direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
+        self.xy_to_direction_dict = {value: key for key, value in self.direction_to_xy_dict.items()}
         self.soundtrack_channel = pg.mixer.Channel(5)
         self.speech_channel = pg.mixer.Channel(3)
         self.fx_channel = pg.mixer.Channel(4)

@@ -246,14 +246,6 @@ class Sawmill(Structure):
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
-class Farmland(Structure):
-    def __init__(self, xy, gw, *args):
-        super().__init__(xy, gw)
-        self.image_path = "assets/farmland.png"
-        self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, gw.tile_s))
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
-
-
 class Pyramid(Structure):
     def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
@@ -294,16 +286,15 @@ class House(Structure):
     def detect_nearby_houses(self, gw, xy, visited):
 
         resolved = [[True for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
-        direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
         required = {"roads"}
         distance = 0
         nearby = 0
 
-        def _detect_nearby_houses(gw, resolved, xy, direction_to_xy_dict, required, distance, visited):
+        def _detect_nearby_houses(gw, resolved, xy, required, distance, visited):
             nonlocal nearby
             if distance >= 6:
                 return
-            for xy0 in direction_to_xy_dict.values():
+            for xy0 in gw.direction_to_xy_dict.values():
                 if isinstance(gw.struct_map[xy[0] + xy0[0]][xy[1] + xy0[1]], House) and \
                         (xy[0] + xy0[0], xy[1] + xy0[1]) not in visited:
                     nearby += 1
@@ -311,13 +302,13 @@ class House(Structure):
 
             resolved[xy[0]][xy[1]] = False
             for direction in gw.struct_map[xy[0]][xy[1]].neighbours:
-                next = direction_to_xy_dict[direction]
+                next = gw.direction_to_xy_dict[direction]
                 if resolved[xy[0] + next[0]][xy[1] + next[1]] and \
                         bool(set(gw.struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
-                    _detect_nearby_houses(gw, resolved, [xy[0] + next[0], xy[1] + next[1]], direction_to_xy_dict,
+                    _detect_nearby_houses(gw, resolved, [xy[0] + next[0], xy[1] + next[1]],
                                           required, distance + 1, visited)
 
-        _detect_nearby_houses(gw, resolved, xy, direction_to_xy_dict, required, distance, visited)
+        _detect_nearby_houses(gw, resolved, xy, required, distance, visited)
         return nearby
 
 
@@ -372,6 +363,14 @@ class Snapper(Structure):
         self.neighbours = set(y["neighbours"])
         self.update_edges('N', 0)
         return self
+
+
+class Farmland(Snapper):
+    def __init__(self, xy, gw, *args):
+        super().__init__(xy, gw)
+        self.image_path = "assets/farmland.png"
+        self.surf = pg.transform.scale(pg.image.load(self.image_path).convert(), (gw.tile_s, gw.tile_s))
+        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
 class Road(Snapper):
