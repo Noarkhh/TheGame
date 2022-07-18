@@ -68,7 +68,7 @@ class GameWorld:
         self.screen = self.set_window()
         self.running = True
 
-        self.layout_path = "assets/maps/desert_delta_L.png"
+        self.layout_path = "assets/maps/grass_test.png"
         self.layout = pg.image.load(self.layout_path).convert()
         self.height_tiles = self.layout.get_height()
         self.width_tiles = self.layout.get_width()
@@ -79,7 +79,7 @@ class GameWorld:
         self.snapper_dict = self.fill_snappers_dict()
         self.sounds, self.tracks = self.load_sounds()
         self.key_structure_dict = {K_h: House, K_t: Tower, K_u: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid,
-                                   pg.K_m: Mine}
+                                   pg.K_m: Mine, pg.K_f: Farmland}
         self.string_type_dict = {"house": House, "tower": Tower, "road": Road, "wall": Wall, "gate": Gate,
                                  "obama": Pyramid, "farmland": Farmland, "mine": Mine}
         self.direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
@@ -126,15 +126,17 @@ class GameWorld:
             :return: Dictionary of dictionaries for different Snappers
         """
         snapper_dict = {}
-        for curr_dict_name, snapper_dir, height in (("walls", "assets/walls", self.tile_s),
-                                                    ("roads", "assets/roads", self.tile_s),
-                                                    ("vgates", "assets/vgates", self.tile_s * 20 / 15),
-                                                    ("hgates", "assets/hgates", self.tile_s * 20 / 15)):
+        for curr_dict_name, sprite_prefix, height in (("walls", "wall", self.tile_s),
+                                                      ("roads", "road", self.tile_s),
+                                                      ("vgates", "gate", self.tile_s * 20 / 15),
+                                                      ("hgates", "gate", self.tile_s * 20 / 15),
+                                                      ("farmlands", "farmland", self.tile_s)):
+            snapper_dir = "assets/" + curr_dict_name
             directory = os.listdir(snapper_dir)
             dir_cut = []
             curr_dict = {}
             for name in directory:
-                dir_cut.append(tuple(name[4:-4]))
+                dir_cut.append(tuple(name.removeprefix(sprite_prefix)[:-4]))
             for file, name in zip(directory, dir_cut):
                 curr_dict[name] = pg.transform.scale(pg.image.load(snapper_dir + "/" + file).convert(),
                                                      (self.tile_s, height))
@@ -149,7 +151,11 @@ class GameWorld:
 
             :return: Surface of the map terrain, 2-dimensional array of tile types
         """
-        color_to_type = {(0, 255, 0, 255): "grassland", (0, 0, 255, 255): "water", (255, 255, 0, 255): "desert"}
+        green = (181, 199, 75, 255)
+        yellow = (181, 199, 75, 255)
+        green = (181, 199, 75, 255)
+
+        color_to_type = {(181, 199, 75, 255): "grassland", (41, 153, 188, 255): "water", (250, 213, 100, 255): "desert"}
         tile_dict = {name: pg.transform.scale(pg.image.load("assets/tiles/" + name + "_tile.png").convert(),
                                               (60, 60)) for name in color_to_type.values()}
 

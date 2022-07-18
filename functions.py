@@ -125,9 +125,11 @@ def detect_surrounded_tiles(gw):
     return
 
 
-def make_field(gw, start_corner, end_corner):
-    topleft_corner = (min(start_corner[0], end_corner[0]), min(start_corner[1], end_corner[1]))
-    bottomright_corner = (max(start_corner[0], end_corner[0]), max(start_corner[1], end_corner[1]))
+def make_farmland_field(gw):
+    topleft_corner = [x // gw.tile_s for x in gw.cursor.ghost.rect.topleft]
+    bottomright_corner = [x // gw.tile_s - 1 for x in gw.cursor.ghost.rect.bottomright]
+    visited = [[False for _ in range(0, gw.cursor.ghost.rect.height, gw.tile_s)]
+               for _ in range(0, gw.cursor.ghost.rect.width, gw.tile_s)]
 
     def should_be_included(pos):
         if gw.tile_type_map[pos[0]][pos[1]] in {"water", "desert"}:
@@ -139,23 +141,52 @@ def make_field(gw, start_corner, end_corner):
         return True
 
     def _make_field(pos):
-        new_struct = Road(pos, gw)
-        gw.structs.add(new_struct)
-        gw.entities.add(new_struct)
-        gw.struct_map[pos[0]][pos[1]] = new_struct
+        visited[pos[0] - topleft_corner[0]][pos[1] - topleft_corner[1]] = True
+        new_struct = None
+        if gw.struct_map[pos[0]][pos[1]] == 0:
+            new_struct = Farmland(pos, gw)
+            gw.structs.add(new_struct)
+            gw.entities.add(new_struct)
+            gw.struct_map[pos[0]][pos[1]] = new_struct
 
         for direction in ([0, -1], [1, 0], [0, 1], [-1, 0]):
             if not gw.is_out_of_bounds(pos[0] + direction[0], pos[1] + direction[1]) and \
                     should_be_included((pos[0] + direction[0], pos[1] + direction[1])):
-
-                if gw.struct_map[pos[0] + direction[0]][pos[1] + direction[1]] == 0:
+                if not visited[pos[0] + direction[0] - topleft_corner[0]][pos[1] + direction[1] - topleft_corner[1]] \
+                        and (isinstance(gw.struct_map[pos[0] + direction[0]][pos[1] + direction[1]], Farmland) or
+                             gw.struct_map[pos[0] + direction[0]][pos[1] + direction[1]] == 0):
                     _make_field([pos[0] + direction[0], pos[1] + direction[1]])
-                if isinstance(gw.struct_map[pos[0] + direction[0]][pos[1] + direction[1]], Road):
-                    new_struct.update_edges(gw.xy_to_direction_dict[tuple(direction)], 1)
-                    gw.struct_map[pos[0] + direction[0]][pos[1] + direction[1]].update_edges(gw.xy_to_direction_dict[tuple([-x for x in direction])], 1)
 
-    if gw.tile_type_map[start_corner[0]][start_corner[1]] not in {"water", "desert"}:
-        _make_field(start_corner)
+                if isinstance(gw.struct_map[pos[0] + direction[0]][pos[1] + direction[1]], Farmland):
+                    gw.struct_map[pos[0] + direction[0]][pos[1] + direction[1]]. \
+                        update_edges(gw.xy_to_direction_dict[tuple([-x for x in direction])], 1)
+                    if new_struct is not None:
+                        new_struct.update_edges(gw.xy_to_direction_dict[tuple(direction)], 1)
+
+    if should_be_included(gw.cursor.ghost.drag_starting_pos):
+        _make_field(gw.cursor.ghost.drag_starting_pos)
+
+
+def make_snapper_line(gw):
+    width = gw.cursor.ghost.rect.width // gw.tile_s
+    height = gw.cursor.ghost.rect.height // gw.tile_s
+    starting_pos = gw.cursor.ghost.drag_starting_pos
+    target_dict = {"top": -1, "right": 1, "bottom": 1, "left": -1}
+
+    if len(gw.cursor.ghost.sides_to_draw) == 2:
+        if gw.cursor.ghost.sides_to_draw[0] in {"left", "right"}:
+            print(gw.cursor.ghost.sides_to_draw, "horiz")
+            for i in range(width):
+                can_be_placed, message = gw.cursor.held_structure.can_be_placed(gw)
+                new_struct = type(gw.cursor.held_structure)([starting_pos[0] + i * target_dict[gw.cursor.ghost.sides_to_draw[0]], starting_pos[1]], gw)
+                print([starting_pos[0] + i * target_dict[gw.cursor.ghost.sides_to_draw[0]], starting_pos[1]], i)
+        else:
+            print(gw.cursor.ghost.sides_to_draw, "vert")
+            for i in range(height):
+                new_struct = type(gw.cursor.held_structure)([starting_pos[0], starting_pos[1] + i * target_dict[gw.cursor.ghost.sides_to_draw[0]]], gw)
+                print([starting_pos[0], starting_pos[1] + i * target_dict[gw.cursor.ghost.sides_to_draw[0]]], i)
+
+    pass
 
 
 def count_road_network(gw, xy):
@@ -217,7 +248,7 @@ def place_structure(gw, is_lmb_held_down):
     change = tuple([a - b for a, b in zip(gw.cursor.pos, gw.cursor.previous_pos)])
     pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
 
-    was_built, build_message = gw.cursor.held_structure.can_be_placed(gw, is_lmb_held_down)
+    was_built, build_message = gw.cursor.held_structure.can_be_placed(gw, gw.cursor.pos)
     if was_built:
         if build_message == "was_built":
             new_struct = type(gw.cursor.held_structure)(gw.cursor.pos, gw, gw.cursor.held_structure.orientation)
@@ -267,7 +298,7 @@ def place_structure(gw, is_lmb_held_down):
     if was_built or was_snapped:
         gw.sounds["drawbridge_control"].play()
 
-    if (was_snapped and isinstance(gw.cursor.held_structure, Road)) or \
+    if (was_snapped and gw.cursor.held_structure is Road) or \
             (was_built and (isinstance(new_struct, House) or isinstance(new_struct, Road))):
         for x in gw.struct_map[max(0, gw.cursor.pos[0] - 7):min(gw.width_tiles, gw.cursor.pos[0] + 8)]:
             for y in x[max(0, gw.cursor.pos[1] - 7):min(gw.width_tiles, gw.cursor.pos[1] + 8)]:

@@ -397,7 +397,7 @@ class Minimap(HUD):
         self.rect = self.surf.get_rect(topright=(gw.WINDOW_WIDTH, 44))
         self.visible_area = pg.surface.Surface(((gw.WINDOW_WIDTH / gw.tile_s) * (128 / gw.width_tiles),
                                                 (gw.WINDOW_HEIGHT / gw.tile_s) * (128 / gw.height_tiles)))
-        self.visible_area.fill((223, 17, 28))
+        self.visible_area.fill((198, 15, 24))
         cutout = pg.surface.Surface((self.visible_area.get_width() - 4, self.visible_area.get_height() - 4))
         cutout.fill((0, 0, 0))
         self.visible_area.blit(cutout, (2, 2))
@@ -431,7 +431,8 @@ class BuildMenu(HUD):
                         ("housing", "military", "transport", "manufacturing", "agriculture", "religion"), 2)
         self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2, top=44)
         self.category_dict = {"housing": (House,), "military": (Wall, Gate, Tower), "religion": (),
-                              "transport": (Road,), "manufacturing": (Sawmill, Mine, Pyramid), "agriculture": (Tree,)}
+                              "transport": (Road,), "manufacturing": (Sawmill, Mine, Pyramid),
+                              "agriculture": (Tree, Farmland)}
         self.structure_buttons = set()
         self.is_build_menu_open = True
 
@@ -493,11 +494,14 @@ class BuildMenu(HUD):
 
         gw.buttons.update(self.buttons)
 
-    def assign(self, gw, button, value):
-        gw.cursor.held_structure = value([0, 0], gw)
+    def assign(self, gw, button, struct_type):
+        gw.cursor.held_structure = struct_type([0, 0], gw)
         gw.cursor.ghost = Ghost(gw)
         gw.cursor.change_mode(gw, None, "demolish", "off")
-
+        if struct_type in {Farmland, Road, Wall}:
+            gw.cursor.change_mode(gw, None, "drag_build", "on")
+        else:
+            gw.cursor.change_mode(gw, None, "drag_build", "off")
 
 class Toolbar(HUD):
     def __init__(self, gw):
@@ -507,10 +511,10 @@ class Toolbar(HUD):
         self.surf_raw = self.surf.copy()
 
         self.fill_dicts(("round_square", "round_square_hover", "round_small", "round_small_hover"),
-                        ("zoom_in", "zoom_out", "statistics", "debug"), 2)
+                        ("zoom_in", "zoom_out", "drag", "debug"), 2)
         self.fill_dicts((), ("build", "demolish", "pause"))
-        self.small_button_functions = {"zoom_in": zoom, "zoom_out": zoom, "statistics": self.foo,
-                                       "debug": gw.cursor.change_mode}
+        self.small_button_functions = {"zoom_in": zoom, "zoom_out": zoom, "drag": gw.cursor.change_mode,
+                                       "debug": self.foo}
         self.big_button_functions = {"build": gw.hud.build_menu.toggle_build_menu,
                                      "demolish": gw.cursor.change_mode,
                                      "pause": gw.hud.pause_menu.run_pause_menu_loop}
@@ -529,9 +533,9 @@ class Toolbar(HUD):
 
         for i, (icon, function) in enumerate(self.small_button_functions.items()):
             new_button = self.make_button(self.icon_dict[icon], (32 + (i % 2) * 40, 4 + (i // 2) * 40),
-                                          function, (2, 0.5, None, "drag_build")[i], "round_small", "round_small_hover",
+                                          function, (2, 0.5, "drag_build", None)[i], "round_small", "round_small_hover",
                                           sound="metrollover")
-            if icon == "debug":
+            if icon == "drag":
                 self.drag_build_button = new_button
 
         for i, (icon, function) in enumerate(self.big_button_functions.items()):

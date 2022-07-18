@@ -34,15 +34,13 @@ if __name__ == "__main__":
             if event.type == KEYDOWN:
 
                 if event.key in gw.key_structure_dict:  # picking up a chosen structure
-                    gw.cursor.held_structure = gw.key_structure_dict[event.key]([0, 0], gw)
-                    gw.cursor.ghost = Ghost(gw)
+                    gw.hud.build_menu.assign(gw, None, gw.key_structure_dict[event.key])
                     gw.sounds["menusl_" + str(randint(1, 3))].play()
-                    gw.cursor.change_mode(gw, None, "demolish", "off")
 
                 if event.key == K_n:
                     gw.cursor.held_structure = None
 
-                if event.key == K_r and isinstance(gw.cursor.held_structure, Gate):
+                if event.key == K_r and gw.cursor.held_structure is Gate:
                     gw.cursor.held_structure.rotate(gw)
 
                 if event.key == pg.K_c and isinstance((gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]]), House):
@@ -74,12 +72,13 @@ if __name__ == "__main__":
 
         if pg.mouse.get_pressed(num_buttons=3)[0] and gw.button_handler.hovered_button is None:
             if not gw.cursor.is_in_demolish_mode and gw.cursor.held_structure is not None:
-                if not (gw.cursor.is_in_drag_build_mode and isinstance(gw.cursor.held_structure, Snapper)):
-                    place_structure(gw, is_lmb_held_down)
-                else:
+                if gw.cursor.is_in_drag_build_mode and type(gw.cursor.held_structure) in {Farmland, Road, Wall}:
+
                     gw.cursor.is_dragging = True
                     if not is_lmb_held_down:
                         gw.cursor.ghost.drag_starting_pos = gw.cursor.pos.copy()
+                else:
+                    place_structure(gw, is_lmb_held_down)
 
             elif gw.cursor.is_in_demolish_mode:
                 remove_structure(gw)
@@ -87,7 +86,10 @@ if __name__ == "__main__":
         else:
             is_lmb_held_down = False
             if gw.cursor.is_dragging:
-                make_field(gw, gw.cursor.ghost.drag_starting_pos, gw.cursor.pos)
+                if isinstance(gw.cursor.held_structure, Farmland):
+                    make_farmland_field(gw)
+                else:
+                    make_snapper_line(gw)
                 gw.cursor.is_dragging = False
 
         gw.scene.move_screen(gw)
