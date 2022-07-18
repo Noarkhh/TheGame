@@ -37,7 +37,7 @@ if __name__ == "__main__":
                     gw.cursor.held_structure = gw.key_structure_dict[event.key]([0, 0], gw)
                     gw.cursor.ghost = Ghost(gw)
                     gw.sounds["menusl_" + str(randint(1, 3))].play()
-                    change_demolish_mode(gw, None, "off")
+                    gw.cursor.change_mode(gw, None, "demolish", "off")
 
                 if event.key == K_n:
                     gw.cursor.held_structure = None
@@ -49,7 +49,8 @@ if __name__ == "__main__":
                     gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_profit(gw)
 
                 if event.key == pg.K_j:
-                    make_field(gw, [85, 55], [95, 65])
+                    # make_field(gw, [85, 55], [95, 65])
+                    gw.cursor.change_mode(gw, None, "drag_build", "toggle")
 
                 if event.key == K_F3:
                     gw.hud.are_debug_stats_displayed = not gw.hud.are_debug_stats_displayed
@@ -61,23 +62,33 @@ if __name__ == "__main__":
                     zoom(gw, None, 0.5)
 
                 if event.key == K_x:
-                    change_demolish_mode(gw, None, "toggle")
+                    gw.cursor.change_mode(gw, None, "demolish", "toggle")
 
                 if event.key == pg.K_e:
                     gw.hud.build_menu.toggle_build_menu(gw)
 
                 if event.key == K_ESCAPE:
                     gw.hud.pause_menu.run_pause_menu_loop(gw)
+
             button_press_result = gw.button_handler.handle_button_press(gw, event)
 
         if pg.mouse.get_pressed(num_buttons=3)[0] and gw.button_handler.hovered_button is None:
             if not gw.cursor.is_in_demolish_mode and gw.cursor.held_structure is not None:
-                place_structure(gw, is_lmb_held_down)
+                if not (gw.cursor.is_in_drag_build_mode and isinstance(gw.cursor.held_structure, Snapper)):
+                    place_structure(gw, is_lmb_held_down)
+                else:
+                    gw.cursor.is_dragging = True
+                    if not is_lmb_held_down:
+                        gw.cursor.ghost.drag_starting_pos = gw.cursor.pos.copy()
+
             elif gw.cursor.is_in_demolish_mode:
                 remove_structure(gw)
             is_lmb_held_down = True
         else:
             is_lmb_held_down = False
+            if gw.cursor.is_dragging:
+                make_field(gw, gw.cursor.ghost.drag_starting_pos, gw.cursor.pos)
+                gw.cursor.is_dragging = False
 
         gw.scene.move_screen(gw)
 

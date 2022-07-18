@@ -1,7 +1,7 @@
 import json
 import os
 from structures import *
-from functions import detect_surrounded_tiles, zoom, change_demolish_mode
+from functions import detect_surrounded_tiles, zoom
 
 
 class Statistics:
@@ -496,7 +496,7 @@ class BuildMenu(HUD):
     def assign(self, gw, button, value):
         gw.cursor.held_structure = value([0, 0], gw)
         gw.cursor.ghost = Ghost(gw)
-        change_demolish_mode(gw, None, "off")
+        gw.cursor.change_mode(gw, None, "demolish", "off")
 
 
 class Toolbar(HUD):
@@ -509,13 +509,16 @@ class Toolbar(HUD):
         self.fill_dicts(("round_square", "round_square_hover", "round_small", "round_small_hover"),
                         ("zoom_in", "zoom_out", "statistics", "debug"), 2)
         self.fill_dicts((), ("build", "demolish", "pause"))
-        self.small_button_functions = {"zoom_in": zoom, "zoom_out": zoom, "statistics": self.foo, "debug": self.foo}
-        self.big_button_functions = {"build": gw.hud.build_menu.toggle_build_menu, "demolish": change_demolish_mode,
+        self.small_button_functions = {"zoom_in": zoom, "zoom_out": zoom, "statistics": self.foo,
+                                       "debug": gw.cursor.change_mode}
+        self.big_button_functions = {"build": gw.hud.build_menu.toggle_build_menu,
+                                     "demolish": gw.cursor.change_mode,
                                      "pause": gw.hud.pause_menu.run_pause_menu_loop}
 
         self.rect = self.surf.get_rect(right=gw.WINDOW_WIDTH, top=184)
 
         self.demolish_button = None
+        self.drag_build_button = None
 
         self.load_toolbar(gw)
 
@@ -525,12 +528,15 @@ class Toolbar(HUD):
         self.buttons.clear()
 
         for i, (icon, function) in enumerate(self.small_button_functions.items()):
-            self.make_button(self.icon_dict[icon], (32 + (i % 2) * 40, 4 + (i // 2) * 40),
-                             function, (2, 0.5, None, None)[i], "round_small", "round_small_hover", sound="metrollover")
+            new_button = self.make_button(self.icon_dict[icon], (32 + (i % 2) * 40, 4 + (i // 2) * 40),
+                                          function, (2, 0.5, None, "drag_build")[i], "round_small", "round_small_hover",
+                                          sound="metrollover")
+            if icon == "debug":
+                self.drag_build_button = new_button
 
         for i, (icon, function) in enumerate(self.big_button_functions.items()):
             new_button = self.make_button(self.icon_dict[icon], (40, 88 + (i * 64)),
-                                          function, (None, "toggle", None)[i], "round_square", "round_square_hover")
+                                          function, (None, "demolish", None)[i], "round_square", "round_square_hover")
             if icon == "demolish":
                 self.demolish_button = new_button
 
@@ -538,4 +544,3 @@ class Toolbar(HUD):
 
     def foo(self, *args):
         pass
-

@@ -147,9 +147,13 @@ def make_field(gw, start_corner, end_corner):
         for direction in ([0, -1], [1, 0], [0, 1], [-1, 0]):
             if not gw.is_out_of_bounds(pos[0] + direction[0], pos[1] + direction[1]) and \
                     should_be_included((pos[0] + direction[0], pos[1] + direction[1])):
-                new_struct.update_edges(gw.xy_to_direction_dict[tuple(direction)], 1)
+
                 if gw.struct_map[pos[0] + direction[0]][pos[1] + direction[1]] == 0:
                     _make_field([pos[0] + direction[0], pos[1] + direction[1]])
+                if isinstance(gw.struct_map[pos[0] + direction[0]][pos[1] + direction[1]], Road):
+                    new_struct.update_edges(gw.xy_to_direction_dict[tuple(direction)], 1)
+                    gw.struct_map[pos[0] + direction[0]][pos[1] + direction[1]].update_edges(gw.xy_to_direction_dict[tuple([-x for x in direction])], 1)
+
     if gw.tile_type_map[start_corner[0]][start_corner[1]] not in {"water", "desert"}:
         _make_field(start_corner)
 
@@ -317,23 +321,6 @@ def remove_structure(gw):
     else:
         removed = False
     return removed
-
-
-def change_demolish_mode(gw, button, mode):
-    if mode == "toggle":
-        gw.cursor.is_in_demolish_mode = not gw.cursor.is_in_demolish_mode
-    elif mode == "on":
-        gw.cursor.is_in_demolish_mode = True
-    elif mode == "off":
-        gw.cursor.is_in_demolish_mode = False
-
-    if gw.cursor.is_in_demolish_mode:
-        gw.cursor.held_structure = None
-        gw.hud.toolbar.demolish_button.is_locked = True
-        gw.hud.toolbar.demolish_button.is_held_down = True
-    else:
-        gw.hud.toolbar.demolish_button.is_locked = False
-        gw.hud.toolbar.demolish_button.is_held_down = False
 
 
 def zoom(gw, button, factor):

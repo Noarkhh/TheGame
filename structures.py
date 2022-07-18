@@ -94,6 +94,8 @@ class Cursor(pg.sprite.Sprite):
     def __init__(self, gw):
         super().__init__()
         self.is_in_demolish_mode = False
+        self.is_in_drag_build_mode = False
+        self.is_dragging = False
 
         self.surf = pg.transform.scale(pg.image.load("assets/cursor2.png").convert(), (gw.tile_s, gw.tile_s))
         self.surf_demolish = pg.transform.scale(pg.image.load("assets/cursor_demolish.png").convert(),
@@ -105,6 +107,7 @@ class Cursor(pg.sprite.Sprite):
         self.rect = self.surf.get_rect()
         self.pos = [0, 0]
         self.previous_pos = [0, 0]
+        self.drag_starting_pos = [0, 0]
         self.held_structure = None
         self.ghost = None
 
@@ -124,25 +127,102 @@ class Cursor(pg.sprite.Sprite):
             self.ghost.update(gw)
             gw.scene.surf.blit(self.ghost.surf, self.ghost.rect)
 
+    def change_mode(self, gw, button, mode, state="toggle"):
+        if mode == "demolish":
+            mode_button = gw.hud.toolbar.demolish_button
+            mode_state = self.is_in_demolish_mode
+        elif mode == "drag_build":
+            mode_button = gw.hud.toolbar.drag_build_button
+            mode_state = self.is_in_drag_build_mode
+        else:
+            return
+
+        if state == "toggle":
+            mode_state = not mode_state
+        elif state == "on":
+            mode_state = True
+        elif state == "off":
+            mode_state = False
+
+        if mode_state:
+            mode_button.is_locked = True
+            mode_button.is_held_down = True
+            if mode == "demolish":
+                self.held_structure = None
+        else:
+            mode_button.is_locked = False
+            mode_button.is_held_down = False
+
+        if mode == "demolish":
+            self.is_in_demolish_mode = mode_state
+        if mode == "drag_build":
+            self.is_in_drag_build_mode = mode_state
+
     def to_json(self):
         return {
             "pos": self.pos
         }
 
 
-class Ghost(pg.sprite.Sprite):
+class Ghost:
     def __init__(self, gw):
-        super().__init__()
         self.surf = gw.cursor.held_structure.surf
         self.surf.set_alpha(128)
         self.pos = gw.cursor.pos
+        self.drag_starting_pos = gw.cursor.pos.copy()
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
 
     def update(self, gw):
         self.pos = gw.cursor.pos
-        self.rect.right = gw.tile_s * (self.pos[0] + 1)
-        self.rect.bottom = gw.tile_s * (self.pos[1] + 1)
-        self.surf = gw.cursor.held_structure.surf
+        if not gw.cursor.is_dragging:
+            self.surf = gw.cursor.held_structure.surf
+            self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
+
+        else:
+            self.surf = pg.Surface(((abs(self.pos[0] - self.drag_starting_pos[0]) + 1) * gw.tile_s,
+                                    (abs(self.pos[1] - self.drag_starting_pos[1]) + 1) * gw.tile_s))
+            self.surf.set_colorkey((0, 0, 0), RLEACCEL)
+            self.rect = self.surf.get_rect(topleft=(min(self.pos[0], self.drag_starting_pos[0]) * gw.tile_s,
+                                                    min(self.pos[1], self.drag_starting_pos[1]) * gw.tile_s))
+            if isinstance(gw.cursor.held_structure, Road):
+                for x in range(gw.tile_s, self.rect.width - gw.tile_s, gw.tile_s):
+                    for y in range(gw.tile_s, self.rect.height - gw.tile_s, gw.tile_s):
+                        self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', 'E', 'S', 'W')], (x, y))
+                if self.rect.width > gw.tile_s and self.rect.height > gw.tile_s:
+                    for edge, const_dimension, direction in zip(('ESW', 'NSW', 'NEW', 'NES'),
+                                                                (0, self.rect.width - gw.tile_s,
+                                                                 self.rect.height - gw.tile_s, 0),
+                                                                ('h', 'v', 'h', 'v')):
+                        if direction == 'h':
+                            end = self.rect.width - gw.tile_s
+                        else:
+                            end = self.rect.height - gw.tile_s
+
+                        for pos in range(gw.tile_s, end, gw.tile_s):
+                            if direction == 'h':
+                                blit_pos = (pos, const_dimension)
+                            else:
+                                blit_pos = (const_dimension, pos)
+                            self.surf.blit(gw.cursor.held_structure.snapper_dict[tuple(edge)], blit_pos)
+
+                    for corner, blit_pos in zip(('SW', 'NW', 'NE', 'ES'),
+                                                ((self.rect.width - gw.tile_s, 0),
+                                                 (self.rect.width - gw.tile_s, self.rect.height - gw.tile_s),
+                                                 (0, self.rect.height - gw.tile_s), (0, 0))):
+                        self.surf.blit(gw.cursor.held_structure.snapper_dict[tuple(corner)], blit_pos)
+                elif self.rect.width == gw.tile_s and self.rect.height == gw.tile_s:
+                    self.surf.blit(gw.cursor.held_structure.snapper_dict[()], (0, 0))
+                elif self.rect.width == gw.tile_s:
+                    self.surf.blit(gw.cursor.held_structure.snapper_dict[('S', )], (0, 0))
+                    self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', )], (0, self.rect.height - gw.tile_s))
+                    for y in range(gw.tile_s, self.rect.height - gw.tile_s, gw.tile_s):
+                        self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', 'S')], (0, y))
+                elif self.rect.height == gw.tile_s:
+                    self.surf.blit(gw.cursor.held_structure.snapper_dict[('E', )], (0, 0))
+                    self.surf.blit(gw.cursor.held_structure.snapper_dict[('W', )], (self.rect.width - gw.tile_s, 0))
+                    for x in range(gw.tile_s, self.rect.width - gw.tile_s, gw.tile_s):
+                        self.surf.blit(gw.cursor.held_structure.snapper_dict[('E', 'W')], (x, 0))
+
         self.surf.set_alpha(128)
 
 
@@ -349,7 +429,7 @@ class Snapper(Structure):
             return False, "one_of_structures_cannot_snap"
 
         if not gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].snapsto[pos_change_dict[change][0]] == \
-                gw.struct_map[gw.cursor.previous_pos[0]][gw.cursor.previous_pos[1]].snapsto[pos_change_dict[change][1]]:
+               gw.struct_map[gw.cursor.previous_pos[0]][gw.cursor.previous_pos[1]].snapsto[pos_change_dict[change][1]]:
             return False, "didn't_match"
 
         return True, "was_snapped"
@@ -433,7 +513,7 @@ class Gate(Wall, Road):
         self.directions_to_connect_to.clear()
 
         for direction, direction_reverse, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
-                                                  (0, -1, 0, 1), (1, 0, -1, 0)):
+                                                      (0, -1, 0, 1), (1, 0, -1, 0)):
             if not gw.is_out_of_bounds(gw.cursor.pos[0] + x, gw.cursor.pos[1] + y) and \
                     isinstance(gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y], Snapper) and \
                     direction in gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y].neighbours:
