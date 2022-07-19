@@ -1,6 +1,7 @@
 import json
 import os
 from structures import *
+from cursor import Ghost
 from functions import detect_surrounded_tiles, zoom
 
 
@@ -502,6 +503,7 @@ class BuildMenu(HUD):
             gw.cursor.change_mode(gw, None, "drag_build", "on")
         else:
             gw.cursor.change_mode(gw, None, "drag_build", "off")
+
 
 class Toolbar(HUD):
     def __init__(self, gw):

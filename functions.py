@@ -484,15 +484,13 @@ def zoom(gw, button, factor):
     gw.scene.surf = pg.transform.scale(gw.scene.surf, (gw.width_pixels, gw.height_pixels))
     gw.scene.surf_raw = pg.transform.scale(gw.scene.surf_raw, (gw.width_pixels, gw.height_pixels))
     gw.cursor.surf = pg.transform.scale(gw.cursor.surf, (gw.tile_s, gw.tile_s))
+    gw.cursor.surf_demolish = pg.transform.scale(gw.cursor.surf_demolish_raw, (gw.tile_s, gw.tile_s))
     gw.hud.minimap.update_zoom(gw)
 
     if gw.cursor.held_structure is not None:
         gw.cursor.held_structure.surf = pg.transform.scale(gw.cursor.held_structure.surf, (
             gw.cursor.held_structure.surf_ratio[0] * gw.tile_s, gw.cursor.held_structure.surf_ratio[1] * gw.tile_s))
-        gw.cursor.ghost.surf = pg.transform.scale(gw.cursor.held_structure.surf, (
-            gw.cursor.held_structure.surf_ratio[0] * gw.tile_s, gw.cursor.held_structure.surf_ratio[1] * gw.tile_s))
-        gw.cursor.ghost.rect = gw.cursor.ghost.surf.get_rect(bottomright=(gw.tile_s * (gw.cursor.ghost.pos[0] + 1),
-                                                                          gw.tile_s * (gw.cursor.ghost.pos[1] + 1)))
+
     for struct in gw.structs:
         struct.update_zoom(gw)
 

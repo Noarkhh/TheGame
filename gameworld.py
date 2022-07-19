@@ -1,6 +1,7 @@
 import os
 from structures import *
 from hud import *
+from cursor import Cursor
 from pygame.locals import (RLEACCEL,
                            K_t,
                            K_h,
