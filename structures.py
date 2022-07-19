@@ -283,13 +283,19 @@ class Ghost:
         if self.rect.width == gw.tile_s and self.rect.height == gw.tile_s:
             self.surf.blit(gw.cursor.held_structure.snapper_dict[()], (0, 0))
         elif self.rect.width == gw.tile_s:
-            self.sides_to_draw.append("right")
+            if self.pos[1] > self.drag_starting_pos[1]:
+                self.sides_to_draw.append("bottom")
+            else:
+                self.sides_to_draw.append("top")
             self.surf.blit(gw.cursor.held_structure.snapper_dict[('S', )], (0, 0))
             self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', )], (0, self.rect.height - gw.tile_s))
             for y in range(gw.tile_s, self.rect.height - gw.tile_s, gw.tile_s):
                 self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', 'S')], (0, y))
         elif self.rect.height == gw.tile_s:
-            self.sides_to_draw.append("top")
+            if self.pos[0] > self.drag_starting_pos[0]:
+                self.sides_to_draw.append("right")
+            else:
+                self.sides_to_draw.append("left")
             self.surf.blit(gw.cursor.held_structure.snapper_dict[('E', )], (0, 0))
             self.surf.blit(gw.cursor.held_structure.snapper_dict[('W', )], (self.rect.width - gw.tile_s, 0))
             for x in range(gw.tile_s, self.rect.width - gw.tile_s, gw.tile_s):
