@@ -189,7 +189,7 @@ class Ghost:
                 self.create_farmland_field(gw)
             elif type(gw.cursor.held_structure) in {Road, Wall}:
                 self.create_snapper_line(gw)
-            self.surf.set_alpha(128)
+        self.surf.set_alpha(128)
 
     def create_farmland_field(self, gw):
         if self.rect.width == gw.tile_s or self.rect.height == gw.tile_s:
@@ -265,13 +265,18 @@ class Ghost:
             self.surf.blit(gw.cursor.held_structure.snapper_dict[('N',)], (vert_segment_x, self.rect.height - gw.tile_s))
 
             if self.sides_to_draw in [["top", "right"], ["right", "top"]]:
+                self.surf.blit(pg.Surface((gw.tile_s, gw.tile_s)), (self.rect.width - gw.tile_s, 0))
                 self.surf.blit(gw.cursor.held_structure.snapper_dict[('S', 'W')], (self.rect.width - gw.tile_s, 0))
             elif self.sides_to_draw in [["bottom", "right"], ["right", "bottom"]]:
+                self.surf.blit(pg.Surface((gw.tile_s, gw.tile_s)), (self.rect.width - gw.tile_s,
+                                                                    self.rect.height - gw.tile_s))
                 self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', 'W')], (self.rect.width - gw.tile_s,
                                                                                    self.rect.height - gw.tile_s))
             elif self.sides_to_draw in [["bottom", "left"], ["left", "bottom"]]:
+                self.surf.blit(pg.Surface((gw.tile_s, gw.tile_s)), (0, self.rect.height - gw.tile_s))
                 self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', 'E')], (0, self.rect.height - gw.tile_s))
             elif self.sides_to_draw in [["top", "left"], ["left", "top"]]:
+                self.surf.blit(pg.Surface((gw.tile_s, gw.tile_s)), (0, 0))
                 self.surf.blit(gw.cursor.held_structure.snapper_dict[('E', 'S')], (0, 0))
 
     def handle_edge_cases(self, gw):
@@ -485,19 +490,21 @@ class Snapper(Structure):
         directions = tuple(sorted(self.neighbours, key=lambda x: self.direction_to_int_dict[x]))
         self.surf = self.snapper_dict[directions].copy()
 
-    def can_be_snapped(self, gw, is_lmb_held_down, change, pos_change_dict):
-        if change not in pos_change_dict.keys():
+    def can_be_snapped(self, gw, curr_pos, prev_pos):
+        change = tuple([curr_pos[0] - prev_pos[0], curr_pos[1] - prev_pos[1]])
+        if change not in gw.pos_change_dict.keys():
             return False, "unsuitable_change"
 
-        if not (isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Snapper) and
-                isinstance(gw.struct_map[gw.cursor.previous_pos[0]][gw.cursor.previous_pos[1]], Snapper)):
+        if not (isinstance(gw.struct_map[curr_pos[0]][curr_pos[1]], Snapper) and
+                isinstance(gw.struct_map[prev_pos[0]][prev_pos[1]], Snapper)):
+
             return False, "one_of_structures_cannot_snap"
 
-        if not gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].snapsto[pos_change_dict[change][0]] == \
-                gw.struct_map[gw.cursor.previous_pos[0]][gw.cursor.previous_pos[1]].snapsto[pos_change_dict[change][1]]:
+        if not gw.struct_map[curr_pos[0]][curr_pos[1]].snapsto[gw.pos_change_dict[change][0]] == \
+                gw.struct_map[prev_pos[0]][prev_pos[1]].snapsto[gw.pos_change_dict[change][1]]:
             return False, "didn't_match"
 
-        if pos_change_dict[change][0] in gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].neighbours:
+        if gw.pos_change_dict[change][0] in gw.struct_map[curr_pos[0]][curr_pos[1]].neighbours:
             return False, "already_snapped"
 
         return True, "was_snapped"

@@ -84,6 +84,7 @@ class GameWorld:
                                  "obama": Pyramid, "farmland": Farmland, "mine": Mine}
         self.direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
         self.xy_to_direction_dict = {value: key for key, value in self.direction_to_xy_dict.items()}
+        self.pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
         self.soundtrack_channel = pg.mixer.Channel(5)
         self.speech_channel = pg.mixer.Channel(3)
         self.fx_channel = pg.mixer.Channel(4)

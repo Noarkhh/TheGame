@@ -168,24 +168,153 @@ def make_farmland_field(gw):
 
 
 def make_snapper_line(gw):
+    def place_structure(pos):
+        new_struct = type(gw.cursor.held_structure)(pos, gw)
+        gw.structs.add(new_struct)
+        gw.entities.add(new_struct)
+        gw.struct_map[pos[0]][pos[1]] = new_struct
+        gw.time_manager.gold -= new_struct.build_cost
+
     width = gw.cursor.ghost.rect.width // gw.tile_s
     height = gw.cursor.ghost.rect.height // gw.tile_s
-    starting_pos = gw.cursor.ghost.drag_starting_pos
     target_dict = {"top": -1, "right": 1, "bottom": 1, "left": -1}
 
-    if len(gw.cursor.ghost.sides_to_draw) == 2:
-        if gw.cursor.ghost.sides_to_draw[0] in {"left", "right"}:
-            print(gw.cursor.ghost.sides_to_draw, "horiz")
-            for i in range(width):
-                can_be_placed, message = gw.cursor.held_structure.can_be_placed(gw)
-                new_struct = type(gw.cursor.held_structure)([starting_pos[0] + i * target_dict[gw.cursor.ghost.sides_to_draw[0]], starting_pos[1]], gw)
-                print([starting_pos[0] + i * target_dict[gw.cursor.ghost.sides_to_draw[0]], starting_pos[1]], i)
+    def build_horizontal_segment(seg_number, length):
+        if seg_number == 0:
+            modifier = target_dict[gw.cursor.ghost.sides_to_draw[0]]
         else:
-            print(gw.cursor.ghost.sides_to_draw, "vert")
-            for i in range(height):
-                new_struct = type(gw.cursor.held_structure)([starting_pos[0], starting_pos[1] + i * target_dict[gw.cursor.ghost.sides_to_draw[0]]], gw)
-                print([starting_pos[0], starting_pos[1] + i * target_dict[gw.cursor.ghost.sides_to_draw[0]]], i)
+            modifier = -target_dict[gw.cursor.ghost.sides_to_draw[1]]
 
+        for i in range(length):
+            can_be_placed, message = gw.cursor.held_structure.can_be_placed(gw, curr_pos)
+            print(curr_pos, message)
+            if can_be_placed:
+                place_structure(curr_pos)
+            elif message != "unsuitable_location_structure":
+                return False
+            elif message == "unsuitable_location_structure":
+                can_be_snapped, snap_message = gw.cursor.held_structure.can_be_snapped(gw, curr_pos, [curr_pos[0] - modifier, curr_pos[1]])
+                print(snap_message)
+                if not can_be_snapped and snap_message != "already_snapped" and i:
+                    return False
+            if i or seg_number:
+                gw.struct_map[curr_pos[0]][curr_pos[1]].update_edges(gw.pos_change_dict[(modifier, 0)][0], 1)
+                gw.struct_map[curr_pos[0] - modifier][curr_pos[1]].update_edges(gw.pos_change_dict[(modifier, 0)][1], 1)
+            curr_pos[0] += modifier
+
+        return True
+
+    def build_vertical_segment(seg_number, length):
+        if seg_number == 0:
+            modifier = target_dict[gw.cursor.ghost.sides_to_draw[0]]
+        else:
+            modifier = -target_dict[gw.cursor.ghost.sides_to_draw[1]]
+
+        for i in range(length):
+            can_be_placed, build_message = gw.cursor.held_structure.can_be_placed(gw, curr_pos)
+
+            if can_be_placed:
+                place_structure(curr_pos)
+                can_be_snapped, snap_message = gw.cursor.held_structure.can_be_snapped(gw, curr_pos, [
+                    curr_pos[0], curr_pos[1] - modifier])
+            elif build_message != "unsuitable_location_structure":
+                return False
+            else:
+                can_be_snapped, snap_message = gw.cursor.held_structure.can_be_snapped(gw, curr_pos, [
+                    curr_pos[0], curr_pos[1] - modifier])
+                if not can_be_snapped and snap_message != "already_snapped" and i:
+                    return False
+            if not can_be_snapped:
+                return False
+            if i or seg_number:
+                gw.struct_map[curr_pos[0]][curr_pos[1]].update_edges(gw.pos_change_dict[(0, modifier)][0], 1)
+                gw.struct_map[curr_pos[0]][curr_pos[1] - modifier].update_edges(gw.pos_change_dict[(0, modifier)][1], 1)
+            curr_pos[1] += modifier
+
+        return True
+
+    if len(gw.cursor.ghost.sides_to_draw) == 2:
+        curr_pos = gw.cursor.ghost.drag_starting_pos.copy()
+        if gw.cursor.ghost.sides_to_draw[0] in {"left", "right"}:
+            if not build_horizontal_segment(0, width):
+                return
+            # for i in range(width):
+            #     can_be_placed, message = gw.cursor.held_structure.can_be_placed(gw, curr_pos)
+            #     print(curr_pos, message)
+            #     if can_be_placed:
+            #         place_structure(curr_pos)
+            #     elif message != "unsuitable_location_structure":
+            #         return
+            #     elif message == "unsuitable_location_structure" and \
+            #             not gw.cursor.held_structure.can_be_snapped(gw, curr_pos, [
+            #                 curr_pos[0] - target_dict[gw.cursor.ghost.sides_to_draw[0]], curr_pos[1]])[0]:
+            #         return
+            #     if i:
+            #         gw.struct_map[curr_pos[0]][curr_pos[1]].update_edges(
+            #             gw.pos_change_dict[(target_dict[gw.cursor.ghost.sides_to_draw[0]], 0)][0], 1)
+            #         gw.struct_map[curr_pos[0] - target_dict[gw.cursor.ghost.sides_to_draw[0]]][
+            #             curr_pos[1]].update_edges(
+            #             gw.pos_change_dict[(target_dict[gw.cursor.ghost.sides_to_draw[0]], 0)][1], 1)
+            #
+            #     curr_pos[0] += target_dict[gw.cursor.ghost.sides_to_draw[0]]
+
+            curr_pos[0] -= target_dict[gw.cursor.ghost.sides_to_draw[0]]
+            curr_pos[1] += -target_dict[gw.cursor.ghost.sides_to_draw[1]]
+            build_vertical_segment(1, height - 1)
+            # for i in range(height - 1):
+            #     can_be_placed, message = gw.cursor.held_structure.can_be_placed(gw, curr_pos)
+            #     if can_be_placed:
+            #         place_structure(curr_pos)
+            #     elif message != "unsuitable_location_structure":
+            #         return
+            #     elif message == "unsuitable_location_structure" and not \
+            #             gw.cursor.held_structure.can_be_snapped(gw, curr_pos, [curr_pos[0], curr_pos[1] - -target_dict[
+            #                 gw.cursor.ghost.sides_to_draw[1]]])[0]:
+            #         return
+            #     gw.struct_map[curr_pos[0]][curr_pos[1]].update_edges(
+            #         gw.pos_change_dict[(0, -target_dict[gw.cursor.ghost.sides_to_draw[1]])][0], 1)
+            #     gw.struct_map[curr_pos[0]][curr_pos[1] - -target_dict[gw.cursor.ghost.sides_to_draw[1]]].update_edges(
+            #         gw.pos_change_dict[(0, -target_dict[gw.cursor.ghost.sides_to_draw[1]])][1], 1)
+            #     curr_pos[1] += -target_dict[gw.cursor.ghost.sides_to_draw[1]]
+
+        elif gw.cursor.ghost.sides_to_draw[0] in {"top", "bottom"}:
+            for i in range(height):
+                can_be_placed, message = gw.cursor.held_structure.can_be_placed(gw, curr_pos)
+                if can_be_placed:
+                    place_structure(curr_pos)
+                elif message != "unsuitable_location_structure":
+                    return
+                elif message == "unsuitable_location_structure" and not \
+                        gw.cursor.held_structure.can_be_snapped(gw, curr_pos, [curr_pos[0], curr_pos[1] - target_dict[
+                            gw.cursor.ghost.sides_to_draw[0]]])[0]:
+                    return
+                if i:
+                    gw.struct_map[curr_pos[0]][curr_pos[1]].update_edges(
+                        gw.pos_change_dict[(0, target_dict[gw.cursor.ghost.sides_to_draw[0]])][0], 1)
+                    gw.struct_map[curr_pos[0]][curr_pos[1] - target_dict[gw.cursor.ghost.sides_to_draw[0]]].update_edges(
+                        gw.pos_change_dict[(0, target_dict[gw.cursor.ghost.sides_to_draw[0]])][1], 1)
+                curr_pos[1] += target_dict[gw.cursor.ghost.sides_to_draw[0]]
+
+            curr_pos[1] -= target_dict[gw.cursor.ghost.sides_to_draw[0]]
+            curr_pos[0] += -target_dict[gw.cursor.ghost.sides_to_draw[1]]
+
+            for i in range(width - 1):
+                can_be_placed, message = gw.cursor.held_structure.can_be_placed(gw, curr_pos)
+                if can_be_placed:
+                    place_structure(curr_pos)
+                elif message != "unsuitable_location_structure":
+                    return
+                elif message == "unsuitable_location_structure" and \
+                        not gw.cursor.held_structure.can_be_snapped(gw, curr_pos, [
+                            curr_pos[0] - -target_dict[gw.cursor.ghost.sides_to_draw[1]], curr_pos[1]])[0]:
+                    return
+                gw.struct_map[curr_pos[0]][curr_pos[1]].update_edges(
+                    gw.pos_change_dict[(-target_dict[gw.cursor.ghost.sides_to_draw[1]], 0)][0], 1)
+                gw.struct_map[curr_pos[0] - -target_dict[gw.cursor.ghost.sides_to_draw[1]]][
+                    curr_pos[1]].update_edges(
+                    gw.pos_change_dict[(-target_dict[gw.cursor.ghost.sides_to_draw[1]], 0)][1], 1)
+
+                curr_pos[0] += -target_dict[gw.cursor.ghost.sides_to_draw[1]]
     pass
 
 
@@ -246,7 +375,6 @@ def place_structure(gw, is_lmb_held_down):
 
     new_struct = None
     change = tuple([a - b for a, b in zip(gw.cursor.pos, gw.cursor.previous_pos)])
-    pos_change_dict = {(0, 1): ('N', 'S'), (-1, 0): ('E', 'W'), (0, -1): ('S', 'N'), (1, 0): ('W', 'E')}
 
     was_built, build_message = gw.cursor.held_structure.can_be_placed(gw, gw.cursor.pos)
     if was_built:
@@ -278,14 +406,14 @@ def place_structure(gw, is_lmb_held_down):
             gw.speech_channel.play(gw.sounds["Placement_Warning16"])
 
     if isinstance(gw.cursor.held_structure, Snapper):
-        was_snapped, snap_message = gw.cursor.held_structure.can_be_snapped(gw, is_lmb_held_down, change,
-                                                                            pos_change_dict)
+        was_snapped, snap_message = gw.cursor.held_structure.can_be_snapped(gw, gw.cursor.pos, gw.cursor.previous_pos)
     else:
         was_snapped, snap_message = False, "not_a_snapper"
 
     if was_snapped and is_lmb_held_down:
-        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(pos_change_dict[change][0], 1)
-        gw.struct_map[gw.cursor.previous_pos[0]][gw.cursor.previous_pos[1]].update_edges(pos_change_dict[change][1], 1)
+        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(gw.pos_change_dict[change][0], 1)
+        gw.struct_map[gw.cursor.previous_pos[0]][gw.cursor.previous_pos[1]].update_edges(gw.pos_change_dict[change][1],
+                                                                                         1)
 
     if was_snapped and not was_built:
         detect_surrounded_tiles(gw)

@@ -40,7 +40,7 @@ if __name__ == "__main__":
                 if event.key == K_n:
                     gw.cursor.held_structure = None
 
-                if event.key == K_r and gw.cursor.held_structure is Gate:
+                if event.key == K_r and isinstance(gw.cursor.held_structure, Gate):
                     gw.cursor.held_structure.rotate(gw)
 
                 if event.key == pg.K_c and isinstance((gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]]), House):
