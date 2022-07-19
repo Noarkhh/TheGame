@@ -1,5 +1,12 @@
 from collections import defaultdict
 from structures import *
+from pygame.locals import (KEYDOWN,
+                           QUIT,
+                           K_ESCAPE,
+                           K_n,
+                           K_x,
+                           K_r,
+                           K_F3)
 
 
 def detect_surrounded_tiles(gw):
@@ -163,8 +170,16 @@ def make_farmland_field(gw):
                     if new_struct is not None:
                         new_struct.update_edges(gw.xy_to_direction_dict[tuple(direction)], 1)
 
-    if should_be_included(gw.cursor.ghost.drag_starting_pos):
+    can_be_placed, message = gw.cursor.held_structure.can_be_placed(gw, gw.cursor.ghost.drag_starting_pos)
+    if can_be_placed or isinstance(gw.struct_map[gw.cursor.ghost.drag_starting_pos[0]][
+                                       gw.cursor.ghost.drag_starting_pos[1]], Farmland):
         _make_field(gw.cursor.ghost.drag_starting_pos)
+        gw.sounds["drawbridge_control"].play()
+    elif not can_be_placed:
+        if message.startswith("unsuitable_location"):
+            gw.speech_channel.play(gw.sounds["Placement_Warning16"])
+        elif message == "could_not_afford":
+            gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
 
 
 def make_snapper_line(gw):
@@ -174,6 +189,8 @@ def make_snapper_line(gw):
         gw.entities.add(new_struct)
         gw.struct_map[pos[0]][pos[1]] = new_struct
         gw.time_manager.gold -= new_struct.build_cost
+        if isinstance(new_struct, Wall):
+            gw.wall_set.add(tuple(pos))
 
     def build_segment(seg_number, orientation, length):
         if orientation == "vert":
@@ -201,6 +218,7 @@ def make_snapper_line(gw):
             if not can_be_snapped and i > 0 and snap_message != "already_snapped":
                 gw.struct_map[curr_pos[0]][curr_pos[1]].kill()
                 gw.time_manager.gold += gw.struct_map[curr_pos[0]][curr_pos[1]].build_cost
+                gw.wall_set.remove(tuple(curr_pos))
                 gw.struct_map[curr_pos[0]][curr_pos[1]] = 0
                 gw.speech_channel.play(gw.sounds["Placement_Warning16"])
                 return False
@@ -254,30 +272,68 @@ def make_snapper_line(gw):
                 gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
 
 
-def count_road_network(gw, xy):
-    """
-    Function that counts how many roads are in a network with the selected road.
+def handle_events(gw, event):
+    if event.type == QUIT:
+        gw.running = False
+    if event.type == pg.MOUSEBUTTONDOWN:
+        if event.button == 1:
+            gw.cursor.is_lmb_pressed = True
+        if event.button == 2:
+            if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Structure):
+                gw.hud.build_menu.assign(gw, None, type(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]]))
+                gw.sounds["menusl_" + str(randint(1, 3))].play()
+        if event.button == 3:
+            gw.cursor.is_lmb_pressed = False
+            gw.cursor.is_lmb_held_down = False
+            gw.cursor.is_dragging = False
 
-        :param gw: Gameworld object
-        :param xy: Coordinates of the selected road
-    """
-    A = [[True for _ in range(gw.height_tiles)] for _ in range(gw.width_tiles)]
-    count = 0
-    direction_to_xy_dict = {'N': (0, -1), 'E': (1, 0), 'S': (0, 1), 'W': (-1, 0)}
-    required = set(gw.struct_map[xy[0]][xy[1]].snapsto.values())
+    if event.type == pg.MOUSEBUTTONUP:
+        if event.button == 1:
+            gw.cursor.is_lmb_pressed = False
+            gw.cursor.is_lmb_held_down = False
+            if gw.cursor.is_dragging and gw.button_handler.hovered_button is None:
+                if isinstance(gw.cursor.held_structure, Farmland):
+                    make_farmland_field(gw)
+                else:
+                    make_snapper_line(gw)
+                gw.cursor.is_dragging = False
 
-    def _count_road_network(gw, A, xy, direction_to_xy_dict, required):
-        nonlocal count
-        count += 1
-        A[xy[0]][xy[1]] = False
-        for direction in gw.struct_map[xy[0]][xy[1]].neighbours:
-            next = direction_to_xy_dict[direction]
-            if A[xy[0] + next[0]][xy[1] + next[1]] and \
-                    bool(set(gw.struct_map[xy[0] + next[0]][xy[1] + next[1]].snapsto.values()) & required):
-                _count_road_network(gw, A, [xy[0] + next[0], xy[1] + next[1]], direction_to_xy_dict, required)
+    if event.type == KEYDOWN:
+        if event.key in gw.key_structure_dict:
+            gw.hud.build_menu.assign(gw, None, gw.key_structure_dict[event.key])
+            gw.sounds["menusl_" + str(randint(1, 3))].play()
 
-    _count_road_network(gw, A, xy, direction_to_xy_dict, required)
-    return count
+        if event.key == K_n:
+            gw.cursor.held_structure = None
+
+        if event.key == K_r and isinstance(gw.cursor.held_structure, Gate):
+            gw.cursor.held_structure.rotate(gw)
+
+        if event.key == pg.K_c and isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], House):
+            gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_profit(gw)
+
+        if event.key == pg.K_j:
+            gw.cursor.change_mode(gw, None, "drag_build", "toggle")
+
+        if event.key == K_F3:
+            gw.hud.are_debug_stats_displayed = not gw.hud.are_debug_stats_displayed
+
+        if event.key == pg.K_KP_PLUS:
+            zoom(gw, None, 2)
+
+        if event.key == pg.K_KP_MINUS:
+            zoom(gw, None, 0.5)
+
+        if event.key == K_x:
+            gw.cursor.change_mode(gw, None, "demolish", "toggle")
+
+        if event.key == pg.K_e:
+            gw.hud.build_menu.toggle_build_menu(gw)
+
+        if event.key == K_ESCAPE:
+            gw.hud.pause_menu.run_pause_menu_loop(gw)
+
+    gw.button_handler.handle_button_press(gw, event)
 
 
 def place_structure(gw, is_lmb_held_down):

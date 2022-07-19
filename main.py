@@ -1,13 +1,7 @@
 from functions import *
 from hud import *
 from gameworld import GameWorld
-from pygame.locals import (KEYDOWN,
-                           QUIT,
-                           K_ESCAPE,
-                           K_n,
-                           K_x,
-                           K_r,
-                           K_F3)
+
 
 if __name__ == "__main__":
 
@@ -15,8 +9,6 @@ if __name__ == "__main__":
     pg.mixer.init()
     gw = GameWorld()
     clock = pg.time.Clock()
-
-    is_lmb_held_down = False
 
     gw.speech_channel.play(gw.sounds["General_Startgame"])
     gw.running = True
@@ -29,68 +21,20 @@ if __name__ == "__main__":
             gw.cursor.update(gw)
 
         for event in pg.event.get():
-            if event.type == QUIT:
-                gw.running = False
-            if event.type == KEYDOWN:
+            handle_events(gw, event)
 
-                if event.key in gw.key_structure_dict:  # picking up a chosen structure
-                    gw.hud.build_menu.assign(gw, None, gw.key_structure_dict[event.key])
-                    gw.sounds["menusl_" + str(randint(1, 3))].play()
-
-                if event.key == K_n:
-                    gw.cursor.held_structure = None
-
-                if event.key == K_r and isinstance(gw.cursor.held_structure, Gate):
-                    gw.cursor.held_structure.rotate(gw)
-
-                if event.key == pg.K_c and isinstance((gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]]), House):
-                    gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_profit(gw)
-
-                if event.key == pg.K_j:
-                    # make_field(gw, [85, 55], [95, 65])
-                    gw.cursor.change_mode(gw, None, "drag_build", "toggle")
-
-                if event.key == K_F3:
-                    gw.hud.are_debug_stats_displayed = not gw.hud.are_debug_stats_displayed
-
-                if event.key == pg.K_KP_PLUS:
-                    zoom(gw, None, 2)
-
-                if event.key == pg.K_KP_MINUS:
-                    zoom(gw, None, 0.5)
-
-                if event.key == K_x:
-                    gw.cursor.change_mode(gw, None, "demolish", "toggle")
-
-                if event.key == pg.K_e:
-                    gw.hud.build_menu.toggle_build_menu(gw)
-
-                if event.key == K_ESCAPE:
-                    gw.hud.pause_menu.run_pause_menu_loop(gw)
-
-            button_press_result = gw.button_handler.handle_button_press(gw, event)
-
-        if pg.mouse.get_pressed(num_buttons=3)[0] and gw.button_handler.hovered_button is None:
+        if gw.cursor.is_lmb_pressed and gw.button_handler.hovered_button is None:
             if not gw.cursor.is_in_demolish_mode and gw.cursor.held_structure is not None:
                 if gw.cursor.is_in_drag_build_mode and type(gw.cursor.held_structure) in {Farmland, Road, Wall}:
-
-                    gw.cursor.is_dragging = True
-                    if not is_lmb_held_down:
+                    if not gw.cursor.is_lmb_held_down:
+                        gw.cursor.is_dragging = True
                         gw.cursor.ghost.drag_starting_pos = gw.cursor.pos.copy()
                 else:
-                    place_structure(gw, is_lmb_held_down)
+                    place_structure(gw, gw.cursor.is_lmb_held_down)
 
             elif gw.cursor.is_in_demolish_mode:
                 remove_structure(gw)
-            is_lmb_held_down = True
-        else:
-            is_lmb_held_down = False
-            if gw.cursor.is_dragging:
-                if isinstance(gw.cursor.held_structure, Farmland):
-                    make_farmland_field(gw)
-                else:
-                    make_snapper_line(gw)
-                gw.cursor.is_dragging = False
+            gw.cursor.is_lmb_held_down = True
 
         gw.scene.move_screen(gw)
 

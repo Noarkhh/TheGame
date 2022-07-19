@@ -5,10 +5,6 @@ from pygame.locals import RLEACCEL
 
 
 class Scene(pg.sprite.Sprite):
-    """
-
-    """
-
     def __init__(self, gw):
         super().__init__()
         self.surf = pg.transform.scale(gw.map_surf.copy(), (gw.width_pixels, gw.height_pixels))
@@ -96,6 +92,8 @@ class Cursor(pg.sprite.Sprite):
         self.is_in_demolish_mode = False
         self.is_in_drag_build_mode = False
         self.is_dragging = False
+        self.is_lmb_held_down = False
+        self.is_lmb_pressed = False
 
         self.surf = pg.transform.scale(pg.image.load("assets/cursor2.png").convert(), (gw.tile_s, gw.tile_s))
         self.surf_demolish = pg.transform.scale(pg.image.load("assets/cursor_demolish.png").convert(),
@@ -535,6 +533,7 @@ class Farmland(Snapper):
         self.surf = self.snapper_dict[()].copy()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.snapsto = {snap: "roads" for snap in ('N', 'E', 'S', 'W')}
+        self.unsuitable_tiles = {"water", "desert"}
         self.base_profit = 1
         self.profit = self.base_profit
         self.build_cost = 10

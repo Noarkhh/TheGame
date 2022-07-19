@@ -68,7 +68,7 @@ class GameWorld:
         self.screen = self.set_window()
         self.running = True
 
-        self.layout_path = "assets/maps/grass_test.png"
+        self.layout_path = "assets/maps/desert_delta_L.png"
         self.layout = pg.image.load(self.layout_path).convert()
         self.height_tiles = self.layout.get_height()
         self.width_tiles = self.layout.get_width()
