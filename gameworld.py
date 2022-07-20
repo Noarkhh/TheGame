@@ -1,6 +1,6 @@
 import os
-from structures import *
 from hud import *
+from graphics import *
 from cursor import Cursor
 from pygame.locals import (RLEACCEL,
                            K_t,
@@ -21,14 +21,12 @@ class GameWorld:
     Attributes:
 
         SOUNDTRACK: Option to turn soundtrack on or off
-        MOUSE_STEERING: Option to turn mouse steering on or off
-        MOUSE_STEERING: Option to turn windowed mode on or off
+        WINDOWED: Option to turn windowed mode on or off
         WINDOW_HEIGHT, WINDOWS_WIDTH: Window size in pixels
         TICK_RATE: Amount of game ticks per second
         STARTING_GOLD: starting gold
 
         screen: Main surface that is displayed
-        snapper_dict: Dictionary of dictionaries for different Snappers
         sounds, tracks: Dictionaries that assign sounds and tracks to their corresponding names
         key_structure_dict: Dictionary that assigns classes of different structures to keys, that will
                             place instances of these classes
@@ -59,7 +57,6 @@ class GameWorld:
 
     def __init__(self):
         self.SOUNDTRACK = False
-        self.MOUSE_STEERING = True
         self.WINDOWED = True
         self.WINDOW_HEIGHT = 720
         self.WINDOW_WIDTH = 1080
@@ -77,7 +74,7 @@ class GameWorld:
         self.width_pixels = self.width_tiles * self.tile_s
         self.height_pixels = self.height_tiles * self.tile_s
 
-        self.snapper_dict = self.fill_snappers_dict()
+        self.spritesheet = Spritesheet()
         self.sounds, self.tracks = self.load_sounds()
         self.key_structure_dict = {K_h: House, K_t: Tower, K_u: Road, K_w: Wall, K_g: Gate, pg.K_p: Pyramid,
                                    pg.K_m: Mine, pg.K_f: Farmland}
@@ -119,32 +116,6 @@ class GameWorld:
         pg.display.set_caption("Twierdza: Zawodzie")
         pg.display.set_icon(pg.image.load("assets/icon.png").convert())
         return screen
-
-    def fill_snappers_dict(self):
-        """
-        Fills dictionaries that assign different version of a Snapper sprite to tuples of directions that the
-        sprite has connections with.
-
-            :return: Dictionary of dictionaries for different Snappers
-        """
-        snapper_dict = {}
-        for curr_dict_name, sprite_prefix, height in (("walls", "wall", self.tile_s),
-                                                      ("roads", "road", self.tile_s),
-                                                      ("vgates", "gate", self.tile_s * 20 / 15),
-                                                      ("hgates", "gate", self.tile_s * 20 / 15),
-                                                      ("farmlands", "farmland", self.tile_s)):
-            snapper_dir = "assets/" + curr_dict_name
-            directory = os.listdir(snapper_dir)
-            dir_cut = []
-            curr_dict = {}
-            for name in directory:
-                dir_cut.append(tuple(name.removeprefix(sprite_prefix)[:-4]))
-            for file, name in zip(directory, dir_cut):
-                curr_dict[name] = pg.transform.scale(pg.image.load(snapper_dir + "/" + file).convert(),
-                                                     (self.tile_s, height))
-                curr_dict[name].set_colorkey((255, 255, 255), RLEACCEL)
-            snapper_dict[curr_dict_name] = curr_dict
-        return snapper_dict
 
     def load_map(self):
         """

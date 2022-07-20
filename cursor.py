@@ -112,11 +112,11 @@ class Ghost:
 
     def create_farmland_field(self, gw):
         if self.rect.width == gw.tile_s or self.rect.height == gw.tile_s:
-            self.handle_edge_cases(gw)
+            self.handle_edge_cases(gw, "farmland")
         else:
             for x in range(gw.tile_s, self.rect.width - gw.tile_s, gw.tile_s):
                 for y in range(gw.tile_s, self.rect.height - gw.tile_s, gw.tile_s):
-                    self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', 'E', 'S', 'W')], (x, y))
+                    self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('N', 'E', 'S', 'W'), "farmland"), (x, y))
 
             for edge, const_dimension, direction in zip(('ESW', 'NSW', 'NEW', 'NES'),
                                                         (0, self.rect.width - gw.tile_s,
@@ -132,18 +132,19 @@ class Ghost:
                         blit_pos = (pos, const_dimension)
                     else:
                         blit_pos = (const_dimension, pos)
-                    self.surf.blit(gw.cursor.held_structure.snapper_dict[tuple(edge)], blit_pos)
+                    self.surf.blit(gw.spritesheet.get_snapper_surf(gw, tuple(edge), "farmland"), blit_pos)
 
             for corner, blit_pos in zip(('SW', 'NW', 'NE', 'ES'),
                                         ((self.rect.width - gw.tile_s, 0),
                                          (self.rect.width - gw.tile_s, self.rect.height - gw.tile_s),
                                          (0, self.rect.height - gw.tile_s), (0, 0))):
-                self.surf.blit(gw.cursor.held_structure.snapper_dict[tuple(corner)], blit_pos)
+                self.surf.blit(gw.spritesheet.get_snapper_surf(gw, tuple(corner), "farmland"), blit_pos)
 
     def create_snapper_line(self, gw):
         self.sides_to_draw.clear()
+        name = gw.cursor.held_structure.sheet_key
         if self.rect.width == gw.tile_s or self.rect.height == gw.tile_s:
-            self.handle_edge_cases(gw)
+            self.handle_edge_cases(gw, name)
         else:
             if self.rect.width > self.rect.height:
                 if self.pos[0] > self.drag_starting_pos[0]:
@@ -174,48 +175,50 @@ class Ghost:
                 vert_segment_x = 0
 
             for x in range(gw.tile_s, self.rect.width - gw.tile_s, gw.tile_s):
-                self.surf.blit(gw.cursor.held_structure.snapper_dict[('E', 'W')], (x, horiz_segment_y))
-            self.surf.blit(gw.cursor.held_structure.snapper_dict[('E',)], (0, horiz_segment_y))
-            self.surf.blit(gw.cursor.held_structure.snapper_dict[('W',)], (self.rect.width - gw.tile_s, horiz_segment_y))
+                self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('E', 'W'), name), (x, horiz_segment_y))
+            self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('E',), name), (0, horiz_segment_y))
+            self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('W',), name), (self.rect.width - gw.tile_s,
+                                                                                     horiz_segment_y))
 
             for y in range(gw.tile_s, self.rect.height - gw.tile_s, gw.tile_s):
-                self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', 'S')], (vert_segment_x, y))
-            self.surf.blit(gw.cursor.held_structure.snapper_dict[('S',)], (vert_segment_x, 0))
-            self.surf.blit(gw.cursor.held_structure.snapper_dict[('N',)], (vert_segment_x, self.rect.height - gw.tile_s))
+                self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('N', 'S'), name), (vert_segment_x, y))
+            self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('S',), name), (vert_segment_x, 0))
+            self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('N',), name), (vert_segment_x,
+                                                                                     self.rect.height - gw.tile_s))
 
             if self.sides_to_draw in [["top", "right"], ["right", "top"]]:
                 self.surf.blit(pg.Surface((gw.tile_s, gw.tile_s)), (self.rect.width - gw.tile_s, 0))
-                self.surf.blit(gw.cursor.held_structure.snapper_dict[('S', 'W')], (self.rect.width - gw.tile_s, 0))
+                self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('S', 'W'), name), (self.rect.width - gw.tile_s, 0))
             elif self.sides_to_draw in [["bottom", "right"], ["right", "bottom"]]:
                 self.surf.blit(pg.Surface((gw.tile_s, gw.tile_s)), (self.rect.width - gw.tile_s,
                                                                     self.rect.height - gw.tile_s))
-                self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', 'W')], (self.rect.width - gw.tile_s,
+                self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('N', 'W'), name), (self.rect.width - gw.tile_s,
                                                                                    self.rect.height - gw.tile_s))
             elif self.sides_to_draw in [["bottom", "left"], ["left", "bottom"]]:
                 self.surf.blit(pg.Surface((gw.tile_s, gw.tile_s)), (0, self.rect.height - gw.tile_s))
-                self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', 'E')], (0, self.rect.height - gw.tile_s))
+                self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('N', 'E'), name), (0, self.rect.height - gw.tile_s))
             elif self.sides_to_draw in [["top", "left"], ["left", "top"]]:
                 self.surf.blit(pg.Surface((gw.tile_s, gw.tile_s)), (0, 0))
-                self.surf.blit(gw.cursor.held_structure.snapper_dict[('E', 'S')], (0, 0))
+                self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('E', 'S'), name), (0, 0))
 
-    def handle_edge_cases(self, gw):
+    def handle_edge_cases(self, gw, name):
         if self.rect.width == gw.tile_s and self.rect.height == gw.tile_s:
-            self.surf.blit(gw.cursor.held_structure.snapper_dict[()], (0, 0))
+            self.surf.blit(gw.spritesheet.get_snapper_surf(gw, (), name), (0, 0))
         elif self.rect.width == gw.tile_s:
             if self.pos[1] > self.drag_starting_pos[1]:
                 self.sides_to_draw.append("bottom")
             else:
                 self.sides_to_draw.append("top")
-            self.surf.blit(gw.cursor.held_structure.snapper_dict[('S', )], (0, 0))
-            self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', )], (0, self.rect.height - gw.tile_s))
+            self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('S', ), name), (0, 0))
+            self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('N', ), name), (0, self.rect.height - gw.tile_s))
             for y in range(gw.tile_s, self.rect.height - gw.tile_s, gw.tile_s):
-                self.surf.blit(gw.cursor.held_structure.snapper_dict[('N', 'S')], (0, y))
+                self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('N', 'S'), name), (0, y))
         elif self.rect.height == gw.tile_s:
             if self.pos[0] > self.drag_starting_pos[0]:
                 self.sides_to_draw.append("right")
             else:
                 self.sides_to_draw.append("left")
-            self.surf.blit(gw.cursor.held_structure.snapper_dict[('E', )], (0, 0))
-            self.surf.blit(gw.cursor.held_structure.snapper_dict[('W', )], (self.rect.width - gw.tile_s, 0))
+            self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('E', ), name), (0, 0))
+            self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('W', ), name), (self.rect.width - gw.tile_s, 0))
             for x in range(gw.tile_s, self.rect.width - gw.tile_s, gw.tile_s):
-                self.surf.blit(gw.cursor.held_structure.snapper_dict[('E', 'W')], (x, 0))
+                self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('E', 'W'), name), (x, 0))

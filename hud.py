@@ -2,7 +2,8 @@ import json
 import os
 from structures import *
 from cursor import Ghost
-from functions import detect_surrounded_tiles, zoom
+from algorithms import detect_surrounded_tiles
+from graphics import zoom
 
 
 class Statistics:

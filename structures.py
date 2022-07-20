@@ -4,47 +4,6 @@ import time
 from pygame.locals import RLEACCEL
 
 
-class Scene(pg.sprite.Sprite):
-    def __init__(self, gw):
-        super().__init__()
-        self.surf = pg.transform.scale(gw.map_surf.copy(), (gw.width_pixels, gw.height_pixels))
-        self.surf_raw = self.surf.copy()
-        self.surf_rendered = self.surf.subsurface((0, 0, gw.WINDOW_WIDTH, gw.WINDOW_HEIGHT))
-        self.rect = self.surf_rendered.get_rect()
-
-    def move_screen(self, gw):
-        if not gw.MOUSE_STEERING:
-            if gw.cursor.rect.right >= self.rect.right <= gw.width_pixels - gw.tile_s / 2:
-                self.rect.move_ip(gw.tile_s / 2, 0)
-            if gw.cursor.rect.left <= self.rect.left >= 0 + gw.tile_s / 2:
-                self.rect.move_ip(-gw.tile_s / 2, 0)
-            if gw.cursor.rect.bottom >= self.rect.bottom <= gw.height_pixels - gw.tile_s / 2:
-                self.rect.move_ip(0, gw.tile_s / 2)
-            if gw.cursor.rect.top <= self.rect.top >= 0 + gw.tile_s / 2:
-                self.rect.move_ip(0, -gw.tile_s / 2)
-        else:
-            if pg.mouse.get_pos()[0] >= gw.WINDOW_WIDTH - gw.tile_s / 2 and \
-                    self.rect.right <= gw.width_pixels - gw.tile_s / 2:
-                self.rect.move_ip(gw.tile_s / 2, 0)
-            if pg.mouse.get_pos()[0] <= 0 + gw.tile_s / 2 <= self.rect.left:
-                self.rect.move_ip(-gw.tile_s / 2, 0)
-            if pg.mouse.get_pos()[1] >= gw.WINDOW_HEIGHT - gw.tile_s / 2 and \
-                    self.rect.bottom <= gw.height_pixels - gw.tile_s / 2:
-                self.rect.move_ip(0, gw.tile_s / 2)
-            if pg.mouse.get_pos()[1] <= 0 + gw.tile_s / 2 <= self.rect.top:
-                self.rect.move_ip(0, -gw.tile_s / 2)
-        self.surf_rendered = self.surf.subsurface(self.rect)
-
-
-class Entities(pg.sprite.Group):
-    def draw(self, scene):
-        sprites = self.sprites()
-        for spr in sorted(sprites, key=lambda spr: spr.pos[1]):
-            if spr.rect.colliderect(scene.rect):
-                scene.surf.blit(spr.surf, spr.rect)
-        self.lostsprites = []
-
-
 class TimeManager:
     def __init__(self, gw):
         self.time = 0
@@ -267,18 +226,17 @@ class Snapper(Structure):
         super().__init__(xy, gw)
         self.snapsto = {}
         self.neighbours = set()
-        self.snapper_dict_key = ""
-        self.snapper_dict = {}
+        self.sheet_key = ""
         self.direction_to_int_dict = {direction: i for i, direction in enumerate(('N', 'E', 'S', 'W'))}
 
-    def update_edges(self, direction, add):
+    def update_edges(self, gw, direction, add):
         if add == 1:
             self.neighbours.update(direction)
         elif add == -1 and direction in self.neighbours:
             self.neighbours.remove(direction)
 
         directions = tuple(sorted(self.neighbours, key=lambda x: self.direction_to_int_dict[x]))
-        self.surf = self.snapper_dict[directions].copy()
+        self.surf = gw.spritesheet.get_snapper_surf(gw, directions, self.sheet_key, self.surf_ratio)
 
     def can_be_snapped(self, gw, curr_pos, prev_pos):
         change = tuple([curr_pos[0] - prev_pos[0], curr_pos[1] - prev_pos[1]])
@@ -300,13 +258,13 @@ class Snapper(Structure):
         return True, "was_snapped"
 
     def to_json(self):
-        return {**super().to_json(), **{"snapper_dict_key": self.snapper_dict_key, "neighbours": list(self.neighbours)}}
+        return {**super().to_json(), **{"sheet_key": self.sheet_key, "neighbours": list(self.neighbours)}}
 
     def from_json(self, y):
         super().from_json(y)
-        self.snapper_dict_key = y["snapper_dict_key"]
+        self.sheet_key = y["sheet_key"]
         self.neighbours = set(y["neighbours"])
-        self.update_edges('N', 0)
+        # self.update_edges(gw, 'N', 0)
         return self
 
 
@@ -314,26 +272,21 @@ class Farmland(Snapper):
     def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = ""
-        self.snapper_dict_key = "farmlands"
-        self.snapper_dict = gw.snapper_dict["farmlands"]
-        self.surf = self.snapper_dict[()].copy()
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.sheet_key = "farmland"
+        self.surf = gw.spritesheet.get_snapper_surf(gw, (), self.sheet_key, self.surf_ratio)
         self.snapsto = {snap: "roads" for snap in ('N', 'E', 'S', 'W')}
         self.unsuitable_tiles = {"water", "desert"}
         self.base_profit = 1
         self.profit = self.base_profit
         self.build_cost = 10
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
 
 
 class Road(Snapper):
     def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = ""
-        self.snapper_dict_key = "roads"
-        self.snapper_dict = gw.snapper_dict["roads"]
-        self.surf = self.snapper_dict[()].copy()
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.sheet_key = "road"
+        self.surf = gw.spritesheet.get_snapper_surf(gw, (), self.sheet_key, self.surf_ratio)
         self.snapsto = {snap: "roads" for snap in ('N', 'E', 'S', 'W')}
         self.base_profit = -2
         self.profit = self.base_profit
@@ -344,10 +297,8 @@ class Wall(Snapper):
     def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = ""
-        self.snapper_dict_key = "walls"
-        self.snapper_dict = gw.snapper_dict["walls"]
-        self.surf = self.snapper_dict[()].copy()
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
+        self.sheet_key = "wall"
+        self.surf = gw.spritesheet.get_snapper_surf(gw, (), self.sheet_key, self.surf_ratio)
         self.snapsto = {snap: "walls" for snap in ('N', 'E', 'S', 'W')}
         self.base_profit = -3
         self.profit = self.base_profit
@@ -360,17 +311,14 @@ class Gate(Wall, Road):
         self.orientation = orientation
         self.image_path = ""
         if orientation == "v":
-            self.snapper_dict_key = "vgates"
-            self.snapper_dict = gw.snapper_dict["vgates"]
+            self.sheet_key = "vgate"
             self.snapsto = {'N': "roads", 'E': "walls", 'S': "roads", 'W': "walls"}
         else:
-            self.snapper_dict_key = "hgates"
-            self.snapper_dict = gw.snapper_dict["hgates"]
+            self.sheet_key = "hgate"
             self.snapsto = {'N': "walls", 'E': "roads", 'S': "walls", 'W': "roads"}
-        self.surf = self.snapper_dict[()].copy()
         self.surf_ratio = (1, 20 / 15)
+        self.surf = gw.spritesheet.get_snapper_surf(gw, (), self.sheet_key, self.surf_ratio)
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (xy[0] + 1), gw.tile_s * (xy[1] + 1)))
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.base_profit = -15
         self.profit = self.base_profit
         self.build_cost = 150
@@ -410,11 +358,11 @@ class Gate(Wall, Road):
     def rotate(self, gw):
         if self.orientation == "v":
             self.orientation = "h"
+            self.sheet_key = "hgate"
             self.snapsto = {'N': "walls", 'E': "roads", 'S': "walls", 'W': "roads"}
         else:
             self.orientation = "v"
+            self.sheet_key = "vgate"
             self.snapsto = {'N': "roads", 'E': "walls", 'S': "roads", 'W': "walls"}
-        self.surf = pg.transform.scale(pg.image.load("assets/" + self.orientation + "gates/gate.png").convert(),
-                                       (gw.tile_s, gw.tile_s * 20 / 15))
+        self.surf = gw.spritesheet.get_snapper_surf(gw, (), self.sheet_key, self.surf_ratio)
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
-        self.surf.set_colorkey((255, 255, 255), RLEACCEL)

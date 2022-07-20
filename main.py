@@ -1,4 +1,4 @@
-from functions import *
+from game_managment import *
 from hud import *
 from gameworld import GameWorld
 
