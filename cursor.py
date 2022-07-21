@@ -26,6 +26,7 @@ class Cursor(pg.sprite.Sprite):
         self.rect = self.surf.get_rect()
         self.pos = [0, 0]
         self.previous_pos = [0, 0]
+        self.change = [0, 0]
         self.drag_starting_pos = [0, 0]
         self.held_structure = None
         self.ghost = None
@@ -34,6 +35,7 @@ class Cursor(pg.sprite.Sprite):
         self.previous_pos = self.pos.copy()
         self.pos[0] = (pg.mouse.get_pos()[0] + gw.scene.rect.x) // gw.tile_s
         self.pos[1] = (pg.mouse.get_pos()[1] + gw.scene.rect.y) // gw.tile_s
+        self.change = tuple([a - b for a, b in zip(self.pos, self.previous_pos)])
         self.rect.x = self.pos[0] * gw.tile_s
         self.rect.y = self.pos[1] * gw.tile_s
 
@@ -95,6 +97,8 @@ class Ghost:
         self.drag_starting_pos = gw.cursor.pos.copy()
         self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
         self.sides_to_draw = []
+        self.main_axis = "horiz"
+        self.is_listening_for_axis = True
 
     def update(self, gw):
         self.pos = gw.cursor.pos
@@ -152,10 +156,18 @@ class Ghost:
     def create_snapper_line(self, gw):
         self.sides_to_draw.clear()
         name = gw.cursor.held_structure.sheet_key
+        if self.rect.size == (gw.tile_s, gw.tile_s):
+            self.is_listening_for_axis = True
+        elif self.is_listening_for_axis:
+            if gw.cursor.change in {(1, 0), (-1, 0)}:
+                self.main_axis = "horiz"
+            elif gw.cursor.change in {(0, 1), (0, -1)}:
+                self.main_axis = "vert"
+            self.is_listening_for_axis = False
         if self.rect.width == gw.tile_s or self.rect.height == gw.tile_s:
             self.handle_edge_cases(gw, name)
         else:
-            if self.rect.width > self.rect.height:
+            if self.main_axis == "horiz":
                 if self.pos[0] > self.drag_starting_pos[0]:
                     self.sides_to_draw.append("right")
                 else:
@@ -164,7 +176,7 @@ class Ghost:
                     self.sides_to_draw.append("top")
                 else:
                     self.sides_to_draw.append("bottom")
-            else:
+            elif self.main_axis == "vert":
                 if self.pos[1] > self.drag_starting_pos[1]:
                     self.sides_to_draw.append("bottom")
                 else:
@@ -211,7 +223,7 @@ class Ghost:
                 self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('E', 'S'), name), (0, 0))
 
     def handle_edge_cases(self, gw, name):
-        if self.rect.width == gw.tile_s and self.rect.height == gw.tile_s:
+        if self.rect.size == (gw.tile_s, gw.tile_s):
             self.surf.blit(gw.spritesheet.get_snapper_surf(gw, (), name), (0, 0))
         elif self.rect.width == gw.tile_s:
             if self.pos[1] > self.drag_starting_pos[1]:

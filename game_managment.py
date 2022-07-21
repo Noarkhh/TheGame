@@ -146,7 +146,6 @@ def place_structure(gw, is_lmb_held_down):
     """
 
     new_struct = None
-    change = tuple([a - b for a, b in zip(gw.cursor.pos, gw.cursor.previous_pos)])
 
     was_built, build_message = gw.cursor.held_structure.can_be_placed(gw, gw.cursor.pos)
     if was_built:
@@ -183,9 +182,8 @@ def place_structure(gw, is_lmb_held_down):
         was_snapped, snap_message = False, "not_a_snapper"
 
     if was_snapped and is_lmb_held_down:
-        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(gw, gw.pos_change_dict[change][0], 1)
-        gw.struct_map[gw.cursor.previous_pos[0]][gw.cursor.previous_pos[1]].update_edges(gw, gw.pos_change_dict[change][1],
-                                                                                         1)
+        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(gw, gw.pos_change_dict[gw.cursor.change][0], 1)
+        gw.struct_map[gw.cursor.previous_pos[0]][gw.cursor.previous_pos[1]].update_edges(gw, gw.pos_change_dict[gw.cursor.change][1],1)
 
     if was_snapped and not was_built:
         detect_surrounded_tiles(gw)
