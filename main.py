@@ -33,7 +33,9 @@ if __name__ == "__main__":
                     place_structure(gw, gw.cursor.is_lmb_held_down)
 
             elif gw.cursor.is_in_demolish_mode:
-                remove_structure(gw)
+                if not gw.cursor.is_lmb_held_down:
+                    gw.cursor.is_dragging = True
+                    gw.cursor.ghost.drag_starting_pos = gw.cursor.pos.copy()
             gw.cursor.is_lmb_held_down = True
 
         gw.scene.move_screen(gw)

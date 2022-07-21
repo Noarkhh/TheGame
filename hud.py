@@ -497,9 +497,9 @@ class BuildMenu(HUD):
         gw.buttons.update(self.buttons)
 
     def assign(self, gw, button, struct_type):
+        gw.cursor.change_mode(gw, None, "demolish", "off")
         gw.cursor.held_structure = struct_type([0, 0], gw)
         gw.cursor.ghost = Ghost(gw)
-        gw.cursor.change_mode(gw, None, "demolish", "off")
         if struct_type in {Farmland, Road, Wall}:
             gw.cursor.change_mode(gw, None, "drag_build", "on")
         else:

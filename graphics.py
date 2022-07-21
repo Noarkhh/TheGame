@@ -7,7 +7,7 @@ class Spritesheet:
         self.edges_sorted = [(), ('N',), ('E',), ('S',), ('W',), ('N', 'E'), ('E', 'S'), ('S', 'W'), ('N', 'W'),
                            ('N', 'S'), ('E', 'W'), ('N', 'E', 'S'), ('E', 'S', 'W'),
                            ('N', 'S', 'W'), ('N', 'E', 'W'), ('N', 'E', 'S', 'W')]
-        self.snappers_sorted = ["road", "wall", "vgate", "hgate", "farmland"]
+        self.snappers_sorted = ["road", "wall", "vgate", "hgate", "farmland", "demolish"]
         self.snappers_sheet = pg.image.load("assets/snapper_sheet.png")
         # self.structures_sheet = pg.image.load("assets/structures_sheet.png")
 
@@ -53,6 +53,7 @@ class Entities(pg.sprite.Group):
             if spr.rect.colliderect(scene.rect):
                 scene.surf.blit(spr.surf, spr.rect)
         self.lostsprites = []
+
 
 def zoom(gw, button, factor):
     if (gw.tile_s <= 15 and factor < 1) or (gw.tile_s >= 120 and factor > 1):

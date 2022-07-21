@@ -125,7 +125,7 @@ def detect_surrounded_tiles(gw):
     return
 
 
-def make_farmland_field(gw):
+def make_field(gw):
     topleft_corner = [x // gw.tile_s for x in gw.cursor.ghost.rect.topleft]
     bottomright_corner = [x // gw.tile_s - 1 for x in gw.cursor.ghost.rect.bottomright]
     visited = [[False for _ in range(0, gw.cursor.ghost.rect.height, gw.tile_s)]

@@ -38,11 +38,9 @@ class Cursor(pg.sprite.Sprite):
         self.rect.y = self.pos[1] * gw.tile_s
 
     def draw(self, gw):
-        if self.is_in_demolish_mode:
-            gw.scene.surf.blit(self.surf_demolish, self.rect)
-        else:
+        if not self.is_in_demolish_mode:
             gw.scene.surf.blit(self.surf, self.rect)
-        if self.held_structure is not None:
+        if self.ghost is not None:
             self.ghost.update(gw)
             gw.scene.surf.blit(self.ghost.surf, self.ghost.rect)
 
@@ -63,19 +61,22 @@ class Cursor(pg.sprite.Sprite):
         elif state == "off":
             mode_state = False
 
+        if mode == "demolish":
+            self.is_in_demolish_mode = mode_state
+        if mode == "drag_build":
+            self.is_in_drag_build_mode = mode_state
+
         if mode_state:
             mode_button.is_locked = True
             mode_button.is_held_down = True
             if mode == "demolish":
                 self.held_structure = None
+                self.ghost = Ghost(gw)
         else:
+            if mode == "demolish":
+                self.ghost = None
             mode_button.is_locked = False
             mode_button.is_held_down = False
-
-        if mode == "demolish":
-            self.is_in_demolish_mode = mode_state
-        if mode == "drag_build":
-            self.is_in_drag_build_mode = mode_state
 
     def to_json(self):
         return {
@@ -85,7 +86,10 @@ class Cursor(pg.sprite.Sprite):
 
 class Ghost:
     def __init__(self, gw):
-        self.surf = gw.cursor.held_structure.surf
+        if not gw.cursor.is_in_demolish_mode:
+            self.surf = gw.cursor.held_structure.surf
+        else:
+            self.surf = gw.spritesheet.get_snapper_surf(gw, (), "demolish")
         self.surf.set_alpha(128)
         self.pos = gw.cursor.pos
         self.drag_starting_pos = gw.cursor.pos.copy()
@@ -95,7 +99,10 @@ class Ghost:
     def update(self, gw):
         self.pos = gw.cursor.pos
         if not gw.cursor.is_dragging:
-            self.surf = gw.cursor.held_structure.surf
+            if not gw.cursor.is_in_demolish_mode:
+                self.surf = gw.cursor.held_structure.surf
+            else:
+                self.surf = gw.spritesheet.get_snapper_surf(gw, (), "demolish")
             self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
 
         else:
@@ -104,19 +111,21 @@ class Ghost:
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)
             self.rect = self.surf.get_rect(topleft=(min(self.pos[0], self.drag_starting_pos[0]) * gw.tile_s,
                                                     min(self.pos[1], self.drag_starting_pos[1]) * gw.tile_s))
-            if isinstance(gw.cursor.held_structure, Farmland):
-                self.create_farmland_field(gw)
+            if gw.cursor.is_in_demolish_mode:
+                self.draw_area(gw, "demolish")
+            elif isinstance(gw.cursor.held_structure, Farmland):
+                self.draw_area(gw, "farmland")
             elif type(gw.cursor.held_structure) in {Road, Wall}:
                 self.create_snapper_line(gw)
         self.surf.set_alpha(128)
 
-    def create_farmland_field(self, gw):
+    def draw_area(self, gw, name):
         if self.rect.width == gw.tile_s or self.rect.height == gw.tile_s:
-            self.handle_edge_cases(gw, "farmland")
+            self.handle_edge_cases(gw, name)
         else:
             for x in range(gw.tile_s, self.rect.width - gw.tile_s, gw.tile_s):
                 for y in range(gw.tile_s, self.rect.height - gw.tile_s, gw.tile_s):
-                    self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('N', 'E', 'S', 'W'), "farmland"), (x, y))
+                    self.surf.blit(gw.spritesheet.get_snapper_surf(gw, ('N', 'E', 'S', 'W'), name), (x, y))
 
             for edge, const_dimension, direction in zip(('ESW', 'NSW', 'NEW', 'NES'),
                                                         (0, self.rect.width - gw.tile_s,
@@ -132,13 +141,13 @@ class Ghost:
                         blit_pos = (pos, const_dimension)
                     else:
                         blit_pos = (const_dimension, pos)
-                    self.surf.blit(gw.spritesheet.get_snapper_surf(gw, tuple(edge), "farmland"), blit_pos)
+                    self.surf.blit(gw.spritesheet.get_snapper_surf(gw, tuple(edge), name), blit_pos)
 
             for corner, blit_pos in zip(('SW', 'NW', 'NE', 'ES'),
                                         ((self.rect.width - gw.tile_s, 0),
                                          (self.rect.width - gw.tile_s, self.rect.height - gw.tile_s),
                                          (0, self.rect.height - gw.tile_s), (0, 0))):
-                self.surf.blit(gw.spritesheet.get_snapper_surf(gw, tuple(corner), "farmland"), blit_pos)
+                self.surf.blit(gw.spritesheet.get_snapper_surf(gw, tuple(corner), name), blit_pos)
 
     def create_snapper_line(self, gw):
         self.sides_to_draw.clear()

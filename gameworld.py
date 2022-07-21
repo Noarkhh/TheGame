@@ -1,6 +1,7 @@
 import os
 from hud import *
 from graphics import *
+from game_managment import TimeManager
 from cursor import Cursor
 from pygame.locals import (RLEACCEL,
                            K_t,

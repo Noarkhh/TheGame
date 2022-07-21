@@ -9,6 +9,47 @@ from pygame.locals import (KEYDOWN,
                            K_F3)
 
 
+class TimeManager:
+    def __init__(self, gw):
+        self.time = 0
+        self.tick = 0
+        self.time = [0, 0, 0]
+        self.elapsed = 1
+        self.start = time.time()
+        self.end = 0
+        self.tribute = 40
+        self.gold = gw.STARTING_GOLD
+
+    def time_lapse(self, gw):
+        self.tick += 1
+        if self.tick >= gw.TICK_RATE:
+            self.tick = 0
+            self.time[0] += 1
+            self.end = time.time()
+            self.elapsed = self.end - self.start
+            self.start = time.time()
+            if self.time[0] >= 24:
+                self.time[0] = 0
+                self.time[1] += 1
+                if self.time[1] >= 7:
+                    self.time[1] = 0
+                    self.time[2] += 1
+                    gw.time_manager.gold -= self.tribute
+                    gw.sounds["ignite_oil"].play()
+                    self.tribute = int(self.tribute ** 1.2)
+
+    def to_json(self):
+        return {
+            "time": self.time,
+            "tribute": self.tribute
+        }
+
+    def from_json(self, json_dict):
+        self.time = json_dict["time"]
+        self.tribute = json_dict["tribute"]
+        return self
+
+
 def handle_events(gw, event):
     if event.type == QUIT:
         gw.running = False
@@ -29,8 +70,10 @@ def handle_events(gw, event):
             gw.cursor.is_lmb_pressed = False
             gw.cursor.is_lmb_held_down = False
             if gw.cursor.is_dragging and gw.button_handler.hovered_button is None:
-                if isinstance(gw.cursor.held_structure, Farmland):
-                    make_farmland_field(gw)
+                if gw.cursor.is_in_demolish_mode:
+                    remove_area(gw)
+                elif isinstance(gw.cursor.held_structure, Farmland):
+                    make_field(gw)
                 else:
                     make_snapper_line(gw)
                 gw.cursor.is_dragging = False
@@ -163,7 +206,7 @@ def place_structure(gw, is_lmb_held_down):
                     y.update_profit(gw)
 
 
-def remove_structure(gw):
+def remove_structure(gw, pos):
     """
     Function that is responsible for removing structures from the map.
     The structure that will be removed is the one that is on a tile that the gw.cursor's on.
@@ -178,34 +221,41 @@ def remove_structure(gw):
 
         :param gw: Gameworld object
     """
-    if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Structure):
-        gw.fx_channel.play(gw.sounds["buildingwreck_01"])
-        if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Snapper):
-            for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
-                                                      (0, -1, 0, 1), (1, 0, -1, 0)):
-                if not gw.is_out_of_bounds(gw.cursor.pos[0] + x, gw.cursor.pos[1] + y) and \
-                        isinstance(gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y], Snapper) and \
-                        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].snapsto[direction_rev] == \
-                        gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y].snapsto[direction]:
-                    gw.struct_map[gw.cursor.pos[0] + x][gw.cursor.pos[1] + y].update_edges(gw, direction, -1)
+    if not isinstance(gw.struct_map[pos[0]][pos[1]], Structure):
+        return False
+    if isinstance(gw.struct_map[pos[0]][pos[1]], Snapper):
+        for direction, direction_rev, x, y in zip(('N', 'E', 'S', 'W'), ('S', 'W', 'N', 'E'),
+                                                  (0, -1, 0, 1), (1, 0, -1, 0)):
+            if not gw.is_out_of_bounds(pos[0] + x, pos[1] + y) and \
+                    isinstance(gw.struct_map[pos[0] + x][pos[1] + y], Snapper) and \
+                    gw.struct_map[pos[0]][pos[1]].snapsto[direction_rev] == \
+                    gw.struct_map[pos[0] + x][pos[1] + y].snapsto[direction]:
+                gw.struct_map[pos[0] + x][pos[1] + y].update_edges(gw, direction, -1)
 
-        if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Wall):
-            gw.wall_set.remove(tuple(gw.cursor.pos))
-            detect_surrounded_tiles(gw)
-        removed = True
+    if isinstance(gw.struct_map[pos[0]][pos[1]], Wall):
+        gw.wall_set.remove(tuple(pos))
+        detect_surrounded_tiles(gw)
+    removed = True
 
-        gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].kill()
-        covered_tiles = gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].covered_tiles
-        for rel in covered_tiles:
-            gw.struct_map[gw.cursor.pos[0] + rel[0]][gw.cursor.pos[1] + rel[1]] = 0
-        for struct in gw.structs:
-            if gw.surrounded_tiles[struct.pos[0]][struct.pos[1]] == 2:
-                struct.inside = True
-            else:
-                struct.inside = False
-            if isinstance(struct, House) and \
-                    abs(struct.pos[0] - gw.cursor.pos[0]) + abs(struct.pos[0] - gw.cursor.pos[0]) <= 6:
-                struct.update_profit(gw)
-    else:
-        removed = False
+    gw.struct_map[pos[0]][pos[1]].kill()
+    covered_tiles = gw.struct_map[pos[0]][pos[1]].covered_tiles
+    for rel in covered_tiles:
+        gw.struct_map[pos[0] + rel[0]][pos[1] + rel[1]] = 0
+    for struct in gw.structs:
+        if gw.surrounded_tiles[struct.pos[0]][struct.pos[1]] == 2:
+            struct.inside = True
+        else:
+            struct.inside = False
+        if isinstance(struct, House) and \
+                abs(struct.pos[0] - pos[0]) + abs(struct.pos[0] - pos[0]) <= 6:
+            struct.update_profit(gw)
     return removed
+
+
+def remove_area(gw):
+    already_made_sound = False
+    for x in range(gw.cursor.ghost.rect.left, gw.cursor.ghost.rect.right, gw.tile_s):
+        for y in range(gw.cursor.ghost.rect.top, gw.cursor.ghost.rect.bottom, gw.tile_s):
+            if remove_structure(gw, [x // gw.tile_s, y // gw.tile_s]) and not already_made_sound:
+                gw.fx_channel.play(gw.sounds["buildingwreck_01"])
+                already_made_sound = True

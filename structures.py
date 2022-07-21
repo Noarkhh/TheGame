@@ -4,47 +4,6 @@ import time
 from pygame.locals import RLEACCEL
 
 
-class TimeManager:
-    def __init__(self, gw):
-        self.time = 0
-        self.tick = 0
-        self.time = [0, 0, 0]
-        self.elapsed = 1
-        self.start = time.time()
-        self.end = 0
-        self.tribute = 40
-        self.gold = gw.STARTING_GOLD
-
-    def time_lapse(self, gw):
-        self.tick += 1
-        if self.tick >= gw.TICK_RATE:
-            self.tick = 0
-            self.time[0] += 1
-            self.end = time.time()
-            self.elapsed = self.end - self.start
-            self.start = time.time()
-            if self.time[0] >= 24:
-                self.time[0] = 0
-                self.time[1] += 1
-                if self.time[1] >= 7:
-                    self.time[1] = 0
-                    self.time[2] += 1
-                    gw.time_manager.gold -= self.tribute
-                    gw.sounds["ignite_oil"].play()
-                    self.tribute = int(self.tribute ** 1.2)
-
-    def to_json(self):
-        return {
-            "time": self.time,
-            "tribute": self.tribute
-        }
-
-    def from_json(self, json_dict):
-        self.time = json_dict["time"]
-        self.tribute = json_dict["tribute"]
-        return self
-
-
 class Structure(pg.sprite.Sprite):
     def __init__(self, xy, gw, *args):
         super().__init__()
