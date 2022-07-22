@@ -63,15 +63,13 @@ class Structure(pg.sprite.Sprite):
             "pos": self.pos,
             "profit": self.profit,
             "time_left": self.time_left,
-            "inside": self.inside,
             "orientation": self.orientation,
         }
 
-    def from_json(self, y):
+    def from_json(self, y, gw):
         self.rect = pg.rect.Rect(y["rect"])
         self.profit = y["profit"]
         self.time_left = y["time_left"]
-        self.inside = y["inside"]
         return self
 
 
@@ -219,11 +217,11 @@ class Snapper(Structure):
     def to_json(self):
         return {**super().to_json(), **{"sheet_key": self.sheet_key, "neighbours": list(self.neighbours)}}
 
-    def from_json(self, y):
-        super().from_json(y)
+    def from_json(self, y, gw):
+        super().from_json(y, gw)
         self.sheet_key = y["sheet_key"]
         self.neighbours = set(y["neighbours"])
-        # self.update_edges(gw, 'N', 0)
+        self.update_edges(gw, 'N', 0)
         return self
 
 
@@ -244,9 +242,10 @@ class Road(Snapper):
     def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = ""
-        self.sheet_key = "road"
+        self.sheet_key = "bridge"
         self.surf = gw.spritesheet.get_snapper_surf(gw, (), self.sheet_key, self.surf_ratio)
         self.snapsto = {snap: "roads" for snap in ('N', 'E', 'S', 'W')}
+        self.unsuitable_tiles = {}
         self.base_profit = -2
         self.profit = self.base_profit
         self.build_cost = 10

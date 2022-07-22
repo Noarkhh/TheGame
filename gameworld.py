@@ -57,8 +57,8 @@ class GameWorld:
     """
 
     def __init__(self):
-        self.SOUNDTRACK = False
-        self.WINDOWED = True
+        self.SOUNDTRACK = True
+        self.WINDOWED = False
         self.WINDOW_HEIGHT = 720
         self.WINDOW_WIDTH = 1080
         self.TICK_RATE = 60
@@ -67,7 +67,7 @@ class GameWorld:
         self.screen = self.set_window()
         self.running = True
 
-        self.layout_path = "assets/maps/desert_delta_L.png"
+        self.layout_path = "assets/maps/river_L.png"
         self.layout = pg.image.load(self.layout_path).convert()
         self.height_tiles = self.layout.get_height()
         self.width_tiles = self.layout.get_width()
@@ -194,7 +194,6 @@ class GameWorld:
         """
         return {
             "layout_path": self.layout_path,
-            "cursor": self.cursor.to_json(),
             "struct_map": [[struct.to_json() if isinstance(struct, Structure) else 0 for struct in x]
                            for x in self.struct_map],
             "time_manager": self.time_manager.to_json(),
@@ -228,6 +227,7 @@ class GameWorld:
         self.scene = Scene(self)
 
         self.hud = Hud(self)
+        self.hud.toolbar = Toolbar(self)
 
         for i, x in enumerate(json_dict["struct_map"]):
             for j, y in enumerate(x):
@@ -236,8 +236,8 @@ class GameWorld:
                     if self.string_type_dict[y["type"]] != Gate:
                         loaded_struct = self.string_type_dict[y["type"]](y["pos"], self)
                     else:
-                        loaded_struct = self.string_type_dict[y["type"]](y["pos"], self, y["oritnation"])
-                    loaded_struct.from_json(y)
+                        loaded_struct = self.string_type_dict[y["type"]](y["pos"], self, y["orientation"])
+                    loaded_struct.from_json(y, self)
                     self.struct_map[i][j] = loaded_struct
                     self.structs.add(loaded_struct)
                     self.entities.add(loaded_struct)

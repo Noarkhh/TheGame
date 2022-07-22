@@ -80,11 +80,6 @@ class Cursor(pg.sprite.Sprite):
             mode_button.is_locked = False
             mode_button.is_held_down = False
 
-    def to_json(self):
-        return {
-            "pos": self.pos
-        }
-
 
 class Ghost:
     def __init__(self, gw):

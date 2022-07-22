@@ -307,9 +307,7 @@ class PauseMenu(HUD):
                         zoom(gw, None, 1)
                         gw.hud.is_build_menu_open = False
                         gw.buttons.difference_update(gw.hud.build_menu.buttons)
-                    return False, True
-                else:
-                    return True, True
+                    self.is_menu_open = False
 
             def save_to_slot(gw, button, value):
                 gw.hud.pause_menu.dates[value] = time.strftime("%H:%M %d-%m-%y")

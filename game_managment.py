@@ -162,8 +162,8 @@ def place_structure(gw, is_lmb_held_down):
 
             gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].kill()
             gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]] = new_struct
-            gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(gw,
-                tuple(gw.cursor.held_structure.directions_to_connect_to), 1)
+            gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(gw, tuple(
+                gw.cursor.held_structure.directions_to_connect_to), 1)
 
         gw.time_manager.gold -= gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].build_cost
         if isinstance(gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]], Wall):
@@ -183,7 +183,8 @@ def place_structure(gw, is_lmb_held_down):
 
     if was_snapped and is_lmb_held_down:
         gw.struct_map[gw.cursor.pos[0]][gw.cursor.pos[1]].update_edges(gw, gw.pos_change_dict[gw.cursor.change][0], 1)
-        gw.struct_map[gw.cursor.previous_pos[0]][gw.cursor.previous_pos[1]].update_edges(gw, gw.pos_change_dict[gw.cursor.change][1],1)
+        gw.struct_map[gw.cursor.previous_pos[0]][gw.cursor.previous_pos[1]].update_edges(gw, gw.pos_change_dict[
+            gw.cursor.change][1], 1)
 
     if was_snapped and not was_built:
         detect_surrounded_tiles(gw)
@@ -232,7 +233,6 @@ def remove_structure(gw, pos):
 
     if isinstance(gw.struct_map[pos[0]][pos[1]], Wall):
         gw.wall_set.remove(tuple(pos))
-        detect_surrounded_tiles(gw)
     removed = True
 
     gw.struct_map[pos[0]][pos[1]].kill()
@@ -257,3 +257,4 @@ def remove_area(gw):
             if remove_structure(gw, [x // gw.tile_s, y // gw.tile_s]) and not already_made_sound:
                 gw.fx_channel.play(gw.sounds["buildingwreck_01"])
                 already_made_sound = True
+    detect_surrounded_tiles(gw)

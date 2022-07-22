@@ -209,7 +209,6 @@ def make_snapper_line(gw):
                     if not can_be_snapped and snap_message != "already_snapped" and (i > 0 or seg_number > 0):
                         return False
             if not can_be_snapped and i > 0 and snap_message != "already_snapped":
-                print(snap_message)
                 gw.struct_map[curr_pos[0]][curr_pos[1]].kill()
                 gw.time_manager.gold += gw.struct_map[curr_pos[0]][curr_pos[1]].build_cost
                 gw.wall_set.remove(tuple(curr_pos))

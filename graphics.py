@@ -7,7 +7,7 @@ class Spritesheet:
         self.edges_sorted = [(), ('N',), ('E',), ('S',), ('W',), ('N', 'E'), ('E', 'S'), ('S', 'W'), ('N', 'W'),
                            ('N', 'S'), ('E', 'W'), ('N', 'E', 'S'), ('E', 'S', 'W'),
                            ('N', 'S', 'W'), ('N', 'E', 'W'), ('N', 'E', 'S', 'W')]
-        self.snappers_sorted = ["road", "wall", "vgate", "hgate", "farmland", "demolish"]
+        self.snappers_sorted = ["road", "wall", "vgate", "hgate", "farmland", "demolish", "bridge"]
         self.snappers_sheet = pg.image.load("assets/snapper_sheet.png")
         # self.structures_sheet = pg.image.load("assets/structures_sheet.png")
 
