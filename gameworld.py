@@ -57,7 +57,7 @@ class GameWorld:
     """
 
     def __init__(self):
-        self.SOUNDTRACK = True
+        self.SOUNDTRACK = False
         self.WINDOWED = False
         self.WINDOW_HEIGHT = 720
         self.WINDOW_WIDTH = 1080
