@@ -26,7 +26,9 @@ class Cursor(pg.sprite.Sprite):
         self.rect = self.surf.get_rect()
         self.pos = [0, 0]
         self.previous_pos = [0, 0]
+        self.previous_mouse_pos = pg.mouse.get_pos()
         self.change = [0, 0]
+        self.mouse_change = (0, 0)
         self.drag_starting_pos = [0, 0]
         self.held_structure = None
         self.ghost = None
@@ -35,9 +37,12 @@ class Cursor(pg.sprite.Sprite):
         self.previous_pos = self.pos.copy()
         self.pos[0] = (pg.mouse.get_pos()[0] + gw.scene.rect.x) // gw.tile_s
         self.pos[1] = (pg.mouse.get_pos()[1] + gw.scene.rect.y) // gw.tile_s
-        self.change = tuple([a - b for a, b in zip(self.pos, self.previous_pos)])
+        self.change = (self.pos[0] - self.previous_pos[0], self.pos[1] - self.previous_pos[1])
+        self.mouse_change = (pg.mouse.get_pos()[0] - self.previous_mouse_pos[0],
+                             pg.mouse.get_pos()[1] - self.previous_mouse_pos[1])
         self.rect.x = self.pos[0] * gw.tile_s
         self.rect.y = self.pos[1] * gw.tile_s
+        self.previous_mouse_pos = pg.mouse.get_pos()
 
     def draw(self, gw):
         if not self.is_in_demolish_mode:
@@ -104,7 +109,7 @@ class Ghost:
                 self.surf = gw.spritesheet.get_snapper_surf(gw, (), "demolish")
             self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))
 
-        else:
+        elif gw.cursor.change != (0, 0):
             self.surf = pg.Surface(((abs(self.pos[0] - self.drag_starting_pos[0]) + 1) * gw.tile_s,
                                     (abs(self.pos[1] - self.drag_starting_pos[1]) + 1) * gw.tile_s))
             self.surf.set_colorkey((0, 0, 0), RLEACCEL)

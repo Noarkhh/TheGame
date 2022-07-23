@@ -178,6 +178,8 @@ def make_field(gw):
 def make_snapper_line(gw):
     def place_structure(pos):
         new_struct = type(gw.cursor.held_structure)(pos, gw)
+        if isinstance(new_struct, Road) and gw.tile_type_map[pos[0]][pos[1]] == "water":
+            new_struct = Bridge(pos, gw)
         gw.structs.add(new_struct)
         gw.entities.add(new_struct)
         gw.struct_map[pos[0]][pos[1]] = new_struct
@@ -197,13 +199,20 @@ def make_snapper_line(gw):
             else:
                 step = (-step_dict[gw.cursor.ghost.sides_to_draw[1]], 0)
 
+        built = 0
+
         for i in range(length):
             can_be_placed, build_message = gw.cursor.held_structure.can_be_placed(gw, curr_pos)
             if can_be_placed:
                 place_structure(curr_pos)
+                built += 1
             can_be_snapped, snap_message = gw.cursor.held_structure.can_be_snapped(gw, curr_pos, [curr_pos[0] - step[0], curr_pos[1] - step[1]])
             if not can_be_placed:
                 if build_message != "unsuitable_location_structure":
+                    if build_message == "could_not_afford":
+                        gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
+                    if built == 1:
+                        gw.sounds["drawbridge_control"].play()
                     return False
                 else:
                     if not can_be_snapped and snap_message != "already_snapped" and (i > 0 or seg_number > 0):
@@ -213,6 +222,7 @@ def make_snapper_line(gw):
                 gw.time_manager.gold += gw.struct_map[curr_pos[0]][curr_pos[1]].build_cost
                 gw.wall_set.remove(tuple(curr_pos))
                 gw.struct_map[curr_pos[0]][curr_pos[1]] = 0
+                built -= 1
                 gw.speech_channel.play(gw.sounds["Placement_Warning16"])
                 return False
             if i > 0 or seg_number == 1:
@@ -220,18 +230,16 @@ def make_snapper_line(gw):
                 gw.struct_map[curr_pos[0] - step[0]][curr_pos[1] - step[1]].update_edges(gw, gw.pos_change_dict[(step[0], step[1])][1], 1)
             curr_pos[1] += step[1]
             curr_pos[0] += step[0]
-            if i == 1 and seg_number == 0:
+            if i == 1 and seg_number == 0 and built > 1:
                 gw.sounds["drawbridge_control"].play()
-            if i == 0 and seg_number == 0 and build_message == "could_not_afford":
-                gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
 
         return True
 
     width = gw.cursor.ghost.rect.width // gw.tile_s
     height = gw.cursor.ghost.rect.height // gw.tile_s
     step_dict = {"top": -1, "right": 1, "bottom": 1, "left": -1}
-
     curr_pos = gw.cursor.ghost.drag_starting_pos.copy()
+
     if len(gw.cursor.ghost.sides_to_draw) == 2:
         if gw.cursor.ghost.sides_to_draw[0] in {"left", "right"}:
             if not build_segment(0, "horiz", width):

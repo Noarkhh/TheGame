@@ -50,7 +50,7 @@ class Structure(pg.sprite.Sprite):
                 for rel in gw.cursor.held_structure.covered_tiles]):
             return False, "unsuitable_location_structure"
 
-        if gw.cursor.held_structure.build_cost >= gw.time_manager.gold:
+        if gw.cursor.held_structure.build_cost > gw.time_manager.gold:
             return False, "could_not_afford"
 
         return True, "was_built"
@@ -242,13 +242,25 @@ class Road(Snapper):
     def __init__(self, xy, gw, *args):
         super().__init__(xy, gw)
         self.image_path = ""
-        self.sheet_key = "bridge"
+        self.sheet_key = "road"
         self.surf = gw.spritesheet.get_snapper_surf(gw, (), self.sheet_key, self.surf_ratio)
         self.snapsto = {snap: "roads" for snap in ('N', 'E', 'S', 'W')}
         self.unsuitable_tiles = {}
         self.base_profit = -2
         self.profit = self.base_profit
         self.build_cost = 10
+
+
+class Bridge(Road):
+    def __init__(self, xy, gw, *args):
+        super().__init__(xy, gw)
+        self.sheet_key = "bridge"
+        self.surf = gw.spritesheet.get_snapper_surf(gw, (), self.sheet_key, self.surf_ratio)
+        self.snapsto = {snap: "roads" for snap in ('N', 'E', 'S', 'W')}
+        self.unsuitable_tiles = {"desert", "grassland"}
+        self.base_profit = -10
+        self.profit = self.base_profit
+        self.build_cost = 30
 
 
 class Wall(Snapper):

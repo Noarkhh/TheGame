@@ -62,7 +62,7 @@ class GameWorld:
         self.WINDOW_HEIGHT = 720
         self.WINDOW_WIDTH = 1080
         self.TICK_RATE = 60
-        self.STARTING_GOLD = 300000000
+        self.STARTING_GOLD = 300
 
         self.screen = self.set_window()
         self.running = True
@@ -101,7 +101,6 @@ class GameWorld:
         self.scene = Scene(self)
 
         self.hud = Hud(self)
-        self.hud.toolbar = Toolbar(self)
 
     def set_window(self):
         """
@@ -257,4 +256,4 @@ class Hud:
         self.minimap = Minimap(gw)
         self.top_bar = TopBar(gw)
         self.pause_menu = PauseMenu(gw)
-        self.toolbar = None
+        self.toolbar = Toolbar(gw, self)

@@ -429,7 +429,7 @@ class BuildMenu(HUD):
 
         self.fill_dicts(("tile", "tile_hover", "tile_big", "tile_big_hover", "round_small", "round_small_hover"),
                         ("housing", "military", "transport", "manufacturing", "agriculture", "religion"), 2)
-        self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH / 2, top=44)
+        self.rect = self.surf.get_rect(centerx=gw.WINDOW_WIDTH // 2, top=44)
         self.category_dict = {"housing": (House,), "military": (Wall, Gate, Tower), "religion": (),
                               "transport": (Road,), "manufacturing": (Sawmill, Mine, Pyramid),
                               "agriculture": (Tree, Farmland)}
@@ -505,7 +505,7 @@ class BuildMenu(HUD):
 
 
 class Toolbar(HUD):
-    def __init__(self, gw):
+    def __init__(self, gw, hud):
         super().__init__(gw)
         self.surf = pg.transform.scale(pg.image.load("assets/hud/toolbar.png").convert(), (108, 300))
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
@@ -516,9 +516,9 @@ class Toolbar(HUD):
         self.fill_dicts((), ("build", "demolish", "pause"))
         self.small_button_functions = {"zoom_in": zoom, "zoom_out": zoom, "drag": gw.cursor.change_mode,
                                        "debug": self.foo}
-        self.big_button_functions = {"build": gw.hud.build_menu.toggle_build_menu,
+        self.big_button_functions = {"build": hud.build_menu.toggle_build_menu,
                                      "demolish": gw.cursor.change_mode,
-                                     "pause": gw.hud.pause_menu.run_pause_menu_loop}
+                                     "pause": hud.pause_menu.run_pause_menu_loop}
 
         self.rect = self.surf.get_rect(right=gw.WINDOW_WIDTH, top=184)
 

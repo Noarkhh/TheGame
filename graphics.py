@@ -5,8 +5,8 @@ from pygame import RLEACCEL
 class Spritesheet:
     def __init__(self):
         self.edges_sorted = [(), ('N',), ('E',), ('S',), ('W',), ('N', 'E'), ('E', 'S'), ('S', 'W'), ('N', 'W'),
-                           ('N', 'S'), ('E', 'W'), ('N', 'E', 'S'), ('E', 'S', 'W'),
-                           ('N', 'S', 'W'), ('N', 'E', 'W'), ('N', 'E', 'S', 'W')]
+                             ('N', 'S'), ('E', 'W'), ('N', 'E', 'S'), ('E', 'S', 'W'),
+                             ('N', 'S', 'W'), ('N', 'E', 'W'), ('N', 'E', 'S', 'W')]
         self.snappers_sorted = ["road", "wall", "vgate", "hgate", "farmland", "demolish", "bridge"]
         self.snappers_sheet = pg.image.load("assets/snapper_sheet.png")
         # self.structures_sheet = pg.image.load("assets/structures_sheet.png")
@@ -26,12 +26,14 @@ class Spritesheet:
 class Scene(pg.sprite.Sprite):
     def __init__(self, gw):
         super().__init__()
-        self.surf = pg.transform.scale(gw.map_surf.copy(), (gw.width_pixels, gw.height_pixels))
+        self.surf = pg.transform.scale(gw.map_surf, (gw.width_pixels, gw.height_pixels))
         self.surf_raw = self.surf.copy()
-        self.surf_rendered = self.surf.subsurface((0, 0, gw.WINDOW_WIDTH, gw.WINDOW_HEIGHT))
-        self.rect = self.surf_rendered.get_rect()
+        self.rect = pg.Rect(((self.surf.get_width() - gw.WINDOW_WIDTH) // 2,
+                             (self.surf.get_height() - gw.WINDOW_HEIGHT) // 2,
+                             gw.WINDOW_WIDTH, gw.WINDOW_HEIGHT))
+        self.surf_rendered = self.surf.subsurface(self.rect)
 
-    def move_screen(self, gw):
+    def move_screen_border(self, gw):
         if gw.button_handler.hovered_button is None:
             if pg.mouse.get_pos()[0] >= gw.WINDOW_WIDTH - gw.tile_s / 2 and \
                     self.rect.right <= gw.width_pixels - gw.tile_s / 2:
@@ -43,6 +45,15 @@ class Scene(pg.sprite.Sprite):
                 self.rect.move_ip(0, gw.tile_s / 2)
             if pg.mouse.get_pos()[1] <= 0 + gw.tile_s / 2 <= self.rect.top:
                 self.rect.move_ip(0, -gw.tile_s / 2)
+        self.surf_rendered = self.surf.subsurface(self.rect)
+
+    def move_screen_drag(self, gw):
+        new_rect = self.rect.move(-gw.cursor.mouse_change[0], -gw.cursor.mouse_change[1])
+        if new_rect.left > 0 and new_rect.right < gw.width_pixels:
+            self.rect.move_ip(-gw.cursor.mouse_change[0], 0)
+        if new_rect.top > 0 and new_rect.bottom < gw.height_pixels:
+            self.rect.move_ip(0, -gw.cursor.mouse_change[1])
+
         self.surf_rendered = self.surf.subsurface(self.rect)
 
 

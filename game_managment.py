@@ -69,7 +69,7 @@ def handle_events(gw, event):
         if event.button == 1:
             gw.cursor.is_lmb_pressed = False
             gw.cursor.is_lmb_held_down = False
-            if gw.cursor.is_dragging and gw.button_handler.hovered_button is None:
+            if gw.cursor.is_dragging:
                 if gw.cursor.is_in_demolish_mode:
                     remove_area(gw)
                 elif isinstance(gw.cursor.held_structure, Farmland):

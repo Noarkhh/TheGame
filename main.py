@@ -24,21 +24,24 @@ if __name__ == "__main__":
             handle_events(gw, event)
 
         if gw.cursor.is_lmb_pressed and gw.button_handler.hovered_button is None:
-            if not gw.cursor.is_in_demolish_mode and gw.cursor.held_structure is not None:
-                if gw.cursor.is_in_drag_build_mode and type(gw.cursor.held_structure) in {Farmland, Road, Wall}:
-                    if not gw.cursor.is_lmb_held_down:
-                        gw.cursor.is_dragging = True
-                        gw.cursor.ghost.drag_starting_pos = gw.cursor.pos.copy()
+            if not gw.cursor.is_in_demolish_mode:
+                if gw.cursor.held_structure is not None:
+                    if gw.cursor.is_in_drag_build_mode and type(gw.cursor.held_structure) in {Farmland, Road, Wall}:
+                        if not gw.cursor.is_lmb_held_down:
+                            gw.cursor.is_dragging = True
+                            gw.cursor.ghost.drag_starting_pos = gw.cursor.pos.copy()
+                    else:
+                        place_structure(gw, gw.cursor.is_lmb_held_down)
                 else:
-                    place_structure(gw, gw.cursor.is_lmb_held_down)
-
-            elif gw.cursor.is_in_demolish_mode:
+                    gw.scene.move_screen_drag(gw)
+            else:
                 if not gw.cursor.is_lmb_held_down:
                     gw.cursor.is_dragging = True
                     gw.cursor.ghost.drag_starting_pos = gw.cursor.pos.copy()
             gw.cursor.is_lmb_held_down = True
 
-        gw.scene.move_screen(gw)
+        if not gw.cursor.is_lmb_pressed:
+            gw.scene.move_screen_border(gw)
 
         for struct in gw.structs:
             struct.get_profit(gw)
