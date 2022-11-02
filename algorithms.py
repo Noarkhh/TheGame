@@ -171,7 +171,7 @@ def make_field(gw):
     elif not can_be_placed:
         if message.startswith("unsuitable_location"):
             gw.speech_channel.play(gw.sounds["Placement_Warning16"])
-        elif message == "could_not_afford":
+        elif message == "couldn't_afford":
             gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
 
 
@@ -199,39 +199,38 @@ def make_snapper_line(gw):
             else:
                 step = (-step_dict[gw.cursor.ghost.sides_to_draw[1]], 0)
 
-        built = 0
-
         for i in range(length):
             can_be_placed, build_message = gw.cursor.held_structure.can_be_placed(gw, curr_pos)
             if can_be_placed:
                 place_structure(curr_pos)
-                built += 1
+                sound_info_dict["was_built"] = True
             can_be_snapped, snap_message = gw.cursor.held_structure.can_be_snapped(gw, curr_pos, [curr_pos[0] - step[0], curr_pos[1] - step[1]])
+            if can_be_snapped:
+                sound_info_dict["was_built"] = True
             if not can_be_placed:
                 if build_message != "unsuitable_location_structure":
-                    if build_message == "could_not_afford":
-                        gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
-                    if built == 1:
-                        gw.sounds["drawbridge_control"].play()
+                    if build_message == "couldn't_afford":
+                        sound_info_dict["couldn't_afford"] = True
+                    if build_message == "unsuitable_location_tile":
+                        sound_info_dict["unsuitable_location"] = True
                     return False
                 else:
                     if not can_be_snapped and snap_message != "already_snapped" and (i > 0 or seg_number > 0):
+                        sound_info_dict["unsuitable_location"] = True
                         return False
             if not can_be_snapped and i > 0 and snap_message != "already_snapped":
                 gw.struct_map[curr_pos[0]][curr_pos[1]].kill()
                 gw.time_manager.gold += gw.struct_map[curr_pos[0]][curr_pos[1]].build_cost
                 gw.wall_set.remove(tuple(curr_pos))
                 gw.struct_map[curr_pos[0]][curr_pos[1]] = 0
-                built -= 1
-                gw.speech_channel.play(gw.sounds["Placement_Warning16"])
+                sound_info_dict["was_built"] = False
+                sound_info_dict["unsuitable_location"] = True
                 return False
             if i > 0 or seg_number == 1:
                 gw.struct_map[curr_pos[0]][curr_pos[1]].update_edges(gw, gw.pos_change_dict[(step[0], step[1])][0], 1)
                 gw.struct_map[curr_pos[0] - step[0]][curr_pos[1] - step[1]].update_edges(gw, gw.pos_change_dict[(step[0], step[1])][1], 1)
             curr_pos[1] += step[1]
             curr_pos[0] += step[0]
-            if i == 1 and seg_number == 0 and built > 1:
-                gw.sounds["drawbridge_control"].play()
 
         return True
 
@@ -240,20 +239,20 @@ def make_snapper_line(gw):
     step_dict = {"top": -1, "right": 1, "bottom": 1, "left": -1}
     curr_pos = gw.cursor.ghost.drag_starting_pos.copy()
 
+    sound_info_dict = {"was_built": False, "couldn't_afford": False, "unsuitable_location": False}
+
     if len(gw.cursor.ghost.sides_to_draw) == 2:
         if gw.cursor.ghost.sides_to_draw[0] in {"left", "right"}:
-            if not build_segment(0, "horiz", width):
-                return
-            curr_pos[0] -= step_dict[gw.cursor.ghost.sides_to_draw[0]]
-            curr_pos[1] += -step_dict[gw.cursor.ghost.sides_to_draw[1]]
-            build_segment(1, "vert", height - 1)
+            if build_segment(0, "horiz", width):
+                curr_pos[0] -= step_dict[gw.cursor.ghost.sides_to_draw[0]]
+                curr_pos[1] += -step_dict[gw.cursor.ghost.sides_to_draw[1]]
+                build_segment(1, "vert", height - 1)
 
         elif gw.cursor.ghost.sides_to_draw[0] in {"top", "bottom"}:
-            if not build_segment(0, "vert", height):
-                return
-            curr_pos[1] -= step_dict[gw.cursor.ghost.sides_to_draw[0]]
-            curr_pos[0] += -step_dict[gw.cursor.ghost.sides_to_draw[1]]
-            build_segment(1, "horiz", width - 1)
+            if build_segment(0, "vert", height):
+                curr_pos[1] -= step_dict[gw.cursor.ghost.sides_to_draw[0]]
+                curr_pos[0] += -step_dict[gw.cursor.ghost.sides_to_draw[1]]
+                build_segment(1, "horiz", width - 1)
 
     elif len(gw.cursor.ghost.sides_to_draw) == 1:
         if gw.cursor.ghost.sides_to_draw[0] in {"left", "right"}:
@@ -265,12 +264,19 @@ def make_snapper_line(gw):
         can_be_placed, message = gw.cursor.held_structure.can_be_placed(gw, curr_pos)
         if can_be_placed:
             place_structure(curr_pos)
-            gw.sounds["drawbridge_control"].play()
+            sound_info_dict["was_built"] = True
         else:
             if message.startswith("unsuitable_location"):
-                gw.speech_channel.play(gw.sounds["Placement_Warning16"])
-            elif message == "could_not_afford":
-                gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
+                sound_info_dict["unsuitable_location"] = True
+            elif message == "couldn't_afford":
+                sound_info_dict["couldn't_afford"] = True
+
+    if sound_info_dict["was_built"]:
+        gw.sounds["drawbridge_control"].play()
+    if sound_info_dict["couldn't_afford"]:
+        gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
+    if sound_info_dict["unsuitable_location"]:
+        gw.speech_channel.play(gw.sounds["Placement_Warning16"])
 
 
 # def detect_wall_loops(xy):

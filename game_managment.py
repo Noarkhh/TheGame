@@ -77,6 +77,9 @@ def handle_events(gw, event):
                 else:
                     make_snapper_line(gw)
                 gw.cursor.is_dragging = False
+            gw.scene.move_velocity_decrement = (gw.scene.move_velocity[0] / gw.scene.retardation_period,
+                                                gw.scene.move_velocity[1] / gw.scene.retardation_period)
+            gw.scene.to_decrement = gw.scene.retardation_period
 
     if event.type == KEYDOWN:
         if event.key in gw.key_structure_dict:
@@ -170,7 +173,7 @@ def place_structure(gw, is_lmb_held_down):
             gw.wall_set.add(tuple(gw.cursor.pos))
 
     else:
-        if build_message == "could_not_afford" and not is_lmb_held_down:
+        if build_message == "couldn't_afford" and not is_lmb_held_down:
             gw.speech_channel.play(gw.sounds["Resource_Need" + str(randint(17, 19))])
         if build_message.startswith("unsuitable_location") and not is_lmb_held_down and \
                 not isinstance(gw.cursor.held_structure, Snapper):

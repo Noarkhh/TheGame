@@ -26,9 +26,10 @@ class Cursor(pg.sprite.Sprite):
         self.rect = self.surf.get_rect()
         self.pos = [0, 0]
         self.previous_pos = [0, 0]
-        self.previous_mouse_pos = pg.mouse.get_pos()
         self.change = [0, 0]
+        self.previous_mouse_pos = pg.mouse.get_pos()
         self.mouse_change = (0, 0)
+
         self.drag_starting_pos = [0, 0]
         self.held_structure = None
         self.ghost = None

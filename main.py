@@ -33,15 +33,20 @@ if __name__ == "__main__":
                     else:
                         place_structure(gw, gw.cursor.is_lmb_held_down)
                 else:
-                    gw.scene.move_screen_drag(gw)
+                    gw.scene.move_velocity = (-gw.cursor.mouse_change[0], -gw.cursor.mouse_change[1])
             else:
                 if not gw.cursor.is_lmb_held_down:
                     gw.cursor.is_dragging = True
                     gw.cursor.ghost.drag_starting_pos = gw.cursor.pos.copy()
             gw.cursor.is_lmb_held_down = True
 
-        if not gw.cursor.is_lmb_pressed:
+        if not gw.cursor.is_lmb_pressed or gw.cursor.held_structure is not None or gw.cursor.is_in_demolish_mode:
             gw.scene.move_screen_border(gw)
+
+        if not gw.cursor.is_lmb_pressed and gw.scene.to_decrement > 0:
+            gw.scene.move_velocity = (gw.scene.move_velocity[0] - gw.scene.move_velocity_decrement[0],
+                                      gw.scene.move_velocity[1] - gw.scene.move_velocity_decrement[1])
+            gw.scene.to_decrement -= 1
 
         for struct in gw.structs:
             struct.get_profit(gw)
@@ -59,6 +64,7 @@ if __name__ == "__main__":
         if randint(1, 200000) == 1:
             gw.sounds["Random_Events13"].play()
 
+        gw.scene.move_screen_drag(gw)
         gw.screen.blit(gw.scene.surf_rendered, (0, 0))
 
         if gw.hud.are_debug_stats_displayed:

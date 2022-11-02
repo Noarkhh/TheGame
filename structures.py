@@ -51,7 +51,7 @@ class Structure(pg.sprite.Sprite):
             return False, "unsuitable_location_structure"
 
         if gw.cursor.held_structure.build_cost > gw.time_manager.gold:
-            return False, "could_not_afford"
+            return False, "couldn't_afford"
 
         return True, "was_built"
 

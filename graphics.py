@@ -32,6 +32,10 @@ class Scene(pg.sprite.Sprite):
                              (self.surf.get_height() - gw.WINDOW_HEIGHT) // 2,
                              gw.WINDOW_WIDTH, gw.WINDOW_HEIGHT))
         self.surf_rendered = self.surf.subsurface(self.rect)
+        self.move_velocity = (0, 0)
+        self.move_velocity_decrement = (0, 0)
+        self.to_decrement = 0
+        self.retardation_period = 30
 
     def move_screen_border(self, gw):
         if gw.button_handler.hovered_button is None:
@@ -48,11 +52,20 @@ class Scene(pg.sprite.Sprite):
         self.surf_rendered = self.surf.subsurface(self.rect)
 
     def move_screen_drag(self, gw):
-        new_rect = self.rect.move(-gw.cursor.mouse_change[0], -gw.cursor.mouse_change[1])
-        if new_rect.left > 0 and new_rect.right < gw.width_pixels:
-            self.rect.move_ip(-gw.cursor.mouse_change[0], 0)
-        if new_rect.top > 0 and new_rect.bottom < gw.height_pixels:
-            self.rect.move_ip(0, -gw.cursor.mouse_change[1])
+        new_rect = self.rect.move(self.move_velocity[0], self.move_velocity[1])
+        if new_rect.left >= 0 and new_rect.right <= gw.width_pixels:
+            self.rect.move_ip(self.move_velocity[0], 0)
+        elif new_rect.left < 0:
+            self.rect.left = 0
+        elif new_rect.right > gw.width_pixels:
+            self.rect.right = gw.width_pixels
+
+        if new_rect.top >= 0 and new_rect.bottom < gw.height_pixels:
+            self.rect.move_ip(0, self.move_velocity[1])
+        elif new_rect.top < 0:
+            self.rect.top = 0
+        elif new_rect.bottom > gw.height_pixels:
+            self.rect.bottom = gw.height_pixels
 
         self.surf_rendered = self.surf.subsurface(self.rect)
 
