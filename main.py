@@ -1,6 +1,6 @@
-# from game_managment import *
-# from hud import *
-# from gameworld import GameWorld
+from game_managment import *
+from hud import *
+from gameworld import GameWorld
 from placeholder import *
 
 def main():
@@ -96,6 +96,11 @@ def testing():
     spritesheet = Spritesheet(sizes)
     struct_manager = StructManager(sizes)
     house1 = House(Vector(1, 1), sizes.tile, spritesheet)
+    wall1 = Wall(Vector(1, 4), sizes.tile, spritesheet)
+    wall1.add_neighbour(Direction.E)
+    wall1.add_neighbour(Direction.N)
+    wall1.add_neighbour(Direction.W)
+    wall1.add_neighbour(Direction.S)
 
     running = True
     while running:
@@ -105,6 +110,7 @@ def testing():
                 running = False
 
         screen.blit(house1.surf, house1.rect)
+        screen.blit(wall1.surf, wall1.rect)
 
         pg.display.flip()
 
@@ -112,6 +118,8 @@ def testing():
 
 
 if __name__ == "__main__":
+    # main()
+
     pg.init()
     pg.mixer.init()
     # gw = GameWorld()
@@ -131,7 +139,17 @@ if __name__ == "__main__":
     # print(struct)
     print(sorted((Direction.N, Direction.S, Direction.E, Direction.W)))
     print(pos1 - pos2)
-    print(TileType.GRASSLAND)
+    print(TileTypes.GRASSLAND)
+    dir_set = DirectionSet((Direction.N, Direction.S))
+    edges_sorted = [(), (Direction.N,), (Direction.E,), (Direction.S,), (Direction.W,), (Direction.N, Direction.E),
+                    (Direction.E, Direction.S), (Direction.S, Direction.W), (Direction.N, Direction.W),
+                    (Direction.N, Direction.S), (Direction.E, Direction.W), (Direction.N, Direction.E, Direction.S),
+                    (Direction.E, Direction.S, Direction.W),
+                    (Direction.N, Direction.S, Direction.W), (Direction.N, Direction.E, Direction.W),
+                    (Direction.N, Direction.E, Direction.S, Direction.W)]
+    a = sorted(edges_sorted, key=lambda x: DirectionSet(x).get_id())
+    # for i, elem in enumerate(a):
+    #     print(i, elem)
+        # print(DirectionSet(set1).get_id())
 
-    # main()
     testing()

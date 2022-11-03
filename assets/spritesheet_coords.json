@@ -8,5 +8,13 @@
     "TileType.GRASSLAND": [0, 60, 15, 15],
     "TileType.DESERT": [15, 60, 15, 15],
     "TileType.WATER": [30, 60, 15, 15]
+  },
+  "Snappers": {
+    "Road": [[0, 15, 15]],
+    "Wall": [[20, 15, 15]],
+    "Gate": [[40, 15, 20], [60, 15, 20]],
+    "Farmland": [[80, 15, 15]],
+    "Demolisher": [[100, 15, 15]],
+    "Bridge": [[120, 15, 15]]
   }
 }

@@ -93,14 +93,34 @@ class Direction(IntEnum):
                 self.W: self.E}[self]
 
 
-class TileType(Enum):
+class DirectionSet(set):
+    def get_id(self):
+        return sum(2 ** elem for elem in self)
+
+
+class TileTypes(Enum):
     GRASSLAND = 0
     DESERT = 1
     WATER = 2
 
 
+class Resources(Enum):
+    WOOD = 0
+    STONE = 1
+    WHEAT = 2
+    COAL = 3
+    ORE = 4
+    IRON = 5
+    CHARCOAL = 6
+    BRICKS = 7
+    STEEL = 8
+    REINFORCED_WOOD = 9
+    BREAD = 10
+    METEORITE = 11
+
+
 class Tile:
-    def __init__(self, tile_type: TileType, resource):
+    def __init__(self, tile_type: TileTypes, resource: Resources):
         self.tile_type = tile_type
         self.resource = resource
 
@@ -111,6 +131,7 @@ class Structure(pg.sprite.Sprite):
         self.pos = pos
         self.surf_aspect_ratio = surf_aspect_ratio
         self.sprite_variant = 0
+        self.spritesheet = spritesheet
         self.surf = spritesheet.get_surf(self)
         self.rect = self.surf.get_rect(bottomright=((self.pos + (1, 1)) * tile_size).to_tuple())
         self.surf.set_colorkey((255, 255, 255), pg.RLEACCEL)
@@ -124,6 +145,25 @@ class House(Structure):
         super().__init__(pos, tile_size, spritesheet)
 
 
+class Snapper(Structure):
+    def __init__(self, pos, tile_size, spritesheet):
+        self.neighbours = DirectionSet()
+        super().__init__(pos, tile_size, spritesheet)
+
+    def add_neighbour(self, neighbour):
+        self.neighbours.add(neighbour)
+        self.surf = self.spritesheet.get_surf(self)
+
+    def remove_neighbour(self, neighbour):
+        self.neighbours.remove(neighbour)
+        self.surf = self.spritesheet.get_surf(self)
+
+
+class Wall(Snapper):
+    def __init__(self, pos, tile_size, spritesheet):
+        super().__init__(pos, tile_size, spritesheet)
+
+
 class Spritesheet:
     def __init__(self, sizes):
         self.spritesheet = pg.image.load("assets/spritesheet.png")
@@ -133,12 +173,17 @@ class Spritesheet:
         self.sizes = sizes
 
     def get_surf(self, obj):
-        if isinstance(obj, Structure):
-            target_rect = pg.Rect(self.coords["Structures"][obj.__class__.__name__][obj.sprite_variant])
-        elif isinstance(obj, TileType):
-            target_rect = pg.Rect(self.coords["TileTypes"][str(obj)])
-        new_surf = pg.Surface(target_rect.size)
-        new_surf.blit(self.spritesheet, (0, 0), target_rect)
+        if isinstance(obj, Snapper):
+            target_rect = pg.Rect([obj.neighbours.get_id() * 15] + self.coords["Snappers"][obj.__class__.__name__][obj.sprite_variant])
+            new_surf = pg.Surface(target_rect.size)
+            new_surf.blit(self.snapper_spritesheet, (0, 0), target_rect)
+        else:
+            if isinstance(obj, Structure):
+                target_rect = pg.Rect(self.coords["Structures"][obj.__class__.__name__][obj.sprite_variant])
+            elif isinstance(obj, TileTypes):
+                target_rect = pg.Rect(self.coords["TileTypes"][str(obj)])
+            new_surf = pg.Surface(target_rect.size)
+            new_surf.blit(self.spritesheet, (0, 0), target_rect)
         new_surf.set_colorkey((255, 255, 255), pg.RLEACCEL)
         return pg.transform.scale(new_surf, (obj.surf_aspect_ratio * self.sizes.tile).to_tuple())
 
@@ -168,3 +213,4 @@ class Config:
         self.layout_path = "assets/maps/river_L.png"
         self.layout = pg.image.load(self.layout_path).convert()
         self.tile_size = 60
+
