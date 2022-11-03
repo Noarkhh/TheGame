@@ -1,6 +1,6 @@
-from game_managment import *
-from hud import *
-from gameworld import GameWorld
+# from game_managment import *
+# from hud import *
+# from gameworld import GameWorld
 from placeholder import *
 
 def main():
@@ -87,18 +87,51 @@ def main():
     pg.quit()
 
 
+def testing():
+    pg.init()
+
+    screen = pg.display.set_mode([500, 500])
+
+    sizes = Sizes(Config())
+    spritesheet = Spritesheet(sizes)
+    struct_manager = StructManager(sizes)
+    house1 = House(Vector(1, 1), sizes.tile, spritesheet)
+
+    running = True
+    while running:
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                running = False
+
+        screen.blit(house1.surf, house1.rect)
+
+        pg.display.flip()
+
+    pg.quit()
+
+
 if __name__ == "__main__":
+    pg.init()
+    pg.mixer.init()
+    # gw = GameWorld()
     map1 = Map([[1, 4, 3, 6],
                 [3, 5, 7, 4],
                 [3, 2, 5, 3],
                 [1, 1, 1, 0]])
-    pos1 = Pos(3, 2)
-    pos2 = Pos(0, 1)
+    pos1 = Vector(3, 2)
+    pos2 = Vector(0, 1)
     # print(map1)
     # print(map1[0, 1])
     # print(-Direction.E)
     pos2 += pos1
-    struct = Structure(pos1, None)
-    print(struct)
-    pos1 += pos2
-    print(struct)
+    # struct = Structure(pos1, None)
+    # print(struct)
+    # pos1 = Vector(4, 4)
+    # print(struct)
+    print(sorted((Direction.N, Direction.S, Direction.E, Direction.W)))
+    print(pos1 - pos2)
+    print(TileType.GRASSLAND)
+
+    # main()
+    testing()

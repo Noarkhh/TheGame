@@ -1,0 +1,12 @@
+{
+  "Structures": {
+    "House": [[0, 0, 15, 15], [15, 39, 15, 21]],
+    "Sawmill": [[0, 15, 30, 15]],
+    "Mine": [[0, 30, 15, 30]]
+  },
+  "Tiles": {
+    "TileType.GRASSLAND": [0, 60, 15, 15],
+    "TileType.DESERT": [15, 60, 15, 15],
+    "TileType.WATER": [30, 60, 15, 15]
+  }
+}
