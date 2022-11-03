@@ -1,10 +1,9 @@
 from game_managment import *
 from hud import *
 from gameworld import GameWorld
+from placeholder import *
 
-
-if __name__ == "__main__":
-
+def main():
     pg.init()
     pg.mixer.init()
     gw = GameWorld()
@@ -86,3 +85,20 @@ if __name__ == "__main__":
         clock.tick(gw.TICK_RATE)
     time.sleep(0.1)
     pg.quit()
+
+
+if __name__ == "__main__":
+    map1 = Map([[1, 4, 3, 6],
+                [3, 5, 7, 4],
+                [3, 2, 5, 3],
+                [1, 1, 1, 0]])
+    pos1 = Pos(3, 2)
+    pos2 = Pos(0, 1)
+    # print(map1)
+    # print(map1[0, 1])
+    # print(-Direction.E)
+    pos2 += pos1
+    struct = Structure(pos1, None)
+    print(struct)
+    pos1 += pos2
+    print(struct)
