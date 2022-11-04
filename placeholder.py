@@ -2,54 +2,9 @@ from typing import Union, TypeVar
 from enum import IntEnum, Enum
 import pygame as pg
 import json
-from gameworld import GameWorld
+from core_classes import *
 
 T = TypeVar('T')
-
-
-class Vector:
-    def __init__(self, x: int, y: int):
-        self.x: int = x
-        self.y: int = y
-
-    def __sub__(self, other: Union[tuple[int, int], 'Vector']) -> 'Vector':
-        if isinstance(other, Vector):
-            return Vector(self.x - other.x, self.y - other.y)
-        if isinstance(other, tuple):
-            return Vector(self.x - other[0], self.y - other[1])
-
-    def __add__(self, other: Union[tuple[int, int], 'Vector']) -> 'Vector':
-        if isinstance(other, Vector):
-            return Vector(self.x + other.x, self.y + other.y)
-        if isinstance(other, tuple):
-            return Vector(self.x + other[0], self.y + other[1])
-
-    def __neg__(self):
-        return Vector(-self.x, -self.y)
-
-    def __mul__(self, other: Union[int, 'Vector']) -> 'Vector':
-        if isinstance(other, int):
-            return Vector(self.x * other, self.y * other)
-        if isinstance(other, Vector):
-            return Vector(self.x * other.x, self.y * other.y)
-
-    def __eq__(self, other: 'Vector') -> 'Vector':
-        return self.x == other.x and self.y == other.y
-
-    def __str__(self) -> str:
-        return f'({self.x}, {self.y})'
-
-    def __hash__(self):
-        return hash((self.__class__, self.x, self.y))
-
-    def to_dir(self) -> 'Direction':
-        return {Vector(0, -1): Direction.N,
-                Vector(1, 0): Direction.E,
-                Vector(0, 1): Direction.S,
-                Vector(-1, 0): Direction.W}.get(self)
-
-    def to_tuple(self) -> tuple:
-        return self.x, self.y
 
 
 class Map:
@@ -61,7 +16,7 @@ class Map:
         self.width: int = len(elements)
         self.height: int = len(elements[0])
 
-    def __getitem__(self, pos: Vector):
+    def __getitem__(self, pos: Union[Vector, tuple]):
         if isinstance(pos, Vector):
             return self.elements[pos.x][pos.y]
         elif isinstance(pos, tuple) or isinstance(pos, list):
@@ -74,81 +29,40 @@ class Map:
         return 0 <= pos.x < self.width and 0 <= pos.y < self.height
 
 
-class Direction(IntEnum):
-    N = 0
-    E = 1
-    S = 2
-    W = 3
-
-    def to_vector(self) -> Vector:
-        return {self.N: Vector(0, -1),
-                self.E: Vector(1, 0),
-                self.S: Vector(0, 1),
-                self.W: Vector(-1, 0)}[self]
-
-    def __neg__(self) -> 'Direction':
-        return {self.N: self.S,
-                self.E: self.W,
-                self.S: self.N,
-                self.W: self.E}[self]
-
-
-class DirectionSet(set):
-    def get_id(self):
-        return sum(2 ** elem for elem in self)
-
-
-class TileTypes(Enum):
-    GRASSLAND = 0
-    DESERT = 1
-    WATER = 2
-
-
-class Resources(Enum):
-    WOOD = 0
-    STONE = 1
-    WHEAT = 2
-    COAL = 3
-    ORE = 4
-    IRON = 5
-    CHARCOAL = 6
-    BRICKS = 7
-    STEEL = 8
-    REINFORCED_WOOD = 9
-    BREAD = 10
-    METEORITE = 11
-
-
-class Tile:
-    def __init__(self, tile_type: TileTypes, resource: Resources):
-        self.tile_type = tile_type
-        self.resource = resource
-
-
 class Structure(pg.sprite.Sprite):
-    def __init__(self, pos, tile_size, spritesheet, surf_aspect_ratio=Vector(1, 1)):
+    def __init__(self, pos, tile_size, spritesheet, resource_manager, surf_aspect_ratio=Vector(1, 1),
+                 covered_tiles=(Vector(0, 0),), orientation=Orientation.VERTICAL, unsuitable_tiles=(TileTypes.WATER,)):
         super().__init__()
         self.pos = pos
         self.surf_aspect_ratio = surf_aspect_ratio
+        self.covered_tiles = covered_tiles
         self.sprite_variant = 0
         self.spritesheet = spritesheet
         self.surf = spritesheet.get_surf(self)
         self.rect = self.surf.get_rect(bottomright=((self.pos + (1, 1)) * tile_size).to_tuple())
-        self.surf.set_colorkey((255, 255, 255), pg.RLEACCEL)
+        self.orientation = orientation
+        self.unsuitable_tiles = unsuitable_tiles
+        self.cost = resource_manager.structures_info[self.__class__.__name__]["cost"]
+        self.profit = resource_manager.structures_info[self.__class__.__name__]["profit"]
 
     def __repr__(self):
         return f'{self.__class__.__name__}(pos: {self.pos})'
 
 
 class House(Structure):
-    def __init__(self, pos, tile_size, spritesheet):
-        super().__init__(pos, tile_size, spritesheet)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class Mine(Structure):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, surf_aspect_ratio=Vector(1, 2), **kwargs)
 
 
 class Snapper(Structure):
-    def __init__(self, pos, tile_size, spritesheet):
+    def __init__(self, *args, **kwargs):
         self.neighbours = DirectionSet()
-        super().__init__(pos, tile_size, spritesheet)
+        super().__init__(*args, **kwargs)
 
     def add_neighbour(self, neighbour):
         self.neighbours.add(neighbour)
@@ -160,39 +74,42 @@ class Snapper(Structure):
 
 
 class Wall(Snapper):
-    def __init__(self, pos, tile_size, spritesheet):
-        super().__init__(pos, tile_size, spritesheet)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class Spritesheet:
     def __init__(self, sizes):
         self.spritesheet = pg.image.load("assets/spritesheet.png")
         self.snapper_spritesheet = pg.image.load("assets/snapper_sheet.png")
-        with open("assets/spritesheet_coords.json", "r") as f:
+        with open("config/spritesheet_coords.json", "r") as f:
             self.coords = json.load(f)
         self.sizes = sizes
 
     def get_surf(self, obj):
         if isinstance(obj, Snapper):
-            target_rect = pg.Rect([obj.neighbours.get_id() * 15] + self.coords["Snappers"][obj.__class__.__name__][obj.sprite_variant])
+            target_rect = pg.Rect(
+                [obj.neighbours.get_id() * 15] + self.coords["Snappers"][obj.__class__.__name__][obj.sprite_variant])
             new_surf = pg.Surface(target_rect.size)
             new_surf.blit(self.snapper_spritesheet, (0, 0), target_rect)
-        else:
-            if isinstance(obj, Structure):
-                target_rect = pg.Rect(self.coords["Structures"][obj.__class__.__name__][obj.sprite_variant])
-            elif isinstance(obj, TileTypes):
-                target_rect = pg.Rect(self.coords["TileTypes"][str(obj)])
+        elif isinstance(obj, Structure):
+            target_rect = pg.Rect(self.coords["Structures"][obj.__class__.__name__][obj.sprite_variant])
             new_surf = pg.Surface(target_rect.size)
             new_surf.blit(self.spritesheet, (0, 0), target_rect)
+        elif isinstance(obj, TileTypes):
+            target_rect = pg.Rect(self.coords["TileTypes"][str(obj)])
+            new_surf = pg.Surface(target_rect.size)
+            new_surf.blit(self.spritesheet, (0, 0), target_rect)
+
         new_surf.set_colorkey((255, 255, 255), pg.RLEACCEL)
         return pg.transform.scale(new_surf, (obj.surf_aspect_ratio * self.sizes.tile).to_tuple())
 
 
 class MapManager:
     def __init__(self, sizes):
-
         self.struct_map = Map(sizes.map_tiles)
         self.tile_map = Map(sizes.map_tiles)
+        self.enclosed_tiles = Map(sizes.map_tiles)
 
 
 class StructManager:
@@ -214,3 +131,8 @@ class Config:
         self.layout = pg.image.load(self.layout_path).convert()
         self.tile_size = 60
 
+
+class ResourceManager:
+    def __init__(self):
+        with open("config/structures_config.json", "r") as f:
+            self.structures_info = json.load(f)

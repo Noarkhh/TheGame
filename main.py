@@ -95,12 +95,15 @@ def testing():
     sizes = Sizes(Config())
     spritesheet = Spritesheet(sizes)
     struct_manager = StructManager(sizes)
-    house1 = House(Vector(1, 1), sizes.tile, spritesheet)
-    wall1 = Wall(Vector(1, 4), sizes.tile, spritesheet)
+    res_man = ResourceManager()
+    house1 = House(Vector(1, 1), sizes.tile, spritesheet, res_man)
+    wall1 = Wall(Vector(1, 4), sizes.tile, spritesheet, res_man)
+    mine1 = Mine(Vector(0, 1), sizes.tile, spritesheet, res_man)
     wall1.add_neighbour(Direction.E)
     wall1.add_neighbour(Direction.N)
     wall1.add_neighbour(Direction.W)
     wall1.add_neighbour(Direction.S)
+    print(house1.cost, house1.profit)
 
     running = True
     while running:
@@ -111,6 +114,7 @@ def testing():
 
         screen.blit(house1.surf, house1.rect)
         screen.blit(wall1.surf, wall1.rect)
+        screen.blit(mine1.surf, mine1.rect)
 
         pg.display.flip()
 
@@ -141,15 +145,4 @@ if __name__ == "__main__":
     print(pos1 - pos2)
     print(TileTypes.GRASSLAND)
     dir_set = DirectionSet((Direction.N, Direction.S))
-    edges_sorted = [(), (Direction.N,), (Direction.E,), (Direction.S,), (Direction.W,), (Direction.N, Direction.E),
-                    (Direction.E, Direction.S), (Direction.S, Direction.W), (Direction.N, Direction.W),
-                    (Direction.N, Direction.S), (Direction.E, Direction.W), (Direction.N, Direction.E, Direction.S),
-                    (Direction.E, Direction.S, Direction.W),
-                    (Direction.N, Direction.S, Direction.W), (Direction.N, Direction.E, Direction.W),
-                    (Direction.N, Direction.E, Direction.S, Direction.W)]
-    a = sorted(edges_sorted, key=lambda x: DirectionSet(x).get_id())
-    # for i, elem in enumerate(a):
-    #     print(i, elem)
-        # print(DirectionSet(set1).get_id())
-
     testing()

@@ -1,0 +1,23 @@
+{
+  "House": {
+    "cost": {
+      "Resources.GOLD": 10,
+      "Resources.WOOD": 5,
+      "Resources.STONE": 5
+    },
+    "profit": {
+      "Resources.GOLD": 10
+    }
+  },
+  "Wall": {
+    "cost": {
+      "Resources.WOOD": 1,
+      "Resources.STONE": 5
+    },
+    "profit": {}
+  },
+  "Mine": {
+    "cost": {},
+    "profit": {}
+  }
+}
