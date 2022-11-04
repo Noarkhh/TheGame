@@ -1,5 +1,4 @@
-from typing import Union, TypeVar
-from enum import IntEnum, Enum
+from typing import TypeVar
 import pygame as pg
 import json
 from core_classes import *
@@ -29,34 +28,68 @@ class Map:
         return 0 <= pos.x < self.width and 0 <= pos.y < self.height
 
 
+class Message(Enum):
+    BAD_LOCATION_TILE = 0
+    BAD_LOCATION_STRUCT = 1
+    NO_RESOURCES = 2
+
+    BAD_DIFF = 3
+    ONE_CANT_SNAP = 4
+    BAD_MATCH = 5
+    ALREADY_SNAPPED = 6
+
+    CANT_OVERRIDE = 7
+
+    BUILT = 8
+    SNAPPED = 9
+    OVERRODE = 10
+
+
 class Structure(pg.sprite.Sprite):
-    def __init__(self, pos, tile_size, spritesheet, resource_manager, surf_aspect_ratio=Vector(1, 1),
-                 covered_tiles=(Vector(0, 0),), orientation=Orientation.VERTICAL, unsuitable_tiles=(TileTypes.WATER,)):
+    def __init__(self, pos, tile_size, spritesheet, resource_manager, surf_aspect_ratio=(1, 1),
+                 covered_tiles=(Vector(0, 0),), orientation=Orientation.VERTICAL, unsuitable_tiles=(TileTypes.WATER,),
+                 sprite_variant=0, can_override=False):
         super().__init__()
         self.pos = pos
         self.surf_aspect_ratio = surf_aspect_ratio
         self.covered_tiles = covered_tiles
-        self.sprite_variant = 0
+        self.sprite_variant = sprite_variant
         self.spritesheet = spritesheet
-        self.surf = spritesheet.get_surf(self)
-        self.rect = self.surf.get_rect(bottomright=((self.pos + (1, 1)) * tile_size).to_tuple())
         self.orientation = orientation
         self.unsuitable_tiles = unsuitable_tiles
+        self.can_override = can_override
+
+        self.surf = spritesheet.get_surf(self)
+        self.rect = self.surf.get_rect(bottomright=((self.pos + (1, 1)) * tile_size).to_tuple())
+
         self.cost = resource_manager.structures_info[self.__class__.__name__]["cost"]
         self.profit = resource_manager.structures_info[self.__class__.__name__]["profit"]
 
     def __repr__(self):
         return f'{self.__class__.__name__}(pos: {self.pos})'
 
+    def can_be_placed(self, pos, map_manager, resource_manager):
+
+        if any(map_manager.tile_map[pos + rel_pos] in self.unsuitable_tiles for rel_pos in self.covered_tiles):
+            return False, Message.BAD_LOCATION_TILE
+
+        if any(isinstance(map_manager.struct_map[pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
+            return False, Message.BAD_LOCATION_STRUCT
+
+        if any(amount > resource_manager.resources[resource] for resource, amount in self.cost.items()):
+            return False, Message.NO_RESOURCES
+
+        return True, Message.BUILT
+
 
 class House(Structure):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, surf_aspect_ratio=(1, 21 / 15), **kwargs)
 
 
 class Mine(Structure):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, surf_aspect_ratio=Vector(1, 2), **kwargs)
+        super().__init__(*args, surf_aspect_ratio=(1, 2), **kwargs)
 
 
 class Snapper(Structure):
@@ -76,6 +109,20 @@ class Snapper(Structure):
 class Wall(Snapper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class Road(Snapper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class Gate(Wall, Road):
+    def __init__(self, *args, orientation, **kwargs):
+        super().__init__(*args, orientation, surf_aspect_ratio=(1, 20/15), can_override=True, **kwargs)
+        if self.orientation == Orientation.VERTICAL:
+            self.snapsto = {Direction.N: Road, Direction.E: Wall, Direction.S: Road, Direction.W: Wall}
+        elif self.orientation == Orientation.HORIZONTAL:
+            self.snapsto = {Direction.N: Wall, Direction.E: Road, Direction.S: Wall, Direction.W: Road}
 
 
 class Spritesheet:
@@ -102,7 +149,8 @@ class Spritesheet:
             new_surf.blit(self.spritesheet, (0, 0), target_rect)
 
         new_surf.set_colorkey((255, 255, 255), pg.RLEACCEL)
-        return pg.transform.scale(new_surf, (obj.surf_aspect_ratio * self.sizes.tile).to_tuple())
+        return pg.transform.scale(new_surf, (obj.surf_aspect_ratio[0] * self.sizes.tile,
+                                             obj.surf_aspect_ratio[1] * self.sizes.tile))
 
 
 class MapManager:
