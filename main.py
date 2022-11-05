@@ -1,6 +1,7 @@
 from game_managment import *
 from hud import *
 from gameworld import GameWorld
+import time
 from placeholder import *
 
 def main():
@@ -70,9 +71,9 @@ def main():
             gw.hud.global_statistics.update_global_stats(gw)
             gw.hud.tile_statistics.update_tile_stats(gw.cursor.pos, gw)
         if gw.hud.build_menu.is_build_menu_open:
-            gw.screen.blit(gw.hud.build_menu.surf, gw.hud.build_menu.rect)
+            gw.screen.blit(gw.hud.build_menu.image, gw.hud.build_menu.rect)
 
-        gw.screen.blit(gw.hud.toolbar.surf, gw.hud.toolbar.rect)
+        gw.screen.blit(gw.hud.toolbar.image, gw.hud.toolbar.rect)
         gw.hud.minimap.update_minimap(gw)
         gw.hud.top_bar.update(gw)
 
@@ -93,18 +94,22 @@ def testing():
     screen = pg.display.set_mode([500, 500])
 
     sizes = Sizes(Config())
+    map_manager = MapManager(sizes)
     spritesheet = Spritesheet(sizes)
-    struct_manager = StructManager(sizes)
-    res_man = Treasury()
-    house1 = House(Vector(1, 1), sizes.tile, spritesheet, res_man)
-    wall1 = Wall(Vector(1, 4), sizes.tile, spritesheet, res_man)
-    mine1 = Mine(Vector(0, 1), sizes.tile, spritesheet, res_man)
-    wall1.add_neighbour(Direction.E)
-    wall1.add_neighbour(Direction.N)
-    wall1.add_neighbour(Direction.W)
-    wall1.add_neighbour(Direction.S)
-    print(house1)
-    print(house1.resource_manager)
+    struct_manager = StructManager(sizes, map_manager)
+    treasury = Treasury()
+    print(treasury.structures_info)
+    structs = [House(Vector(1, 1), sizes.tile, spritesheet, treasury, sprite_variant=0),
+               Wall(Vector(1, 4), sizes.tile, spritesheet, treasury),
+               Mine(Vector(0, 1), sizes.tile, spritesheet, treasury),
+               Mine(Vector(0, 1), sizes.tile, spritesheet, treasury),
+               Gate(Vector(5, 5), sizes.tile, spritesheet, treasury, orientation=Orientation.VERTICAL)
+               ]
+    struct_manager.structs.add(structs)
+    print(struct_manager.structs.sprites())
+
+    map_manager.struct_map[(5, 5)] = structs[1]
+    print(structs[-1].overrider(struct_manager.map_manager.struct_map))
 
     running = True
     while running:
@@ -113,9 +118,7 @@ def testing():
             if event.type == pg.QUIT:
                 running = False
 
-        screen.blit(house1.surf, house1.rect)
-        screen.blit(wall1.surf, wall1.rect)
-        screen.blit(mine1.surf, mine1.rect)
+            struct_manager.structs.draw(screen)
 
         pg.display.flip()
 
@@ -128,10 +131,6 @@ if __name__ == "__main__":
     pg.init()
     pg.mixer.init()
     # gw = GameWorld()
-    map1 = Map([[1, 4, 3, 6],
-                [3, 5, 7, 4],
-                [3, 2, 5, 3],
-                [1, 1, 1, 0]])
     pos1 = Vector(3, 2)
     pos2 = Vector(0, 1)
     # print(map1)
@@ -142,8 +141,8 @@ if __name__ == "__main__":
     # print(struct)
     # pos1 = Vector(4, 4)
     # print(struct)
-    print(sorted((Direction.N, Direction.S, Direction.E, Direction.W)))
+    print(sorted((Directions.N, Directions.S, Directions.E, Directions.W)))
     print(pos1 - pos2)
     print(TileTypes.GRASSLAND)
-    dir_set = DirectionSet((Direction.N, Direction.S))
+    dir_set = DirectionSet((Directions.N, Directions.S))
     testing()

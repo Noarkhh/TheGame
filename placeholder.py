@@ -2,25 +2,27 @@ from typing import TypeVar
 import pygame as pg
 import json
 from core_classes import *
-from collections import defaultdict
 
 T = TypeVar('T')
 
 
 class Map:
-    def __init__(self, elements: Union[list[list[T]], Vector]):
-        if isinstance(elements, list):
-            self.elements: list[list[T]] = elements
-        elif isinstance(elements, Vector):
-            self.elements: list[list[T]] = [[None for _ in range(elements.y)] for _ in range(elements.x)]
-        self.width: int = len(elements)
-        self.height: int = len(elements[0])
+    def __init__(self, size: Vector):
+        self.elements: list[list[T]] = [[None for _ in range(size.y)] for _ in range(size.x)]
+        self.width: int = size.x
+        self.height: int = size.y
 
     def __getitem__(self, pos: Union[Vector, tuple]):
         if isinstance(pos, Vector):
             return self.elements[pos.x][pos.y]
         elif isinstance(pos, tuple) or isinstance(pos, list):
             return self.elements[pos[0]][pos[1]]
+
+    def __setitem__(self, pos: Union[Vector, tuple], element: T):
+        if isinstance(pos, Vector):
+            self.elements[pos.x][pos.y] = element
+        elif isinstance(pos, tuple) or isinstance(pos, list):
+            self.elements[pos[0]][pos[1]] = element
 
     def __str__(self):
         return "\n".join([" ".join([str(self[x, y]) for x in range(self.width)]) for y in range(self.height)])
@@ -44,85 +46,6 @@ class Message(Enum):
     BUILT = 8
     SNAPPED = 9
     OVERRODE = 10
-
-
-class Structure(pg.sprite.Sprite):
-    def __init__(self, pos, tile_size, spritesheet, treasury, surf_aspect_ratio=(1, 1),
-                 covered_tiles=(Vector(0, 0),), orientation=Orientation.VERTICAL, unsuitable_tiles=(TileTypes.WATER,),
-                 sprite_variant=0, can_override=False):
-        super().__init__()
-        self.pos = pos
-        self.surf_aspect_ratio = surf_aspect_ratio
-        self.covered_tiles = covered_tiles
-        self.sprite_variant = sprite_variant
-        self.spritesheet = spritesheet
-        self.orientation = orientation
-        self.unsuitable_tiles = unsuitable_tiles
-        self.can_override = can_override
-
-        self.surf = spritesheet.get_surf(self)
-        self.rect = self.surf.get_rect(bottomright=((self.pos + (1, 1)) * tile_size).to_tuple())
-
-        self.resource_manager = ResourceManager(self, treasury)
-
-    def __repr__(self):
-        return f'{self.__class__.__name__}(pos: {self.pos})'
-
-    def can_be_placed(self, pos, map_manager, treasury):
-
-        if any(map_manager.tile_map[pos + rel_pos] in self.unsuitable_tiles for rel_pos in self.covered_tiles):
-            return False, Message.BAD_LOCATION_TILE
-
-        if any(isinstance(map_manager.struct_map[pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
-            return False, Message.BAD_LOCATION_STRUCT
-
-        if any(amount > treasury.resources[resource] for resource, amount in self.resource_manager.cost.items()):
-            return False, Message.NO_RESOURCES
-
-        return True, Message.BUILT
-
-
-class House(Structure):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, surf_aspect_ratio=(1, 21 / 15), **kwargs)
-
-
-class Mine(Structure):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, surf_aspect_ratio=(1, 2), **kwargs)
-
-
-class Snapper(Structure):
-    def __init__(self, *args, **kwargs):
-        self.neighbours = DirectionSet()
-        super().__init__(*args, **kwargs)
-
-    def add_neighbour(self, neighbour):
-        self.neighbours.add(neighbour)
-        self.surf = self.spritesheet.get_surf(self)
-
-    def remove_neighbour(self, neighbour):
-        self.neighbours.remove(neighbour)
-        self.surf = self.spritesheet.get_surf(self)
-
-
-class Wall(Snapper):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
-class Road(Snapper):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
-class Gate(Wall, Road):
-    def __init__(self, *args, orientation, **kwargs):
-        super().__init__(*args, orientation, surf_aspect_ratio=(1, 20 / 15), can_override=True, **kwargs)
-        if self.orientation == Orientation.VERTICAL:
-            self.snapsto = {Direction.N: Road, Direction.E: Wall, Direction.S: Road, Direction.W: Wall}
-        elif self.orientation == Orientation.HORIZONTAL:
-            self.snapsto = {Direction.N: Wall, Direction.E: Road, Direction.S: Wall, Direction.W: Road}
 
 
 class Spritesheet:
@@ -153,6 +76,117 @@ class Spritesheet:
                                              obj.surf_aspect_ratio[1] * self.sizes.tile))
 
 
+class Structure(pg.sprite.Sprite):
+    surf_aspect_ratio: tuple[int, Union[int, float]] = (1, 1)
+    covered_tiles: tuple[Vector, ...] = (Vector(0, 0),)
+    unsuitable_tiles: tuple[TileTypes, ...] = (TileTypes.WATER,)
+    overrider: bool = False
+
+    def __init__(self, pos: Vector, tile_size: int, spritesheet: 'Spritesheet', treasury: 'Treasury',
+                 sprite_variant: int = 0, orientation: Orientation = Orientation.VERTICAL):
+        super().__init__()
+        self.pos: Vector = pos
+        self.spritesheet: 'Spritesheet' = spritesheet
+
+        self.sprite_variant: int = sprite_variant
+        self.orientation: Orientation = orientation
+
+        self.image: pg.Surf = spritesheet.get_surf(self)
+        self.rect: pg.Rect = self.image.get_rect(bottomright=((self.pos + (1, 1)) * tile_size).to_tuple())
+
+        self.resource_manager: ResourceManager = ResourceManager(self, treasury)
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(pos: {self.pos})'
+
+    def can_be_placed(self, map_manager, treasury):
+
+        if any(map_manager.tile_map[self.pos + rel_pos] in self.unsuitable_tiles for rel_pos in self.covered_tiles):
+            return False, Message.BAD_LOCATION_TILE
+
+        if any(isinstance(map_manager.struct_map[self.pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
+            return False, Message.BAD_LOCATION_STRUCT
+
+        if any(amount > treasury.resources[resource] for resource, amount in self.resource_manager.cost.items()):
+            return False, Message.NO_RESOURCES
+
+        return True, Message.BUILT
+
+
+class House(Structure):
+    surf_aspect_ratio = (1, 21 / 15)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class Mine(Structure):
+    surf_aspect_ratio = (1, 2)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class Sawmill(Structure):
+    surf_aspect_ratio = (2, 1)
+    covered_tiles = (Vector(0, 0), Vector(-1, 0))
+
+    def __init__(self, *args, **kwargs):
+        super(Sawmill, self).__init__(*args, **kwargs)
+
+
+class Snapper(Structure):
+    def __init__(self, *args, **kwargs):
+        self.neighbours = DirectionSet()
+        super().__init__(*args, **kwargs)
+
+    def add_neighbours(self, neighbours):
+        self.neighbours.update(neighbours)
+        self.image = self.spritesheet.get_surf(self)
+
+    def remove_neighbours(self, neighbours):
+        self.neighbours.difference_update(neighbours)
+        self.image = self.spritesheet.get_surf(self)
+
+
+class Wall(Snapper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class Road(Snapper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class Gate(Wall, Road):
+    surf_aspect_ratio = (1, 20 / 15)
+    overrider = True
+
+    def __init__(self, *args, orientation, **kwargs):
+        super().__init__(*args, orientation, **kwargs)
+        self.directions_to_connect_to = set()
+
+        if self.orientation == Orientation.VERTICAL:
+            self.snapsto = {Directions.N: Road, Directions.E: Wall, Directions.S: Road, Directions.W: Wall}
+        elif self.orientation == Orientation.HORIZONTAL:
+            self.snapsto = {Directions.N: Wall, Directions.E: Road, Directions.S: Wall, Directions.W: Road}
+
+    def can_override(self, struct_map: Map) -> bool:
+        if not type(struct_map[self.pos]) in (Wall, Road):
+            return False
+
+        for direction in Directions:
+            neighbour_pos = self.pos + direction.to_vector()
+            if struct_map.contains(neighbour_pos) and isinstance(struct_map[neighbour_pos], Snapper) and \
+                    direction in struct_map[neighbour_pos].neighbours:
+                if self.snapsto[-direction] != struct_map[neighbour_pos].snaps_to[direction]:
+                    self.directions_to_connect_to.clear()
+                    return False
+                self.directions_to_connect_to.add(direction)
+        return True
+
+
 class MapManager:
     def __init__(self, sizes):
         self.struct_map = Map(sizes.map_tiles)
@@ -161,7 +195,8 @@ class MapManager:
 
 
 class StructManager:
-    def __init__(self, sizes):
+    def __init__(self, sizes, map_manager):
+        self.map_manager = map_manager
         self.sizes = sizes
         self.structs = pg.sprite.Group()
 
@@ -191,14 +226,13 @@ class Treasury:
 class ResourceManager:
     def __init__(self, struct, treasury):
         self.treasury = treasury
-        self.cost = treasury.structures_info[struct.__class__.__name__].get("cost", 0)
-        self.base_profit = treasury.structures_info[struct.__class__.__name__].get("profit", 0)
+        self.cost = treasury.structures_info[struct.__class__].get("cost", 0)
+        self.base_profit = treasury.structures_info[struct.__class__].get("profit", 0)
         self.profit = self.base_profit
-        self.base_capacity = treasury.structures_info[struct.__class__.__name__].get("capacity", 0)
+        self.base_capacity = treasury.structures_info[struct.__class__].get("capacity", 0)
         self.capacity = self.base_capacity
         self.stockpile = {resource: 0 for resource in self.profit.keys()}
-        self.base_cooldown = treasury.structures_info[struct.__class__.__name__].get("cooldown",
-                                                                                     treasury.default_cooldown)
+        self.base_cooldown = treasury.structures_info[struct.__class__].get("cooldown", treasury.default_cooldown)
         self.cooldown = self.base_cooldown
 
     def __repr__(self):
@@ -212,6 +246,3 @@ class ResourceManager:
                 for resource, amount in self.profit.items():
                     self.stockpile[resource] += amount
             self.cooldown = self.base_cooldown
-
-
-

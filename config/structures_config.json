@@ -24,5 +24,15 @@
     "cost": {},
     "profit": {},
     "capacity": 100
+  },
+  "Gate": {
+    "cost": {
+      "Resources.GOLD": 100,
+      "Resources.WOOD": 50,
+      "Resources.STONE": 50
+    },
+    "profit": {
+      "Resources.GOLD": -10
+    }
   }
 }

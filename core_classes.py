@@ -37,17 +37,17 @@ class Vector:
     def __hash__(self) -> int:
         return hash((self.__class__, self.x, self.y))
 
-    def to_dir(self) -> 'Direction':
-        return {Vector(0, -1): Direction.N,
-                Vector(1, 0): Direction.E,
-                Vector(0, 1): Direction.S,
-                Vector(-1, 0): Direction.W}.get(self)
+    def to_dir(self) -> 'Directions':
+        return {Vector(0, -1): Directions.N,
+                Vector(1, 0): Directions.E,
+                Vector(0, 1): Directions.S,
+                Vector(-1, 0): Directions.W}.get(self)
 
     def to_tuple(self) -> tuple:
         return self.x, self.y
 
 
-class Direction(IntEnum):
+class Directions(IntEnum):
     N = 0
     E = 1
     S = 2
@@ -59,7 +59,7 @@ class Direction(IntEnum):
                 self.S: Vector(0, 1),
                 self.W: Vector(-1, 0)}[self]
 
-    def __neg__(self) -> 'Direction':
+    def __neg__(self) -> 'Directions':
         return {self.N: self.S,
                 self.E: self.W,
                 self.S: self.N,
