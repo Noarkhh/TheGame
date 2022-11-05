@@ -7,17 +7,22 @@
     },
     "profit": {
       "Resources.GOLD": 10
-    }
+    },
+    "capacity": 0
   },
   "Wall": {
     "cost": {
       "Resources.WOOD": 1,
       "Resources.STONE": 5
     },
-    "profit": {}
+    "profit": {
+      "Resources.GOLD": -2
+    },
+    "capacity": 0
   },
   "Mine": {
     "cost": {},
-    "profit": {}
+    "profit": {},
+    "capacity": 100
   }
 }

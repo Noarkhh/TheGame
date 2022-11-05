@@ -95,7 +95,7 @@ def testing():
     sizes = Sizes(Config())
     spritesheet = Spritesheet(sizes)
     struct_manager = StructManager(sizes)
-    res_man = ResourceManager()
+    res_man = Treasury()
     house1 = House(Vector(1, 1), sizes.tile, spritesheet, res_man)
     wall1 = Wall(Vector(1, 4), sizes.tile, spritesheet, res_man)
     mine1 = Mine(Vector(0, 1), sizes.tile, spritesheet, res_man)
@@ -103,7 +103,8 @@ def testing():
     wall1.add_neighbour(Direction.N)
     wall1.add_neighbour(Direction.W)
     wall1.add_neighbour(Direction.S)
-    print(house1.cost, house1.profit)
+    print(house1)
+    print(house1.resource_manager)
 
     running = True
     while running:

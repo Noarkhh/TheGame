@@ -2,6 +2,7 @@ from typing import TypeVar
 import pygame as pg
 import json
 from core_classes import *
+from collections import defaultdict
 
 T = TypeVar('T')
 
@@ -33,7 +34,7 @@ class Message(Enum):
     BAD_LOCATION_STRUCT = 1
     NO_RESOURCES = 2
 
-    BAD_DIFF = 3
+    NOT_ADJACENT = 3
     ONE_CANT_SNAP = 4
     BAD_MATCH = 5
     ALREADY_SNAPPED = 6
@@ -46,7 +47,7 @@ class Message(Enum):
 
 
 class Structure(pg.sprite.Sprite):
-    def __init__(self, pos, tile_size, spritesheet, resource_manager, surf_aspect_ratio=(1, 1),
+    def __init__(self, pos, tile_size, spritesheet, treasury, surf_aspect_ratio=(1, 1),
                  covered_tiles=(Vector(0, 0),), orientation=Orientation.VERTICAL, unsuitable_tiles=(TileTypes.WATER,),
                  sprite_variant=0, can_override=False):
         super().__init__()
@@ -62,13 +63,12 @@ class Structure(pg.sprite.Sprite):
         self.surf = spritesheet.get_surf(self)
         self.rect = self.surf.get_rect(bottomright=((self.pos + (1, 1)) * tile_size).to_tuple())
 
-        self.cost = resource_manager.structures_info[self.__class__.__name__]["cost"]
-        self.profit = resource_manager.structures_info[self.__class__.__name__]["profit"]
+        self.resource_manager = ResourceManager(self, treasury)
 
     def __repr__(self):
         return f'{self.__class__.__name__}(pos: {self.pos})'
 
-    def can_be_placed(self, pos, map_manager, resource_manager):
+    def can_be_placed(self, pos, map_manager, treasury):
 
         if any(map_manager.tile_map[pos + rel_pos] in self.unsuitable_tiles for rel_pos in self.covered_tiles):
             return False, Message.BAD_LOCATION_TILE
@@ -76,7 +76,7 @@ class Structure(pg.sprite.Sprite):
         if any(isinstance(map_manager.struct_map[pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
             return False, Message.BAD_LOCATION_STRUCT
 
-        if any(amount > resource_manager.resources[resource] for resource, amount in self.cost.items()):
+        if any(amount > treasury.resources[resource] for resource, amount in self.resource_manager.cost.items()):
             return False, Message.NO_RESOURCES
 
         return True, Message.BUILT
@@ -118,7 +118,7 @@ class Road(Snapper):
 
 class Gate(Wall, Road):
     def __init__(self, *args, orientation, **kwargs):
-        super().__init__(*args, orientation, surf_aspect_ratio=(1, 20/15), can_override=True, **kwargs)
+        super().__init__(*args, orientation, surf_aspect_ratio=(1, 20 / 15), can_override=True, **kwargs)
         if self.orientation == Orientation.VERTICAL:
             self.snapsto = {Direction.N: Road, Direction.E: Wall, Direction.S: Road, Direction.W: Wall}
         elif self.orientation == Orientation.HORIZONTAL:
@@ -180,7 +180,38 @@ class Config:
         self.tile_size = 60
 
 
-class ResourceManager:
+class Treasury:
     def __init__(self):
         with open("config/structures_config.json", "r") as f:
-            self.structures_info = json.load(f)
+            raw_structures_info = json.load(f)
+            self.structures_info = {globals()[name]: info for name, info in raw_structures_info.items()}
+        self.default_cooldown = 5
+
+
+class ResourceManager:
+    def __init__(self, struct, treasury):
+        self.treasury = treasury
+        self.cost = treasury.structures_info[struct.__class__.__name__].get("cost", 0)
+        self.base_profit = treasury.structures_info[struct.__class__.__name__].get("profit", 0)
+        self.profit = self.base_profit
+        self.base_capacity = treasury.structures_info[struct.__class__.__name__].get("capacity", 0)
+        self.capacity = self.base_capacity
+        self.stockpile = {resource: 0 for resource in self.profit.keys()}
+        self.base_cooldown = treasury.structures_info[struct.__class__.__name__].get("cooldown",
+                                                                                     treasury.default_cooldown)
+        self.cooldown = self.base_cooldown
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(cost: {self.cost}, profit: {self.profit}, ' \
+               f'capacity: {self.capacity}, self.stockpile: {self.stockpile}, cooldown: {self.cooldown}'
+
+    def produce(self):
+        self.cooldown -= 1
+        if self.cooldown == 0:
+            if sum(self.stockpile.values() < self.capacity):
+                for resource, amount in self.profit.items():
+                    self.stockpile[resource] += amount
+            self.cooldown = self.base_cooldown
+
+
+
