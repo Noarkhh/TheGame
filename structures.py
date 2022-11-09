@@ -1,7 +1,6 @@
 import pygame as pg
 from random import randint
 from pygame.locals import RLEACCEL
-from core_classes import *
 
 
 class Structure(pg.sprite.Sprite):

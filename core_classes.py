@@ -1,43 +1,35 @@
-from typing import Union
+from __future__ import annotations
 from enum import Enum, IntEnum
+from dataclasses import dataclass
 
 
+@dataclass
 class Vector:
-    def __init__(self, x: int, y: int):
-        self.x: int = x
-        self.y: int = y
+    x: int
+    y: int
 
-    def __sub__(self, other: Union[tuple[int, int], 'Vector']) -> 'Vector':
+    def __sub__(self, other: Vector | tuple[int, int]) -> Vector:
         if isinstance(other, Vector):
             return Vector(self.x - other.x, self.y - other.y)
         if isinstance(other, tuple):
             return Vector(self.x - other[0], self.y - other[1])
 
-    def __add__(self, other: Union[tuple[int, int], 'Vector']) -> 'Vector':
+    def __add__(self, other: Vector | tuple[int, int]) -> Vector:
         if isinstance(other, Vector):
             return Vector(self.x + other.x, self.y + other.y)
         if isinstance(other, tuple):
             return Vector(self.x + other[0], self.y + other[1])
 
-    def __neg__(self) -> 'Vector':
+    def __neg__(self) -> Vector:
         return Vector(-self.x, -self.y)
 
-    def __mul__(self, other: Union[int, 'Vector']) -> 'Vector':
+    def __mul__(self, other: int | Vector) -> Vector:
         if isinstance(other, int):
             return Vector(self.x * other, self.y * other)
         if isinstance(other, Vector):
             return Vector(self.x * other.x, self.y * other.y)
 
-    def __eq__(self, other: 'Vector') -> bool:
-        return self.x == other.x and self.y == other.y
-
-    def __str__(self) -> str:
-        return f'({self.x}, {self.y})'
-
-    def __hash__(self) -> int:
-        return hash((self.__class__, self.x, self.y))
-
-    def to_dir(self) -> 'Directions':
+    def to_dir(self) -> Directions:
         return {Vector(0, -1): Directions.N,
                 Vector(1, 0): Directions.E,
                 Vector(0, 1): Directions.S,
@@ -59,7 +51,7 @@ class Directions(IntEnum):
                 self.S: Vector(0, 1),
                 self.W: Vector(-1, 0)}[self]
 
-    def __neg__(self) -> 'Directions':
+    def __neg__(self) -> Directions:
         return {self.N: self.S,
                 self.E: self.W,
                 self.S: self.N,
@@ -87,6 +79,9 @@ class TileTypes(Enum):
     DESERT = 1
     WATER = 2
 
+    def __repr__(self):
+        return self.name
+
 
 class Resources(Enum):
     WOOD = 0
@@ -102,3 +97,6 @@ class Resources(Enum):
     BREAD = 10
     METEORITE = 11
     GOLD = 12
+
+    def __repr__(self):
+        return self.name

@@ -1,8 +1,10 @@
+from __future__ import annotations
 from game_managment import *
 from hud import *
 from gameworld import GameWorld
 import time
 from placeholder import *
+from dataclasses import dataclass
 
 def main():
     pg.init()
@@ -98,7 +100,7 @@ def testing():
     spritesheet = Spritesheet(sizes)
     struct_manager = StructManager(sizes, map_manager)
     treasury = Treasury()
-    print(treasury.structures_info)
+    print(treasury.structures_params)
     structs = [House(Vector(1, 1), sizes.tile, spritesheet, treasury, sprite_variant=0),
                Wall(Vector(1, 4), sizes.tile, spritesheet, treasury),
                Mine(Vector(0, 1), sizes.tile, spritesheet, treasury),
@@ -130,19 +132,43 @@ if __name__ == "__main__":
 
     pg.init()
     pg.mixer.init()
+    screen = pg.display.set_mode([500, 500])
+    sizes = Sizes(Config())
+    map_manager = MapManager(sizes)
+    spritesheet = Spritesheet(sizes)
+    struct_manager = StructManager(sizes, map_manager)
+    treasury = Treasury()
     # gw = GameWorld()
-    pos1 = Vector(3, 2)
-    pos2 = Vector(0, 1)
+    # pos1 = Vector(3, 2)
+    # pos2 = Vector(0, 1)
     # print(map1)
     # print(map1[0, 1])
     # print(-Direction.E)
-    pos2 += pos1
+    # pos2 += pos1
     # struct = Structure(pos1, None)
     # print(struct)
     # pos1 = Vector(4, 4)
     # print(struct)
-    print(sorted((Directions.N, Directions.S, Directions.E, Directions.W)))
-    print(pos1 - pos2)
-    print(TileTypes.GRASSLAND)
-    dir_set = DirectionSet((Directions.N, Directions.S))
-    testing()
+    # print(sorted((Directions.N, Directions.S, Directions.E, Directions.W)))
+    # print(pos1 - pos2)
+    # print(TileTypes.GRASSLAND)
+    # dir_set = DirectionSet((Directions.N, Directions.S))
+
+    print(globals()["House"])
+    Config.get_structures_config()
+    print(House.cost)
+    house1 = House(Vector(1, 1), sizes.tile, spritesheet, treasury, sprite_variant=0)
+    house2 = House(Vector(1, 1), sizes.tile, spritesheet, treasury, sprite_variant=0)
+    print(house1.profit)
+    print(House.cooldown)
+    print(house1.cooldown_left)
+    house1.cooldown_left = 1
+    house1.cooldown = 1
+    print(house1.cooldown_left)
+    house1.produce()
+    house1.produce()
+    house1.produce()
+    print(house1.stockpile)
+    print(house1.cooldown_left)
+    # testing()
+    # main()

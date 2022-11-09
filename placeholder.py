@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import TypeVar
 import pygame as pg
 import json
@@ -12,16 +13,16 @@ class Map:
         self.width: int = size.x
         self.height: int = size.y
 
-    def __getitem__(self, pos: Union[Vector, tuple]):
+    def __getitem__(self, pos: Vector | tuple):
         if isinstance(pos, Vector):
             return self.elements[pos.x][pos.y]
-        elif isinstance(pos, tuple) or isinstance(pos, list):
+        elif isinstance(pos, tuple):
             return self.elements[pos[0]][pos[1]]
 
-    def __setitem__(self, pos: Union[Vector, tuple], element: T):
+    def __setitem__(self, pos: Vector | tuple, element: T):
         if isinstance(pos, Vector):
             self.elements[pos.x][pos.y] = element
-        elif isinstance(pos, tuple) or isinstance(pos, list):
+        elif isinstance(pos, tuple):
             self.elements[pos[0]][pos[1]] = element
 
     def __str__(self):
@@ -56,7 +57,7 @@ class Spritesheet:
             self.coords = json.load(f)
         self.sizes = sizes
 
-    def get_surf(self, obj):
+    def get_image(self, obj: Structure | TileTypes):
         if isinstance(obj, Snapper):
             target_rect = pg.Rect(
                 [obj.neighbours.get_id() * 15] + self.coords["Snappers"][obj.__class__.__name__][obj.sprite_variant])
@@ -67,9 +68,11 @@ class Spritesheet:
             new_surf = pg.Surface(target_rect.size)
             new_surf.blit(self.spritesheet, (0, 0), target_rect)
         elif isinstance(obj, TileTypes):
-            target_rect = pg.Rect(self.coords["TileTypes"][str(obj)])
+            target_rect = pg.Rect(self.coords["TileTypes"][obj.name])
             new_surf = pg.Surface(target_rect.size)
             new_surf.blit(self.spritesheet, (0, 0), target_rect)
+        else:
+            raise ValueError
 
         new_surf.set_colorkey((255, 255, 255), pg.RLEACCEL)
         return pg.transform.scale(new_surf, (obj.surf_aspect_ratio[0] * self.sizes.tile,
@@ -77,29 +80,40 @@ class Spritesheet:
 
 
 class Structure(pg.sprite.Sprite):
-    surf_aspect_ratio: tuple[int, Union[int, float]] = (1, 1)
+    surf_aspect_ratio: tuple[int, int | float] = (1, 1)
     covered_tiles: tuple[Vector, ...] = (Vector(0, 0),)
     unsuitable_tiles: tuple[TileTypes, ...] = (TileTypes.WATER,)
     overrider: bool = False
 
-    def __init__(self, pos: Vector, tile_size: int, spritesheet: 'Spritesheet', treasury: 'Treasury',
+    cost: dict[Resources] = {}
+    profit: dict[Resources] = {}
+    capacity: int = 100
+    cooldown: int = 5
+
+    def __init__(self, pos: Vector, tile_size: int, spritesheet: Spritesheet, treasury: Treasury,
                  sprite_variant: int = 0, orientation: Orientation = Orientation.VERTICAL):
         super().__init__()
         self.pos: Vector = pos
-        self.spritesheet: 'Spritesheet' = spritesheet
+        self.spritesheet: Spritesheet = spritesheet
 
         self.sprite_variant: int = sprite_variant
         self.orientation: Orientation = orientation
 
-        self.image: pg.Surf = spritesheet.get_surf(self)
+        self.image: pg.Surface = spritesheet.get_image(self)
         self.rect: pg.Rect = self.image.get_rect(bottomright=((self.pos + (1, 1)) * tile_size).to_tuple())
 
-        self.resource_manager: ResourceManager = ResourceManager(self, treasury)
+        self.cost = self.__class__.cost.copy()
+        self.profit = self.__class__.profit.copy()
+        self.capacity = self.__class__.capacity
+        self.cooldown = self.__class__.cooldown
+
+        self.cooldown_left = self.cooldown
+        self.stockpile = {resource: 0 for resource in self.profit.keys()}
 
     def __repr__(self):
         return f'{self.__class__.__name__}(pos: {self.pos})'
 
-    def can_be_placed(self, map_manager, treasury):
+    def can_be_placed(self, map_manager: MapManager, treasury: Treasury) -> tuple[bool, Message]:
 
         if any(map_manager.tile_map[self.pos + rel_pos] in self.unsuitable_tiles for rel_pos in self.covered_tiles):
             return False, Message.BAD_LOCATION_TILE
@@ -107,10 +121,18 @@ class Structure(pg.sprite.Sprite):
         if any(isinstance(map_manager.struct_map[self.pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
             return False, Message.BAD_LOCATION_STRUCT
 
-        if any(amount > treasury.resources[resource] for resource, amount in self.resource_manager.cost.items()):
+        if any(amount > treasury.resources[resource] for resource, amount in self.cost.items()):
             return False, Message.NO_RESOURCES
 
         return True, Message.BUILT
+
+    def produce(self):
+        self.cooldown_left -= 1
+        if self.cooldown_left == 0:
+            if sum(self.stockpile.values()) < self.capacity:
+                for resource, amount in self.profit.items():
+                    self.stockpile[resource] += amount
+            self.cooldown_left = self.cooldown
 
 
 class House(Structure):
@@ -137,16 +159,16 @@ class Sawmill(Structure):
 
 class Snapper(Structure):
     def __init__(self, *args, **kwargs):
-        self.neighbours = DirectionSet()
+        self.neighbours: DirectionSet = DirectionSet()
         super().__init__(*args, **kwargs)
 
-    def add_neighbours(self, neighbours):
+    def add_neighbours(self, neighbours: DirectionSet | set) -> None:
         self.neighbours.update(neighbours)
-        self.image = self.spritesheet.get_surf(self)
+        self.image = self.spritesheet.get_image(self)
 
-    def remove_neighbours(self, neighbours):
+    def remove_neighbours(self, neighbours: DirectionSet | set) -> None:
         self.neighbours.difference_update(neighbours)
-        self.image = self.spritesheet.get_surf(self)
+        self.image = self.spritesheet.get_image(self)
 
 
 class Wall(Snapper):
@@ -163,9 +185,9 @@ class Gate(Wall, Road):
     surf_aspect_ratio = (1, 20 / 15)
     overrider = True
 
-    def __init__(self, *args, orientation, **kwargs):
+    def __init__(self, *args, orientation: Orientation, **kwargs):
         super().__init__(*args, orientation, **kwargs)
-        self.directions_to_connect_to = set()
+        self.directions_to_connect_to: DirectionSet = DirectionSet()
 
         if self.orientation == Orientation.VERTICAL:
             self.snapsto = {Directions.N: Road, Directions.E: Wall, Directions.S: Road, Directions.W: Wall}
@@ -188,27 +210,44 @@ class Gate(Wall, Road):
 
 
 class MapManager:
-    def __init__(self, sizes):
+    def __init__(self, sizes: Sizes):
         self.struct_map = Map(sizes.map_tiles)
         self.tile_map = Map(sizes.map_tiles)
         self.enclosed_tiles = Map(sizes.map_tiles)
 
 
 class StructManager:
-    def __init__(self, sizes, map_manager):
+    def __init__(self, sizes: Sizes, map_manager: MapManager):
         self.map_manager = map_manager
         self.sizes = sizes
         self.structs = pg.sprite.Group()
 
 
 class Sizes:
-    def __init__(self, config):
+    def __init__(self, config: Config):
         self.map_tiles = Vector(config.layout.get_width(), config.layout.get_height())
         self.tile = config.tile_size
         self.map_pixels = self.map_tiles * self.tile
 
 
 class Config:
+    @staticmethod
+    def get_structures_config():
+        with open("config/structures_config.json", "r") as f:
+            base_structure_params = {}
+            for name, params in json.load(f).items():
+                base_structure_params[globals()[name]] = params
+                setattr(globals()[name], "cost", {Resources[name]: amount for name, amount in params["cost"].items()})
+                setattr(globals()[name], "profit", {Resources[name]: amount for name, amount in params["profit"].items()})
+                setattr(globals()[name], "capacity", params.get("capacity", 100))
+                setattr(globals()[name], "cooldown", params.get("cooldown", 5))
+            return base_structure_params
+
+    @staticmethod
+    def get_starting_resources():
+        with open("config/starting_resources.json", "r") as f:
+            return {Resources[name]: info for name, info in json.load(f).items()}
+
     def __init__(self):
         self.layout_path = "assets/maps/river_L.png"
         self.layout = pg.image.load(self.layout_path).convert()
@@ -217,22 +256,21 @@ class Config:
 
 class Treasury:
     def __init__(self):
-        with open("config/structures_config.json", "r") as f:
-            raw_structures_info = json.load(f)
-            self.structures_info = {globals()[name]: info for name, info in raw_structures_info.items()}
+        self.structures_params = Config.get_structures_config()
+        self.resources = Config.get_starting_resources()
         self.default_cooldown = 5
 
 
 class ResourceManager:
     def __init__(self, struct, treasury):
         self.treasury = treasury
-        self.cost = treasury.structures_info[struct.__class__].get("cost", 0)
-        self.base_profit = treasury.structures_info[struct.__class__].get("profit", 0)
+        self.cost = treasury.structures_params[struct.__class__].get("cost", 0)
+        self.base_profit = treasury.structures_params[struct.__class__].get("profit", 0)
         self.profit = self.base_profit
-        self.base_capacity = treasury.structures_info[struct.__class__].get("capacity", 0)
+        self.base_capacity = treasury.structures_params[struct.__class__].get("capacity", 0)
         self.capacity = self.base_capacity
         self.stockpile = {resource: 0 for resource in self.profit.keys()}
-        self.base_cooldown = treasury.structures_info[struct.__class__].get("cooldown", treasury.default_cooldown)
+        self.base_cooldown = treasury.structures_params[struct.__class__].get("cooldown", treasury.default_cooldown)
         self.cooldown = self.base_cooldown
 
     def __repr__(self):

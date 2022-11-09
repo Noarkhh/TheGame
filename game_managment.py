@@ -1,5 +1,6 @@
 from algorithms import *
 from graphics import zoom
+import time
 from pygame.locals import (KEYDOWN,
                            QUIT,
                            K_ESCAPE,

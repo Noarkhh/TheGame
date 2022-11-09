@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from structures import *
 from cursor import Ghost
 from algorithms import detect_surrounded_tiles

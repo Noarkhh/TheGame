@@ -1,24 +1,22 @@
 {
   "House": {
     "cost": {
-      "Resources.GOLD": 10,
-      "Resources.WOOD": 5,
-      "Resources.STONE": 5
+      "GOLD": 10,
+      "WOOD": 5,
+      "STONE": 5
     },
     "profit": {
-      "Resources.GOLD": 10
-    },
-    "capacity": 0
+      "GOLD": 10
+    }
   },
   "Wall": {
     "cost": {
-      "Resources.WOOD": 1,
-      "Resources.STONE": 5
+      "WOOD": 1,
+      "STONE": 5
     },
     "profit": {
-      "Resources.GOLD": -2
-    },
-    "capacity": 0
+      "GOLD": -2
+    }
   },
   "Mine": {
     "cost": {},
@@ -27,12 +25,12 @@
   },
   "Gate": {
     "cost": {
-      "Resources.GOLD": 100,
-      "Resources.WOOD": 50,
-      "Resources.STONE": 50
+      "GOLD": 100,
+      "WOOD": 50,
+      "STONE": 50
     },
     "profit": {
-      "Resources.GOLD": -10
+      "GOLD": -10
     }
   }
 }
