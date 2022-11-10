@@ -3,7 +3,7 @@ from enum import Enum, IntEnum
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(frozen=True)
 class Vector:
     x: int
     y: int
@@ -69,12 +69,12 @@ class Orientation(IntEnum):
 
 
 class Tile:
-    def __init__(self, tile_type: 'TileTypes', resource: 'Resources'):
-        self.tile_type = tile_type
+    def __init__(self, terrain: 'Terrain', resource: 'Resources'):
+        self.terrain = terrain
         self.resource = resource
 
 
-class TileTypes(Enum):
+class Terrain(Enum):
     GRASSLAND = 0
     DESERT = 1
     WATER = 2

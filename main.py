@@ -95,23 +95,11 @@ def testing():
 
     screen = pg.display.set_mode([500, 500])
 
-    sizes = Sizes(Config())
-    map_manager = MapManager(sizes)
-    spritesheet = Spritesheet(sizes)
-    struct_manager = StructManager(sizes, map_manager)
-    treasury = Treasury()
-    print(treasury.structures_params)
-    structs = [House(Vector(1, 1), sizes.tile, spritesheet, treasury, sprite_variant=0),
-               Wall(Vector(1, 4), sizes.tile, spritesheet, treasury),
-               Mine(Vector(0, 1), sizes.tile, spritesheet, treasury),
-               Mine(Vector(0, 1), sizes.tile, spritesheet, treasury),
-               Gate(Vector(5, 5), sizes.tile, spritesheet, treasury, orientation=Orientation.VERTICAL)
-               ]
-    struct_manager.structs.add(structs)
+    structs = [House(Vector(1, 1)), Wall(Vector(1, 4)), Mine(Vector(0, 1)), Mine(Vector(0, 1)), Gate(Vector(5, 5))]
     print(struct_manager.structs.sprites())
 
     map_manager.struct_map[(5, 5)] = structs[1]
-    print(structs[-1].overrider(struct_manager.map_manager.struct_map))
+    print(structs[-1].can_override())
 
     running = True
     while running:
@@ -133,11 +121,13 @@ if __name__ == "__main__":
     pg.init()
     pg.mixer.init()
     screen = pg.display.set_mode([500, 500])
-    sizes = Sizes(Config())
+    config = Config()
+    sizes = Sizes(config)
     map_manager = MapManager(sizes)
     spritesheet = Spritesheet(sizes)
-    struct_manager = StructManager(sizes, map_manager)
-    treasury = Treasury()
+    treasury = Treasury(config)
+
+    struct_manager = StructManager(sizes, map_manager, spritesheet, treasury)
     # gw = GameWorld()
     # pos1 = Vector(3, 2)
     # pos2 = Vector(0, 1)
@@ -157,8 +147,8 @@ if __name__ == "__main__":
     print(globals()["House"])
     Config.get_structures_config()
     print(House.cost)
-    house1 = House(Vector(1, 1), sizes.tile, spritesheet, treasury, sprite_variant=0)
-    house2 = House(Vector(1, 1), sizes.tile, spritesheet, treasury, sprite_variant=0)
+    house1 = House(Vector(1, 1))
+    house2 = House(Vector(1, 1))
     print(house1.profit)
     print(House.cooldown)
     print(house1.cooldown_left)
@@ -170,5 +160,5 @@ if __name__ == "__main__":
     house1.produce()
     print(house1.stockpile)
     print(house1.cooldown_left)
-    # testing()
+    testing()
     # main()
