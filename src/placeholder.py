@@ -1,18 +1,20 @@
 from __future__ import annotations
-from typing import TypeVar, Generic, Type
+from typing import TypeVar, Generic, Type, ClassVar
 import pygame as pg
 import json
-from core_classes import *
+from src.core_classes import *
 
-T = TypeVar('T')
+U = TypeVar('U')
 
 
-class Map(Generic[T]):
+class Map(Generic[U]):
     def __init__(self, size: Vector) -> None:
-        self.elements: list[list[Optional[T]]] = [[None for _ in range(size.y)] for _ in range(size.x)]
+        self.elements: list[list[Optional[U]]] = [[None for _ in range(size.y)] for _ in range(size.x)]
         self.size: Vector = size
 
-    def __getitem__(self, pos: Vector | tuple) -> Optional[T]:
+    def __getitem__(self, pos: Vector | tuple) -> Optional[U]:
+        if not self.contains(pos):
+            return None
         if isinstance(pos, Vector):
             return self.elements[pos.x][pos.y]
         elif isinstance(pos, tuple):
@@ -20,7 +22,9 @@ class Map(Generic[T]):
         else:
             raise TypeError
 
-    def __setitem__(self, pos: Vector | tuple, element: T) -> None:
+    def __setitem__(self, pos: Vector | tuple, element: U) -> None:
+        if not self.contains(pos):
+            return None
         if isinstance(pos, Vector):
             self.elements[pos.x][pos.y] = element
         elif isinstance(pos, tuple):
@@ -29,32 +33,20 @@ class Map(Generic[T]):
     def __str__(self) -> str:
         return "\n".join([" ".join([str(self[x, y]) for x in range(self.size.x)]) for y in range(self.size.y)])
 
-    def contains(self, pos: Vector) -> bool:
-        return 0 <= pos.x < self.size.x and 0 <= pos.y < self.size.y
-
-
-class Message(Enum):
-    BAD_LOCATION_TERRAIN = 0
-    BAD_LOCATION_STRUCT = 1
-    NO_RESOURCES = 2
-
-    NOT_ADJACENT = 3
-    ONE_CANT_SNAP = 4
-    BAD_MATCH = 5
-    ALREADY_SNAPPED = 6
-
-    CANT_OVERRIDE = 7
-
-    BUILT = 8
-    SNAPPED = 9
-    OVERRODE = 10
+    def contains(self, pos: Vector | tuple) -> bool:
+        if isinstance(pos, Vector):
+            return 0 <= pos.x < self.size.x and 0 <= pos.y < self.size.y
+        elif isinstance(pos, tuple):
+            return 0 <= pos[0] < self.size.x and 0 <= pos[1] < self.size.y
+        else:
+            raise TypeError
 
 
 class Spritesheet:
     def __init__(self, sizes) -> None:
-        self.sheet: pg.Surface = pg.image.load("assets/spritesheet.png")
-        self.snapper_sheet: pg.Surface = pg.image.load("assets/snapper_sheet.png")
-        with open("config/spritesheet_coords.json", "r") as f:
+        self.sheet: pg.Surface = pg.image.load("../assets/spritesheet.png")
+        self.snapper_sheet: pg.Surface = pg.image.load("../assets/snapper_sheet.png")
+        with open("../config/spritesheet_coords.json", "r") as f:
             self.coords = json.load(f)
         self.sizes: Sizes = sizes
 
@@ -84,17 +76,17 @@ class Spritesheet:
 
 
 class Structure(pg.sprite.Sprite):
-    surf_aspect_ratio: tuple[int, int | float] = (1, 1)
-    covered_tiles: tuple[Vector, ...] = (Vector(0, 0),)
-    unsuitable_terrain: tuple[Terrain, ...] = (Terrain.WATER,)
-    overrider: bool = False
+    surf_aspect_ratio: ClassVar[tuple[int, int | float]] = (1, 1)
+    covered_tiles: ClassVar[tuple[Vector, ...]] = (Vector(0, 0),)
+    unsuitable_terrain: ClassVar[tuple[Terrain, ...]] = (Terrain.WATER,)
+    overrider: ClassVar[bool] = False
 
-    cost: dict[Resource, int]
-    profit: dict[Resource, int]
-    capacity: int
-    cooldown: int
+    base_cost: ClassVar[dict[Resource, int]]
+    base_profit: ClassVar[dict[Resource, int]]
+    base_capacity: ClassVar[int]
+    base_cooldown: ClassVar[int]
 
-    manager: StructManager
+    manager: ClassVar[StructManager]
 
     def __init__(self, pos: Vector, sprite_variant: int = 0, orientation: Orientation = Orientation.VERTICAL,
                  is_ghost: bool = False) -> None:
@@ -111,38 +103,39 @@ class Structure(pg.sprite.Sprite):
         self.image: pg.Surface = self.manager.spritesheet.get_image(self)
         self.rect: pg.Rect = self.image.get_rect(bottomright=((self.pos + (1, 1)) * self.manager.sizes.tile).to_tuple())
 
-        self.cost: dict[Resource, int] = self.__class__.cost.copy()
-        self.profit: dict[Resource, int] = self.__class__.profit.copy()
-        self.capacity: int = self.__class__.capacity
-        self.cooldown: int = self.__class__.cooldown
+        self.cost: dict[Resource, int] = self.__class__.base_cost.copy()
+        self.profit: dict[Resource, int] = self.__class__.base_profit.copy()
+        self.capacity: int = self.__class__.base_capacity
+        self.cooldown: int = self.__class__.base_cooldown
 
-        self.cooldown_left: int = self.cooldown
-        self.stockpile: dict[Resource, int] = {resource: 0 for resource in self.profit.keys()}
+        self.cooldown_left: int = self.base_cooldown
+        self.stockpile: dict[Resource, int] = {resource: 0 for resource in self.base_profit.keys()}
 
     def __repr__(self):
         return f'{self.__class__.__name__}(pos: {self.pos})'
 
-    def can_be_placed(self, map_manager: MapManager) -> tuple[bool, Message]:
+    def can_be_placed(self) -> Message:
+        tile_map = self.manager.map_manager.tile_map
+        struct_map = self.manager.map_manager.struct_map
 
-        if any(map_manager.tile_map[self.pos + rel_pos] in self.unsuitable_terrain for rel_pos in
-               self.covered_tiles):
-            return False, Message.BAD_LOCATION_TERRAIN
+        if any(tile_map[self.pos + rel_pos] in self.unsuitable_terrain for rel_pos in self.covered_tiles):
+            return Message.BAD_LOCATION_TERRAIN
 
-        if any(isinstance(map_manager.struct_map[self.pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
-            return False, Message.BAD_LOCATION_STRUCT
+        if any(isinstance(struct_map[self.pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
+            return Message.BAD_LOCATION_STRUCT
 
-        if any(amount > self.manager.treasury.resources[resource] for resource, amount in self.cost.items()):
-            return False, Message.NO_RESOURCES
+        if any(amount > self.manager.treasury.resources[resource] for resource, amount in self.base_cost.items()):
+            return Message.NO_RESOURCES
 
-        return True, Message.BUILT
+        return Message.BUILT
 
     def produce(self) -> None:
         self.cooldown_left -= 1
         if self.cooldown_left == 0:
-            if sum(self.stockpile.values()) < self.capacity:
-                for resource, amount in self.profit.items():
+            if sum(self.stockpile.values()) < self.base_capacity:
+                for resource, amount in self.base_profit.items():
                     self.stockpile[resource] += amount
-            self.cooldown_left = self.cooldown
+            self.cooldown_left = self.base_cooldown
 
     def update_zoom(self) -> None:
         self.image = pg.transform.scale(self.image, (self.surf_aspect_ratio[0] * self.manager.sizes.tile,
@@ -156,10 +149,10 @@ class Structure(pg.sprite.Sprite):
             "orientation": self.orientation,
             "sprite_variant": self.sprite_variant,
 
-            "cost": {resource.name: amount for resource, amount in self.cost.items()},
-            "profit": {resource.name: amount for resource, amount in self.cost.items()},
-            "capacity": self.capacity,
-            "cooldown": self.cooldown,
+            "cost": {resource.name: amount for resource, amount in self.base_cost.items()},
+            "profit": {resource.name: amount for resource, amount in self.base_cost.items()},
+            "capacity": self.base_capacity,
+            "cooldown": self.base_cooldown,
             "cooldown_left": self.cooldown_left,
             "stockpile": {resource.name: amount for resource, amount in self.stockpile.items()}
         }
@@ -186,6 +179,10 @@ class Sawmill(Structure):
     covered_tiles = (Vector(0, 0), Vector(-1, 0))
 
 
+class Tower(Structure):
+    surf_aspect_ratio = (1, 2)
+
+
 class Snapper(Structure):
     def __init__(self, *args, **kwargs) -> None:
         self.snaps_to: dict[Direction, Type[Structure]] = {direction: self.__class__ for direction in Direction}
@@ -200,24 +197,27 @@ class Snapper(Structure):
         self.neighbours.difference_update(neighbours)
         self.image = self.manager.spritesheet.get_image(self)
 
-    def can_be_snapped(self, curr_pos: Vector, prev_pos: Vector) -> tuple[bool, Message]:
+    def can_be_snapped(self, curr_pos: Vector, prev_pos: Vector) -> Message:
         snap_direction = (curr_pos - prev_pos).to_dir()
         struct_map = self.manager.map_manager.struct_map
         curr_struct, prev_struct = struct_map[curr_pos], struct_map[prev_pos]
 
+        if not issubclass(curr_struct.__class__, self.__class__):
+            return Message.BAD_CONNECTOR
+
         if snap_direction is None:
-            return False, Message.NOT_ADJACENT
+            return Message.NOT_ADJACENT
 
         if not isinstance(curr_struct, Snapper) or not isinstance(prev_struct, Snapper):
-            return False, Message.ONE_CANT_SNAP
+            return Message.ONE_CANT_SNAP
 
-        if curr_struct.snaps_to[-snap_direction] != prev_struct.snaps_to[snap_direction]:
-            return False, Message.BAD_MATCH
+        if curr_struct.snaps_to[snap_direction.opposite()] != prev_struct.snaps_to[snap_direction]:
+            return Message.BAD_MATCH
 
-        if -snap_direction in curr_struct.neighbours:
-            return False, Message.ALREADY_SNAPPED
+        if snap_direction.opposite() in curr_struct.neighbours:
+            return Message.ALREADY_SNAPPED
 
-        return True, Message.SNAPPED
+        return Message.SNAPPED
 
     def to_json(self) -> dict:
         return {
@@ -238,6 +238,14 @@ class Road(Snapper):
     pass
 
 
+class Farmland(Snapper):
+    pass
+
+
+class Bridge(Snapper):
+    unsuitable_terrain = (Terrain.GRASSLAND, Terrain.DESERT)
+
+
 class Gate(Wall, Road):
     surf_aspect_ratio = (1, 20 / 15)
     overrider = True
@@ -256,16 +264,22 @@ class Gate(Wall, Road):
         if not type(struct_map[self.pos]) in (Wall, Road):
             return False
 
-        for tested_direction in Direction:
-            neighbour_pos = self.pos + tested_direction.to_vector()
-            if struct_map.contains(neighbour_pos):
-                neighbour = struct_map[neighbour_pos]
-                if isinstance(neighbour, Snapper) and -tested_direction in neighbour.neighbours:
-                    if self.snaps_to[tested_direction] != neighbour.snaps_to[-tested_direction]:
-                        self.directions_to_connect_to.clear()
-                        return False
-                    self.directions_to_connect_to.add(tested_direction)
+        for direction_to_neighbour in Direction:
+            neighbour_pos = self.pos + direction_to_neighbour.to_vector()
+            neighbour = struct_map[neighbour_pos]
+            if isinstance(neighbour, Snapper) and direction_to_neighbour.opposite() in neighbour.neighbours:
+                if self.snaps_to[direction_to_neighbour] != neighbour.snaps_to[direction_to_neighbour.opposite()]:
+                    self.directions_to_connect_to.clear()
+                    return False
+                self.directions_to_connect_to.add(direction_to_neighbour)
         return True
+
+    def can_be_placed(self) -> Message:
+        message = super().can_be_placed()
+        if message == Message.BAD_LOCATION_STRUCT and self.can_override():
+            message = Message.OVERRODE
+
+        return message
 
     def rotate(self) -> None:
         if self.orientation == Orientation.VERTICAL:
@@ -279,11 +293,11 @@ class Gate(Wall, Road):
 
 
 class MapManager:
-    def __init__(self, sizes: Sizes):
+    def __init__(self, sizes: Sizes) -> None:
         self.layout: pg.Surface = Config.get_layout()
         self.struct_map: Map[Structure] = Map(sizes.map_tiles)
-        self.tile_map: Map = Map(sizes.map_tiles)
-        self.enclosed_tiles: Map = Map(sizes.map_tiles)
+        self.tile_map: Map[Tile] = Map(sizes.map_tiles)
+        self.enclosed_tiles: Map[bool] = Map(sizes.map_tiles)
 
     def load_terrain(self) -> None:
         color_to_terrain: dict[tuple[int, ...], Terrain] = {(181, 199, 75, 255): Terrain.GRASSLAND,
@@ -325,26 +339,25 @@ class Config:
 
     @staticmethod
     def get_structures_config():
-        with open("config/structures_config.json", "r") as f:
+        with open("../config/structures_config.json", "r") as f:
             for name, params in json.load(f).items():
-                setattr(globals()[name], "cost",
+                setattr(globals()[name], "base_cost",
                         {Resource[name]: amount for name, amount in params.get("cost", {}).items()})
-                setattr(globals()[name], "profit",
+                setattr(globals()[name], "base_profit",
                         {Resource[name]: amount for name, amount in params.get("profit", {}).items()})
-                setattr(globals()[name], "capacity", params.get("capacity", 100))
-                setattr(globals()[name], "cooldown", params.get("cooldown", 5))
+                setattr(globals()[name], "base_capacity", params.get("capacity", 100))
+                setattr(globals()[name], "base_cooldown", params.get("cooldown", 5))
 
     @staticmethod
     def get_starting_resources() -> dict[Resource, int]:
-        with open("config/starting_resources.json", "r") as f:
+        with open("../config/starting_resources.json", "r") as f:
             return {Resource[name]: info for name, info in json.load(f).items()}
 
     @staticmethod
     def get_layout() -> pg.Surface:
-        return pg.image.load("assets/maps/river_L.png").convert()
+        return pg.image.load("../assets/maps/river_L.png").convert()
 
 
 class Treasury:
-
     def __init__(self, config: Config) -> None:
         self.resources: dict[Resource, int] = config.get_starting_resources()

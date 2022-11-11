@@ -1,25 +1,27 @@
 from __future__ import annotations
 from enum import Enum, IntEnum
-from typing import Optional
+from typing import Optional, Generic, TypeVar
 from dataclasses import dataclass
+
+V = TypeVar('V', int, float)
 
 
 @dataclass(frozen=True)
-class Vector:
-    x: int
-    y: int
+class Vector(Generic[V]):
+    x: V
+    y: V
 
-    def __sub__(self, other: Vector | tuple[int, int]) -> Vector:
+    def __sub__(self, other: Vector | tuple[V, V]) -> Vector:
         if isinstance(other, Vector):
             return Vector(self.x - other.x, self.y - other.y)
         if isinstance(other, tuple):
             return Vector(self.x - other[0], self.y - other[1])
 
-    def __add__(self, other: Vector | tuple[int, int]) -> Vector:
+    def __add__(self, other: Vector[V] | tuple[V, V]) -> Vector[V]:
         if isinstance(other, Vector):
-            return Vector(self.x + other.x, self.y + other.y)
+            return Vector[V](self.x + other.x, self.y + other.y)
         if isinstance(other, tuple):
-            return Vector(self.x + other[0], self.y + other[1])
+            return Vector[V](self.x + other[0], self.y + other[1])
 
     def __neg__(self) -> Vector:
         return Vector(-self.x, -self.y)
@@ -30,7 +32,7 @@ class Vector:
         if isinstance(other, Vector):
             return Vector(self.x * other.x, self.y * other.y)
 
-    def to_dir(self) -> Optional[Direction]:
+    def to_dir(self: Vector[int]) -> Optional[Direction]:
         return {Vector(0, -1): Direction.N,
                 Vector(1, 0): Direction.E,
                 Vector(0, 1): Direction.S,
@@ -52,7 +54,7 @@ class Direction(IntEnum):
                 self.S: Vector(0, 1),
                 self.W: Vector(-1, 0)}[self]
 
-    def __neg__(self) -> Direction:
+    def opposite(self) -> Direction:
         return {self.N: Direction.S,
                 self.E: Direction.W,
                 self.S: Direction.N,
@@ -101,3 +103,26 @@ class Resource(Enum):
 
     def __repr__(self) -> str:
         return self.name
+
+
+class Message(Enum):
+    BUILT = 0
+    SNAPPED = 1
+    OVERRODE = 2
+
+    BAD_LOCATION_TERRAIN = 3
+    BAD_LOCATION_STRUCT = 4
+    NO_RESOURCES = 5
+
+    BAD_CONNECTOR = 6
+    NOT_ADJACENT = 7
+    ONE_CANT_SNAP = 8
+    BAD_MATCH = 9
+    ALREADY_SNAPPED = 10
+
+    CANT_OVERRIDE = 11
+
+    def success(self) -> bool:
+        if self in (Message.BUILT, Message.SNAPPED, Message.OVERRODE):
+            return True
+        return False
