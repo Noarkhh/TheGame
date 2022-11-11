@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TypeVar
+from typing import TypeVar, Generic, Type
 import pygame as pg
 import json
 from core_classes import *
@@ -7,16 +7,18 @@ from core_classes import *
 T = TypeVar('T')
 
 
-class Map:
+class Map(Generic[T]):
     def __init__(self, size: Vector) -> None:
-        self.elements: list[list[T]] = [[None for _ in range(size.y)] for _ in range(size.x)]
+        self.elements: list[list[Optional[T]]] = [[None for _ in range(size.y)] for _ in range(size.x)]
         self.size: Vector = size
 
-    def __getitem__(self, pos: Vector | tuple) -> T:
+    def __getitem__(self, pos: Vector | tuple) -> Optional[T]:
         if isinstance(pos, Vector):
             return self.elements[pos.x][pos.y]
         elif isinstance(pos, tuple):
             return self.elements[pos[0]][pos[1]]
+        else:
+            raise TypeError
 
     def __setitem__(self, pos: Vector | tuple, element: T) -> None:
         if isinstance(pos, Vector):
@@ -60,22 +62,25 @@ class Spritesheet:
         if isinstance(obj, Snapper):
             target_rect = pg.Rect(
                 [obj.neighbours.get_id() * 15] + self.coords["Snappers"][obj.__class__.__name__][obj.sprite_variant])
-            new_surf = pg.Surface(target_rect.size)
-            new_surf.blit(self.snapper_sheet, (0, 0), target_rect)
+            sheet = self.snapper_sheet
+            aspect_ratio = obj.surf_aspect_ratio
         elif isinstance(obj, Structure):
             target_rect = pg.Rect(self.coords["Structures"][obj.__class__.__name__][obj.sprite_variant])
-            new_surf = pg.Surface(target_rect.size)
-            new_surf.blit(self.sheet, (0, 0), target_rect)
+            sheet = self.sheet
+            aspect_ratio = obj.surf_aspect_ratio
         elif isinstance(obj, Terrain):
             target_rect = pg.Rect(self.coords["TileTypes"][obj.name])
-            new_surf = pg.Surface(target_rect.size)
-            new_surf.blit(self.sheet, (0, 0), target_rect)
+            sheet = self.sheet
+            aspect_ratio = (1, 1)
         else:
-            raise ValueError
+            raise TypeError
+
+        new_surf = pg.Surface(target_rect.size)
+        new_surf.blit(sheet, (0, 0), target_rect)
+        new_surf = pg.transform.scale(new_surf, (aspect_ratio[0] * self.sizes.tile, aspect_ratio[1] * self.sizes.tile))
 
         new_surf.set_colorkey((255, 255, 255), pg.RLEACCEL)
-        return pg.transform.scale(new_surf, (obj.surf_aspect_ratio[0] * self.sizes.tile,
-                                             obj.surf_aspect_ratio[1] * self.sizes.tile))
+        return new_surf
 
 
 class Structure(pg.sprite.Sprite):
@@ -93,7 +98,10 @@ class Structure(pg.sprite.Sprite):
 
     def __init__(self, pos: Vector, sprite_variant: int = 0, orientation: Orientation = Orientation.VERTICAL,
                  is_ghost: bool = False) -> None:
-        super().__init__(self.manager.structs if not is_ghost else ())
+        if is_ghost:
+            super().__init__()
+        else:
+            super().__init__(self.manager.structs)
 
         self.pos: Vector = pos
 
@@ -148,12 +156,12 @@ class Structure(pg.sprite.Sprite):
             "orientation": self.orientation,
             "sprite_variant": self.sprite_variant,
 
-            "cost": {resource.name: amount for resource, amount in self.cost},
-            "profit": {resource.name: amount for resource, amount in self.cost},
+            "cost": {resource.name: amount for resource, amount in self.cost.items()},
+            "profit": {resource.name: amount for resource, amount in self.cost.items()},
             "capacity": self.capacity,
             "cooldown": self.cooldown,
             "cooldown_left": self.cooldown_left,
-            "stockpile": {resource.name: amount for resource, amount in self.stockpile}
+            "stockpile": {resource.name: amount for resource, amount in self.stockpile.items()}
         }
 
     def from_json(self, y: dict) -> None:
@@ -180,7 +188,7 @@ class Sawmill(Structure):
 
 class Snapper(Structure):
     def __init__(self, *args, **kwargs) -> None:
-        self.snaps_to: dict[Direction, Structure] = {direction: self.__class__ for direction in Direction}
+        self.snaps_to: dict[Direction, Type[Structure]] = {direction: self.__class__ for direction in Direction}
         self.neighbours: DirectionSet = DirectionSet()
         super().__init__(*args, **kwargs)
 
@@ -192,19 +200,21 @@ class Snapper(Structure):
         self.neighbours.difference_update(neighbours)
         self.image = self.manager.spritesheet.get_image(self)
 
-    def can_be_snapped(self, prev_pos) -> tuple[bool, Message]:
-        snap_direction = (self.pos - prev_pos).to_dir()
+    def can_be_snapped(self, curr_pos: Vector, prev_pos: Vector) -> tuple[bool, Message]:
+        snap_direction = (curr_pos - prev_pos).to_dir()
         struct_map = self.manager.map_manager.struct_map
+        curr_struct, prev_struct = struct_map[curr_pos], struct_map[prev_pos]
+
         if snap_direction is None:
             return False, Message.NOT_ADJACENT
 
-        if not isinstance(struct_map[self.pos], Snapper) or not isinstance(struct_map[prev_pos], Snapper):
+        if not isinstance(curr_struct, Snapper) or not isinstance(prev_struct, Snapper):
             return False, Message.ONE_CANT_SNAP
 
-        if self.snaps_to[-snap_direction] != struct_map[prev_pos].snapsto[snap_direction]:
+        if curr_struct.snaps_to[-snap_direction] != prev_struct.snaps_to[snap_direction]:
             return False, Message.BAD_MATCH
 
-        if -snap_direction in self.neighbours:
+        if -snap_direction in curr_struct.neighbours:
             return False, Message.ALREADY_SNAPPED
 
         return True, Message.SNAPPED
@@ -248,12 +258,13 @@ class Gate(Wall, Road):
 
         for tested_direction in Direction:
             neighbour_pos = self.pos + tested_direction.to_vector()
-            if struct_map.contains(neighbour_pos) and isinstance(struct_map[neighbour_pos], Snapper) and \
-                    -tested_direction in struct_map[neighbour_pos].neighbours:
-                if self.snaps_to[tested_direction] != struct_map[neighbour_pos].snaps_to[-tested_direction]:
-                    self.directions_to_connect_to.clear()
-                    return False
-                self.directions_to_connect_to.add(tested_direction)
+            if struct_map.contains(neighbour_pos):
+                neighbour = struct_map[neighbour_pos]
+                if isinstance(neighbour, Snapper) and -tested_direction in neighbour.neighbours:
+                    if self.snaps_to[tested_direction] != neighbour.snaps_to[-tested_direction]:
+                        self.directions_to_connect_to.clear()
+                        return False
+                    self.directions_to_connect_to.add(tested_direction)
         return True
 
     def rotate(self) -> None:
@@ -270,14 +281,14 @@ class Gate(Wall, Road):
 class MapManager:
     def __init__(self, sizes: Sizes):
         self.layout: pg.Surface = Config.get_layout()
-        self.struct_map: Map = Map(sizes.map_tiles)
+        self.struct_map: Map[Structure] = Map(sizes.map_tiles)
         self.tile_map: Map = Map(sizes.map_tiles)
         self.enclosed_tiles: Map = Map(sizes.map_tiles)
 
     def load_terrain(self) -> None:
-        color_to_terrain = {(181, 199, 75, 255): Terrain.GRASSLAND,
-                            (41, 153, 188, 255): Terrain.WATER,
-                            (250, 213, 100, 255): Terrain.DESERT}
+        color_to_terrain: dict[tuple[int, ...], Terrain] = {(181, 199, 75, 255): Terrain.GRASSLAND,
+                                                            (41, 153, 188, 255): Terrain.WATER,
+                                                            (250, 213, 100, 255): Terrain.DESERT}
 
         for x in range(self.tile_map.size.x):
             for y in range(self.tile_map.size.y):
@@ -299,7 +310,7 @@ class StructManager:
 
 
 class Sizes:
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         self.tile: int = config.tile_size
 
         self.map_tiles: Vector = Vector(*Config.get_layout().get_size())
@@ -308,7 +319,7 @@ class Sizes:
 
 class Config:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.tile_size: int = 60
         self.tick_rate: int = 60
 
@@ -324,16 +335,16 @@ class Config:
                 setattr(globals()[name], "cooldown", params.get("cooldown", 5))
 
     @staticmethod
-    def get_starting_resources():
+    def get_starting_resources() -> dict[Resource, int]:
         with open("config/starting_resources.json", "r") as f:
             return {Resource[name]: info for name, info in json.load(f).items()}
 
     @staticmethod
-    def get_layout():
+    def get_layout() -> pg.Surface:
         return pg.image.load("assets/maps/river_L.png").convert()
 
 
 class Treasury:
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         self.resources: dict[Resource, int] = config.get_starting_resources()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from enum import Enum, IntEnum
+from typing import Optional
 from dataclasses import dataclass
 
 
@@ -29,7 +30,7 @@ class Vector:
         if isinstance(other, Vector):
             return Vector(self.x * other.x, self.y * other.y)
 
-    def to_dir(self) -> Direction:
+    def to_dir(self) -> Optional[Direction]:
         return {Vector(0, -1): Direction.N,
                 Vector(1, 0): Direction.E,
                 Vector(0, 1): Direction.S,
@@ -52,10 +53,10 @@ class Direction(IntEnum):
                 self.W: Vector(-1, 0)}[self]
 
     def __neg__(self) -> Direction:
-        return {self.N: self.S,
-                self.E: self.W,
-                self.S: self.N,
-                self.W: self.E}[self]
+        return {self.N: Direction.S,
+                self.E: Direction.W,
+                self.S: Direction.N,
+                self.W: Direction.E}[self]
 
 
 class DirectionSet(set):
@@ -69,9 +70,9 @@ class Orientation(IntEnum):
 
 
 class Tile:
-    def __init__(self, terrain: 'Terrain', resource: 'Resource' = None) -> None:
-        self.terrain = terrain
-        self.resource = resource
+    def __init__(self, terrain: Terrain, resource: Optional[Resource] = None) -> None:
+        self.terrain: Terrain = terrain
+        self.resource: Optional[Resource] = resource
 
 
 class Terrain(Enum):
