@@ -3,34 +3,34 @@ from enum import Enum, IntEnum
 from typing import Optional, Generic, TypeVar
 from dataclasses import dataclass
 
-V = TypeVar('V', int, float)
+T = TypeVar('T', int, float)
 
 
 @dataclass(frozen=True)
-class Vector(Generic[V]):
-    x: V
-    y: V
+class Vector(Generic[T]):
+    x: T
+    y: T
 
-    def __sub__(self, other: Vector | tuple[V, V]) -> Vector:
+    def __sub__(self, other: Vector[T] | tuple[T, T]) -> Vector[T]:
         if isinstance(other, Vector):
-            return Vector(self.x - other.x, self.y - other.y)
+            return Vector[T](self.x - other.x, self.y - other.y)
         if isinstance(other, tuple):
-            return Vector(self.x - other[0], self.y - other[1])
+            return Vector[T](self.x - other[0], self.y - other[1])
 
-    def __add__(self, other: Vector[V] | tuple[V, V]) -> Vector[V]:
+    def __add__(self, other: Vector[T] | tuple[T, T]) -> Vector[T]:
         if isinstance(other, Vector):
-            return Vector[V](self.x + other.x, self.y + other.y)
+            return Vector[T](self.x + other.x, self.y + other.y)
         if isinstance(other, tuple):
-            return Vector[V](self.x + other[0], self.y + other[1])
+            return Vector[T](self.x + other[0], self.y + other[1])
 
-    def __neg__(self) -> Vector:
-        return Vector(-self.x, -self.y)
+    def __neg__(self) -> Vector[T]:
+        return Vector[T](-self.x, -self.y)
 
-    def __mul__(self, other: int | Vector) -> Vector:
-        if isinstance(other, int):
-            return Vector(self.x * other, self.y * other)
+    def __mul__(self, other: T | Vector[T]) -> Vector[T]:
+        if isinstance(other, int) or isinstance(other, float):
+            return Vector[T](self.x * other, self.y * other)
         if isinstance(other, Vector):
-            return Vector(self.x * other.x, self.y * other.y)
+            return Vector[T](self.x * other.x, self.y * other.y)
 
     def to_dir(self: Vector[int]) -> Optional[Direction]:
         return {Vector(0, -1): Direction.N,
@@ -38,7 +38,7 @@ class Vector(Generic[V]):
                 Vector(0, 1): Direction.S,
                 Vector(-1, 0): Direction.W}.get(self)
 
-    def to_tuple(self) -> tuple:
+    def to_tuple(self) -> tuple[T, T]:
         return self.x, self.y
 
 

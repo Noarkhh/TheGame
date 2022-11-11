@@ -1,8 +1,9 @@
 from __future__ import annotations
+from src.structures import *
 from src.placeholder import *
 
 
-def main():
+def main() -> None:
     pg.init()
     pg.mixer.init()
     pg.time.Clock()
@@ -17,6 +18,11 @@ def main():
 
     structs = [House(Vector(1, 1)), Wall(Vector(1, 4)), Mine(Vector(0, 1), is_ghost=True), Gate(Vector(5, 5))]
     print(struct_manager.structs.sprites())
+
+    v = Vector[int](2, 4)
+    u = Vector[float](1.0, 5.0)
+
+    # w = u.to_dir()
 
     map_manager.struct_map[(5, 5)] = structs[1]
 
