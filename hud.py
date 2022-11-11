@@ -476,7 +476,7 @@ class BuildMenu(HUD):
             else:
                 button_tile, button_tile_hover = "tile_big", "tile_big_hover"
             curr_button = self.make_button(
-                pg.transform.scale(new_build.image, (60 * new_build.surf_ratio[0], 60 * new_build.surf_ratio[1])),
+                pg.transform.scale(new_build.surf, (60 * new_build.surf_ratio[0], 60 * new_build.surf_ratio[1])),
                 (curr_button_pos_left, 0), self.assign, type(new_build),
                 button_tile, button_tile_hover, -i - 1, 4 + height)
             self.structure_buttons.add(curr_button)

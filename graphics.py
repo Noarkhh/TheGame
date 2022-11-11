@@ -75,7 +75,7 @@ class Entities(pg.sprite.Group):
         sprites = self.sprites()
         for spr in sorted(sprites, key=lambda spr: spr.pos[1]):
             if spr.rect.colliderect(scene.rect):
-                scene.image.blit(spr.surf, spr.rect)
+                scene.surf.blit(spr.surf, spr.rect)
         self.lostsprites = []
 
 
@@ -86,14 +86,14 @@ def zoom(gw, button, factor):
     gw.tile_s = int(gw.tile_s * factor)
     gw.width_pixels = int(gw.width_pixels * factor)
     gw.height_pixels = int(gw.height_pixels * factor)
-    gw.scene.image = pg.transform.scale(gw.scene.image, (gw.width_pixels, gw.height_pixels))
+    gw.scene.surf = pg.transform.scale(gw.scene.surf, (gw.width_pixels, gw.height_pixels))
     gw.scene.surf_raw = pg.transform.scale(gw.scene.surf_raw, (gw.width_pixels, gw.height_pixels))
-    gw.cursor.image = pg.transform.scale(gw.cursor.image, (gw.tile_s, gw.tile_s))
+    gw.cursor.surf = pg.transform.scale(gw.cursor.surf, (gw.tile_s, gw.tile_s))
     gw.cursor.surf_demolish = pg.transform.scale(gw.cursor.surf_demolish_raw, (gw.tile_s, gw.tile_s))
     gw.hud.minimap.update_zoom(gw)
 
     if gw.cursor.held_structure is not None:
-        gw.cursor.held_structure.image = pg.transform.scale(gw.cursor.held_structure.image, (
+        gw.cursor.held_structure.surf = pg.transform.scale(gw.cursor.held_structure.surf, (
             gw.cursor.held_structure.surf_ratio[0] * gw.tile_s, gw.cursor.held_structure.surf_ratio[1] * gw.tile_s))
 
     for struct in gw.structs:

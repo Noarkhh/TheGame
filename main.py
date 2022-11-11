@@ -73,9 +73,9 @@ def main():
             gw.hud.global_statistics.update_global_stats(gw)
             gw.hud.tile_statistics.update_tile_stats(gw.cursor.pos, gw)
         if gw.hud.build_menu.is_build_menu_open:
-            gw.screen.blit(gw.hud.build_menu.image, gw.hud.build_menu.rect)
+            gw.screen.blit(gw.hud.build_menu.surf, gw.hud.build_menu.rect)
 
-        gw.screen.blit(gw.hud.toolbar.image, gw.hud.toolbar.rect)
+        gw.screen.blit(gw.hud.toolbar.surf, gw.hud.toolbar.rect)
         gw.hud.minimap.update_minimap(gw)
         gw.hud.top_bar.update(gw)
 
@@ -91,11 +91,9 @@ def main():
 
 
 def testing():
-    pg.init()
-
     screen = pg.display.set_mode([500, 500])
 
-    structs = [House(Vector(1, 1)), Wall(Vector(1, 4)), Mine(Vector(0, 1)), Mine(Vector(0, 1)), Gate(Vector(5, 5))]
+    structs = [House(Vector(1, 1)), Wall(Vector(1, 4)), Mine(Vector(0, 1), is_ghost=True), Gate(Vector(5, 5))]
     print(struct_manager.structs.sprites())
 
     map_manager.struct_map[(5, 5)] = structs[1]
@@ -143,22 +141,8 @@ if __name__ == "__main__":
     # print(pos1 - pos2)
     # print(TileTypes.GRASSLAND)
     # dir_set = DirectionSet((Directions.N, Directions.S))
-
-    print(globals()["House"])
-    Config.get_structures_config()
-    print(House.cost)
-    house1 = House(Vector(1, 1))
-    house2 = House(Vector(1, 1))
-    print(house1.profit)
-    print(House.cooldown)
-    print(house1.cooldown_left)
-    house1.cooldown_left = 1
-    house1.cooldown = 1
-    print(house1.cooldown_left)
-    house1.produce()
-    house1.produce()
-    house1.produce()
-    print(house1.stockpile)
-    print(house1.cooldown_left)
+    a = Orientation.VERTICAL
+    a += 1
+    print(Vector(2, 2).to_dir())
     testing()
     # main()

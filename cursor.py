@@ -47,10 +47,10 @@ class Cursor(pg.sprite.Sprite):
 
     def draw(self, gw):
         if not self.is_in_demolish_mode:
-            gw.scene.image.blit(self.surf, self.rect)
+            gw.scene.surf.blit(self.surf, self.rect)
         if self.ghost is not None:
             self.ghost.update(gw)
-            gw.scene.image.blit(self.ghost.image, self.ghost.rect)
+            gw.scene.surf.blit(self.ghost.surf, self.ghost.rect)
 
     def change_mode(self, gw, button, mode, state="toggle"):
         if mode == "demolish":
@@ -90,7 +90,7 @@ class Cursor(pg.sprite.Sprite):
 class Ghost:
     def __init__(self, gw):
         if not gw.cursor.is_in_demolish_mode:
-            self.surf = gw.cursor.held_structure.image
+            self.surf = gw.cursor.held_structure.surf
         else:
             self.surf = gw.spritesheet.get_snapper_surf(gw, (), "demolish")
         self.surf.set_alpha(128)
@@ -105,7 +105,7 @@ class Ghost:
         self.pos = gw.cursor.pos
         if not gw.cursor.is_dragging:
             if not gw.cursor.is_in_demolish_mode:
-                self.surf = gw.cursor.held_structure.image
+                self.surf = gw.cursor.held_structure.surf
             else:
                 self.surf = gw.spritesheet.get_snapper_surf(gw, (), "demolish")
             self.rect = self.surf.get_rect(bottomright=(gw.tile_s * (self.pos[0] + 1), gw.tile_s * (self.pos[1] + 1)))

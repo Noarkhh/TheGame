@@ -29,17 +29,17 @@ class Vector:
         if isinstance(other, Vector):
             return Vector(self.x * other.x, self.y * other.y)
 
-    def to_dir(self) -> Directions:
-        return {Vector(0, -1): Directions.N,
-                Vector(1, 0): Directions.E,
-                Vector(0, 1): Directions.S,
-                Vector(-1, 0): Directions.W}.get(self)
+    def to_dir(self) -> Direction:
+        return {Vector(0, -1): Direction.N,
+                Vector(1, 0): Direction.E,
+                Vector(0, 1): Direction.S,
+                Vector(-1, 0): Direction.W}.get(self)
 
     def to_tuple(self) -> tuple:
         return self.x, self.y
 
 
-class Directions(IntEnum):
+class Direction(IntEnum):
     N = 0
     E = 1
     S = 2
@@ -51,7 +51,7 @@ class Directions(IntEnum):
                 self.S: Vector(0, 1),
                 self.W: Vector(-1, 0)}[self]
 
-    def __neg__(self) -> Directions:
+    def __neg__(self) -> Direction:
         return {self.N: self.S,
                 self.E: self.W,
                 self.S: self.N,
@@ -69,7 +69,7 @@ class Orientation(IntEnum):
 
 
 class Tile:
-    def __init__(self, terrain: 'Terrain', resource: 'Resources'):
+    def __init__(self, terrain: 'Terrain', resource: 'Resource' = None) -> None:
         self.terrain = terrain
         self.resource = resource
 
@@ -79,11 +79,11 @@ class Terrain(Enum):
     DESERT = 1
     WATER = 2
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
 
-class Resources(Enum):
+class Resource(Enum):
     WOOD = 0
     STONE = 1
     WHEAT = 2
@@ -98,5 +98,5 @@ class Resources(Enum):
     METEORITE = 11
     GOLD = 12
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
