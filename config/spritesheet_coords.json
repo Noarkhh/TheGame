@@ -4,10 +4,10 @@
     "Sawmill": [[0, 15, 30, 15]],
     "Mine": [[0, 30, 15, 30]]
   },
-  "Tiles": {
-    "TileType.GRASSLAND": [0, 60, 15, 15],
-    "TileType.DESERT": [15, 60, 15, 15],
-    "TileType.WATER": [30, 60, 15, 15]
+  "Terrain": {
+    "GRASSLAND": [0, 60, 15, 15],
+    "DESERT": [15, 60, 15, 15],
+    "WATER": [30, 60, 15, 15]
   },
   "Snappers": {
     "Road": [[0, 15, 15]],

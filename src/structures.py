@@ -1,13 +1,15 @@
-from typing import Type, ClassVar
+from __future__ import annotations
 import pygame as pg
+from typing import Type, ClassVar
 from src.core_classes import *
-from src.placeholder import StructManager
+if TYPE_CHECKING:
+    from src.struct_manager import StructManager
 
 
 class Structure(pg.sprite.Sprite):
     image_aspect_ratio: ClassVar[Vector[float]] = Vector[float](1, 1)
-    covered_tiles: ClassVar[tuple[Vector[int], ...]] = (Vector[int](0, 0),)
-    unsuitable_terrain: ClassVar[tuple[Terrain, ...]] = (Terrain.WATER,)
+    covered_tiles: ClassVar[list[Vector[int]]] = [Vector[int](0, 0)]
+    unsuitable_terrain: ClassVar[list[Terrain]] = [Terrain.WATER]
     overrider: ClassVar[bool] = False
 
     base_cost: ClassVar[dict[Resource, int]]
@@ -30,7 +32,7 @@ class Structure(pg.sprite.Sprite):
         self.orientation: Orientation = orientation
 
         self.image: pg.Surface = self.manager.spritesheet.get_image(self)
-        self.rect: pg.Rect = self.image.get_rect(bottomright=((self.pos + (1, 1)) * self.manager.sizes.tile).to_tuple())
+        self.rect: pg.Rect = self.image.get_rect(bottomright=((self.pos + (1, 1)) * Tile.size).to_tuple())
 
         self.cost: dict[Resource, int] = self.__class__.base_cost.copy()
         self.profit: dict[Resource, int] = self.__class__.base_profit.copy()
@@ -67,8 +69,8 @@ class Structure(pg.sprite.Sprite):
             self.cooldown_left = self.base_cooldown
 
     def update_zoom(self) -> None:
-        self.image = pg.transform.scale(self.image, (self.image_aspect_ratio * self.manager.sizes.tile).to_tuple())
-        self.rect = self.image.get_rect(bottomright=((self.pos + (1, 1)) * self.manager.sizes.tile).to_tuple())
+        self.image = pg.transform.scale(self.image, (self.image_aspect_ratio * Tile.size).to_tuple())
+        self.rect = self.image.get_rect(bottomright=((self.pos + (1, 1)) * Tile.size).to_tuple())
 
     def to_json(self) -> dict:
         return {
@@ -104,7 +106,7 @@ class Mine(Structure):
 
 class Sawmill(Structure):
     image_aspect_ratio = Vector[float](2, 1)
-    covered_tiles = (Vector[int](0, 0), Vector[int](-1, 0))
+    covered_tiles = [Vector[int](0, 0), Vector[int](-1, 0)]
 
 
 class Tower(Structure):
@@ -171,15 +173,15 @@ class Farmland(Snapper):
 
 
 class Bridge(Snapper):
-    unsuitable_terrain = (Terrain.GRASSLAND, Terrain.DESERT)
+    unsuitable_terrain = [Terrain.GRASSLAND, Terrain.DESERT]
 
 
 class Gate(Wall, Road):
     image_aspect_ratio = Vector[float](1, 20 / 15)
     overrider = True
 
-    def __init__(self, *args, orientation: Orientation = Orientation.VERTICAL, **kwargs) -> None:
-        super().__init__(*args, orientation, **kwargs)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.directions_to_connect_to: DirectionSet = DirectionSet()
 
         if self.orientation == Orientation.VERTICAL:

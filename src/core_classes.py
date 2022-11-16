@@ -1,6 +1,6 @@
 from __future__ import annotations
 from enum import Enum, IntEnum
-from typing import Optional, Generic, TypeVar
+from typing import Optional, Generic, TypeVar, TYPE_CHECKING
 from dataclasses import dataclass
 
 T = TypeVar('T', int, float)
@@ -72,6 +72,8 @@ class Orientation(IntEnum):
 
 
 class Tile:
+    size: int
+
     def __init__(self, terrain: Terrain, resource: Optional[Resource] = None) -> None:
         self.terrain: Terrain = terrain
         self.resource: Optional[Resource] = resource
