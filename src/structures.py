@@ -24,7 +24,7 @@ class Structure(pg.sprite.Sprite):
         if is_ghost:
             super().__init__()
         else:
-            super().__init__(self.manager.structs)
+            super().__init__(self.manager.structs, self.manager.entities)
 
         self.pos: Vector[int] = pos
 
@@ -59,6 +59,9 @@ class Structure(pg.sprite.Sprite):
             return Message.NO_RESOURCES
 
         return Message.BUILT
+
+    def can_be_snapped(self, curr_pos: Vector[int], prev_pos: Vector[int]) -> Message:
+        return Message.NOT_A_SNAPPER
 
     def produce(self) -> None:
         self.cooldown_left -= 1
@@ -119,12 +122,18 @@ class Snapper(Structure):
         self.neighbours: DirectionSet = DirectionSet()
         super().__init__(*args, **kwargs)
 
-    def add_neighbours(self, neighbours: DirectionSet | set) -> None:
-        self.neighbours.update(neighbours)
+    def add_neighbours(self, neighbours: DirectionSet | set | Direction) -> None:
+        if isinstance(neighbours, Direction):
+            self.neighbours.add(neighbours)
+        else:
+            self.neighbours.update(neighbours)
         self.image = self.manager.spritesheet.get_image(self)
 
-    def remove_neighbours(self, neighbours: DirectionSet | set) -> None:
-        self.neighbours.difference_update(neighbours)
+    def remove_neighbours(self, neighbours: DirectionSet | set | Direction) -> None:
+        if isinstance(neighbours, Direction):
+            self.neighbours.remove(neighbours)
+        else:
+            self.neighbours.difference_update(neighbours)
         self.image = self.manager.spritesheet.get_image(self)
 
     def can_be_snapped(self, curr_pos: Vector[int], prev_pos: Vector[int]) -> Message:
@@ -182,7 +191,6 @@ class Gate(Wall, Road):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.directions_to_connect_to: DirectionSet = DirectionSet()
 
         if self.orientation == Orientation.VERTICAL:
             self.snaps_to = {Direction.N: Road, Direction.E: Wall, Direction.S: Road, Direction.W: Wall}
@@ -191,6 +199,8 @@ class Gate(Wall, Road):
 
     def can_override(self) -> bool:
         struct_map = self.manager.map_manager.struct_map
+        directions_to_connect_to: DirectionSet = DirectionSet()
+
         if not type(struct_map[self.pos]) in (Wall, Road):
             return False
 
@@ -199,16 +209,16 @@ class Gate(Wall, Road):
             neighbour = struct_map[neighbour_pos]
             if isinstance(neighbour, Snapper) and direction_to_neighbour.opposite() in neighbour.neighbours:
                 if self.snaps_to[direction_to_neighbour] != neighbour.snaps_to[direction_to_neighbour.opposite()]:
-                    self.directions_to_connect_to.clear()
                     return False
-                self.directions_to_connect_to.add(direction_to_neighbour)
+                directions_to_connect_to.add(direction_to_neighbour)
+
+        self.add_neighbours(directions_to_connect_to)
         return True
 
     def can_be_placed(self) -> Message:
         message = super().can_be_placed()
         if message == Message.BAD_LOCATION_STRUCT and self.can_override():
             message = Message.OVERRODE
-
         return message
 
     def rotate(self) -> None:

@@ -1,15 +1,33 @@
 from __future__ import annotations
-from enum import Enum, IntEnum
-from typing import Optional, Generic, TypeVar, TYPE_CHECKING
-from dataclasses import dataclass
+from enum import Enum, IntEnum, auto
+from typing import Optional, Generic, TypeVar, TYPE_CHECKING, overload
 
 T = TypeVar('T', int, float)
 
 
-@dataclass(frozen=True)
 class Vector(Generic[T]):
-    x: T
-    y: T
+    @overload
+    def __init__(self, x: tuple[T, T]) -> None: ...
+    @overload
+    def __init__(self, x: T, y: T) -> None: ...
+
+    def __init__(self, x: tuple[T, T] | T, y: Optional[T] = None) -> None:
+        if isinstance(x, tuple):
+            self._x: T = x[0]
+            self._y: T = x[1]
+        elif y is not None:
+            self._x = x
+            self._y = y
+        else:
+            raise TypeError
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
 
     def __sub__(self, other: Vector[T] | tuple[T, T]) -> Vector[T]:
         if isinstance(other, Vector):
@@ -32,6 +50,12 @@ class Vector(Generic[T]):
         if isinstance(other, Vector):
             return Vector[T](self.x * other.x, self.y * other.y)
 
+    def __floordiv__(self, other: int):
+        return Vector[int](self.x // other, self.y // other)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.x}, {self.y})"
+
     def to_dir(self: Vector[int]) -> Optional[Direction]:
         return {Vector(0, -1): Direction.N,
                 Vector(1, 0): Direction.E,
@@ -40,6 +64,12 @@ class Vector(Generic[T]):
 
     def to_tuple(self) -> tuple[T, T]:
         return self.x, self.y
+
+    def to_float(self: Vector[int]):
+        return Vector(float(self.x), float(self.y))
+
+    def to_int(self: Vector[float]):
+        return Vector(int(self.x), int(self.y))
 
 
 class Direction(IntEnum):
@@ -80,51 +110,50 @@ class Tile:
 
 
 class Terrain(Enum):
-    GRASSLAND = 0
-    DESERT = 1
-    WATER = 2
+    GRASSLAND = auto()
+    DESERT = auto()
+    WATER = auto()
 
     def __repr__(self) -> str:
         return self.name
 
 
 class Resource(Enum):
-    WOOD = 0
-    STONE = 1
-    WHEAT = 2
-    COAL = 3
-    ORE = 4
-    IRON = 5
-    CHARCOAL = 6
-    BRICKS = 7
-    STEEL = 8
-    REINFORCED_WOOD = 9
-    BREAD = 10
-    METEORITE = 11
-    GOLD = 12
+    WOOD = auto()
+    STONE = auto()
+    WHEAT = auto()
+    COAL = auto()
+    ORE = auto()
+    IRON = auto()
+    CHARCOAL = auto()
+    BRICKS = auto()
+    STEEL = auto()
+    REINFORCED_WOOD = auto()
+    BREAD = auto()
+    METEORITE = auto()
+    GOLD = auto()
 
     def __repr__(self) -> str:
         return self.name
 
 
 class Message(Enum):
-    BUILT = 0
-    SNAPPED = 1
-    OVERRODE = 2
+    BUILT = auto()
+    SNAPPED = auto()
+    OVERRODE = auto()
 
-    BAD_LOCATION_TERRAIN = 3
-    BAD_LOCATION_STRUCT = 4
-    NO_RESOURCES = 5
+    BAD_LOCATION_TERRAIN = auto()
+    BAD_LOCATION_STRUCT = auto()
+    NO_RESOURCES = auto()
 
-    BAD_CONNECTOR = 6
-    NOT_ADJACENT = 7
-    ONE_CANT_SNAP = 8
-    BAD_MATCH = 9
-    ALREADY_SNAPPED = 10
+    NOT_A_SNAPPER = auto()
+    BAD_CONNECTOR = auto()
+    NOT_ADJACENT = auto()
+    ONE_CANT_SNAP = auto()
+    BAD_MATCH = auto()
+    ALREADY_SNAPPED = auto()
 
-    CANT_OVERRIDE = 11
+    CANT_OVERRIDE = auto()
 
     def success(self) -> bool:
-        if self in (Message.BUILT, Message.SNAPPED, Message.OVERRODE):
-            return True
-        return False
+        return self in (Message.BUILT, Message.SNAPPED, Message.OVERRODE)

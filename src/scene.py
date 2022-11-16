@@ -11,12 +11,12 @@ if TYPE_CHECKING:
 class Scene(pg.sprite.Sprite):
     def __init__(self, config: Config, spritesheet: Spritesheet, map_manager: MapManager) -> None:
         super().__init__()
-        self.image: pg.Surface = map_manager.load_terrain(spritesheet)
-        self.image_raw: pg.Surface = self.image.copy()
-        self.rect: pg.Rect = pg.Rect(((self.image.get_width() - config.window_size.x) // 2,
-                                      (self.image.get_height() - config.window_size.y) // 2,
+        self.map_image: pg.Surface = map_manager.load_terrain(spritesheet)
+        self.map_image_raw: pg.Surface = self.map_image.copy()
+        self.rect: pg.Rect = pg.Rect(((self.map_image.get_width() - config.window_size.x) // 2,
+                                      (self.map_image.get_height() - config.window_size.y) // 2,
                                       config.window_size.x, config.window_size.y))
-        self.image_rendered: pg.Surface = self.image.subsurface(self.rect)
+        self.image: pg.Surface = self.map_image.subsurface(self.rect)
         self.window_size: Vector[int] = config.window_size
         self.map_size_px: Vector[int] = map_manager.map_size_px
 
@@ -38,10 +38,10 @@ class Scene(pg.sprite.Sprite):
         if curr_mouse_pos.y <= 0 + Tile.size / 2 <= self.rect.top:
             self.rect.move_ip(0, -Tile.size / 2)
 
-        self.image_rendered = self.image.subsurface(self.rect)
+        self.image = self.map_image.subsurface(self.rect)
 
     def move_screen_drag(self, curr_mouse_pos: Vector[int], previous_mouse_pos: Vector[int]):
-        self.move_velocity = previous_mouse_pos - curr_mouse_pos
+        self.move_velocity = (previous_mouse_pos - curr_mouse_pos).to_float()
         new_rect = self.rect.move(*self.move_velocity.to_tuple())
 
         if new_rect.left >= 0 and new_rect.right <= self.map_size_px.x:
@@ -58,4 +58,4 @@ class Scene(pg.sprite.Sprite):
         elif new_rect.bottom > self.map_size_px.y:
             self.rect.bottom = self.map_size_px.y
 
-        self.image_rendered = self.image.subsurface(self.rect)
+        self.image = self.map_image.subsurface(self.rect)

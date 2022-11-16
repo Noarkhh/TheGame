@@ -33,5 +33,5 @@ class Spritesheet:
         new_surf.blit(sheet, (0, 0), target_rect)
         new_surf = pg.transform.scale(new_surf, (aspect_ratio * Tile.size).to_tuple())
 
-        new_surf.set_colorkey((255, 255, 255), pg.RLEACCEL)
+        new_surf.set_colorkey("white", pg.RLEACCEL)
         return new_surf

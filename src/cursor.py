@@ -1,0 +1,49 @@
+from __future__ import annotations
+import pygame as pg
+from src.core_classes import *
+from enum import Enum, auto
+if TYPE_CHECKING:
+    from src.scene import Scene
+    from src.structures import Structure
+
+
+class Mode(Enum):
+    NORMAL = auto()
+    DEMOLISH = auto()
+    DRAG = auto()
+
+
+class Cursor(pg.sprite.Sprite):
+    def __init__(self) -> None:
+        super().__init__()
+        self.mode: Mode = Mode.NORMAL
+        self.is_lmb_held_down: bool = False
+        self.image: pg.Surface = pg.transform.scale(pg.image.load("../assets/cursor2.png").convert(),
+                                                    (Tile.size, Tile.size))
+        self.image.set_colorkey("white")
+        self.image_demolish: pg.Surface = pg.transform.scale(pg.image.load("../assets/cursor_demolish.png").convert(),
+                                                             (Tile.size, Tile.size))
+        self.image_demolish.set_colorkey("white")
+        self.image_demolish.set_alpha(128)
+        self.rect: pg.Rect = self.image.get_rect()
+
+        self.pos: Vector[int] = Vector(0, 0)
+        self.previous_pos: Vector[int] = Vector(0, 0)
+        self.pos_difference: Vector[int] = Vector(0, 0)
+
+        self.pos_px: Vector[int] = Vector(pg.mouse.get_pos())
+        self.previous_pos_px: Vector[int] = Vector(pg.mouse.get_pos())
+        self.pos_px_difference: Vector[int] = Vector(0, 0)
+
+        self.held_structure: Optional[Structure] = None
+
+    def update(self, scene: Scene):
+        self.previous_pos = self.pos
+        self.previous_pos_px = self.pos_px
+
+        self.pos = (Vector(pg.mouse.get_pos()) + Vector(scene.rect.topleft)) // Tile.size
+        self.pos_px = Vector(pg.mouse.get_pos())
+        self.pos_difference = self.pos - self.previous_pos
+        self.pos_px_difference = self.pos_px - self.previous_pos_px
+        self.rect.topleft = (self.pos * Tile.size).to_tuple()
+
