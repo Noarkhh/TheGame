@@ -1,37 +1,83 @@
 from __future__ import annotations
-from src.structures import *
-from src.map import MapManager
+from src.game_mechanics.structures import *
+from src.game_mechanics.map import MapManager
 from src.config import Config
-from src.spritesheet import Spritesheet
-from src.treasury import Treasury
-from src.struct_manager import StructManager
-from src.scene import Scene
-from src.entities import Entities
+from src.graphics.spritesheet import Spritesheet
+from src.game_mechanics.treasury import Treasury
+from src.game_mechanics.struct_manager import StructManager
+from src.graphics.scene import Scene
+from src.graphics.entities import Entities
 from src.cursor import Cursor
 
+from typing import Protocol
+from random import randint
 
-def a(cls: Type, elem: object):
-    return isinstance(elem, cls)
+class _HasImageAndRect(Protocol):
+    rect: pg.rect.Rect
+    image: pg.surface.Surface
+
+
+class _HasResource(Protocol):
+    resource: Resource
+
+IR = TypeVar("IR", bound=_HasImageAndRect)
+
+class _SupportsMine(_HasResource, _HasImageAndRect, Protocol): ...
+
+
+class Struct:
+    rect: pg.rect.Rect
+    image: pg.surface.Surface
+    resource: Resource
+
+    def __init__(self) -> None:
+        self.image: pg.surface.Surface = pg.surface.Surface((0, 0))
+        self.rect: pg.rect.Rect = self.image.get_rect()
 
 
 def main() -> None:
     pg.init()
     pg.mixer.init()
-    clock = pg.time.Clock()
+    clock: pg.time.Clock = pg.time.Clock()
 
     config = Config()
     screen = pg.display.set_mode(config.window_size.to_tuple())
     map_manager = MapManager(config)
-    entities = Entities()
     cursor = Cursor()
     spritesheet = Spritesheet()
+    entities = Entities(spritesheet=spritesheet)
     treasury = Treasury(config)
-    struct_manager = StructManager(config, map_manager, spritesheet, treasury, entities)
+    struct_manager = StructManager(config, map_manager, treasury)
     scene = Scene(config, spritesheet, map_manager)
 
     structs = [House(Vector(1, 1)), Wall(Vector(1, 4)), Mine(Vector(0, 1), is_ghost=True), Gate(Vector(5, 5))]
-    print(struct_manager.structs.sprites())
-    print(Vector(32, 44))
+    a: list[_SupportsMine] = [Struct()]
+
+    class MyGroup(Generic[IR]):
+        l: list[IR]
+
+        def __init__(self, *args: IR):
+            self.l = []
+            if args:
+                for arg in args:
+                    self.l.append(arg)
+
+        def add(self, spr: IR) -> None:
+            self.l.append(spr)
+
+    class MySprite(pg.sprite.Sprite):
+        image: pg.surface.Surface
+        # rect: pg.rect.Rect
+
+    # b = pg.sprite.Group(MySprite())
+    # b: pg.sprite.Group = pg.sprite.Group()
+    # b.add(MySprite())
+
+    # g: MySprite = MySprite()
+    # h: MySprite = MySprite()
+    # i: MyGroup[MySprite] = MyGroup()
+    # i.add(g)
+    # j = pg.sprite.Group[Structure]
 
     running = True
     while running:
@@ -45,12 +91,11 @@ def main() -> None:
 
         cursor.update(scene)
         screen.blit(scene.image, (0, 0))
-        print(cursor.rect.topleft, cursor.pos)
         scene.move_screen_border(Vector(pg.mouse.get_pos()))
 
         scene.image.blit(scene.map_image_raw.subsurface(scene.rect), (0, 0))
         pg.display.flip()
-        clock.tick(config.tick_rate)
+        clock.tick(config.frame_rate)
 
     pg.quit()
 

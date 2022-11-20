@@ -2,13 +2,12 @@ from __future__ import annotations
 import pygame as pg
 from typing import Type, ClassVar
 from src.core_classes import *
+from src.graphics.entities import Entity
 if TYPE_CHECKING:
-    from src.struct_manager import StructManager
+    from src.game_mechanics.struct_manager import StructManager
 
 
-class Structure(pg.sprite.Sprite):
-    image_aspect_ratio: ClassVar[Vector[float]] = Vector[float](1, 1)
-    covered_tiles: ClassVar[list[Vector[int]]] = [Vector[int](0, 0)]
+class Structure(Entity):
     unsuitable_terrain: ClassVar[list[Terrain]] = [Terrain.WATER]
     overrider: ClassVar[bool] = False
 
@@ -19,25 +18,19 @@ class Structure(pg.sprite.Sprite):
 
     manager: ClassVar[StructManager]
 
-    def __init__(self, pos: Vector[int], sprite_variant: int = 0, orientation: Orientation = Orientation.VERTICAL,
+    def __init__(self, pos: Vector[int], image_variant: int = 0, orientation: Orientation = Orientation.VERTICAL,
                  is_ghost: bool = False) -> None:
-        if is_ghost:
-            super().__init__()
-        else:
-            super().__init__(self.manager.structs, self.manager.entities)
+        super().__init__(pos, image_variant)
 
-        self.pos: Vector[int] = pos
-
-        self.sprite_variant: int = sprite_variant
         self.orientation: Orientation = orientation
 
-        self.image: pg.Surface = self.manager.spritesheet.get_image(self)
-        self.rect: pg.Rect = self.image.get_rect(bottomright=((self.pos + (1, 1)) * Tile.size).to_tuple())
+        if not is_ghost:
+            self.manager.structs.add(self)
 
-        self.cost: dict[Resource, int] = self.__class__.base_cost.copy()
-        self.profit: dict[Resource, int] = self.__class__.base_profit.copy()
-        self.capacity: int = self.__class__.base_capacity
-        self.cooldown: int = self.__class__.base_cooldown
+        self.cost: dict[Resource, int] = self.base_cost.copy()
+        self.profit: dict[Resource, int] = self.base_profit.copy()
+        self.capacity: int = self.base_capacity
+        self.cooldown: int = self.base_cooldown
 
         self.cooldown_left: int = self.base_cooldown
         self.stockpile: dict[Resource, int] = {resource: 0 for resource in self.base_profit.keys()}
@@ -71,16 +64,12 @@ class Structure(pg.sprite.Sprite):
                     self.stockpile[resource] += amount
             self.cooldown_left = self.base_cooldown
 
-    def update_zoom(self) -> None:
-        self.image = pg.transform.scale(self.image, (self.image_aspect_ratio * Tile.size).to_tuple())
-        self.rect = self.image.get_rect(bottomright=((self.pos + (1, 1)) * Tile.size).to_tuple())
-
     def to_json(self) -> dict:
         return {
             "type": self.__class__.__name__,
             "pos": self.pos.to_tuple(),
             "orientation": self.orientation,
-            "sprite_variant": self.sprite_variant,
+            "sprite_variant": self.image_variant,
 
             "cost": {resource.name: amount for resource, amount in self.base_cost.items()},
             "profit": {resource.name: amount for resource, amount in self.base_cost.items()},
@@ -101,6 +90,7 @@ class Structure(pg.sprite.Sprite):
 
 class House(Structure):
     image_aspect_ratio = Vector[float](1, 21 / 15)
+    image_variants = 2
 
 
 class Mine(Structure):
@@ -127,14 +117,14 @@ class Snapper(Structure):
             self.neighbours.add(neighbours)
         else:
             self.neighbours.update(neighbours)
-        self.image = self.manager.spritesheet.get_image(self)
+        self.image = self.get_image()
 
     def remove_neighbours(self, neighbours: DirectionSet | set | Direction) -> None:
         if isinstance(neighbours, Direction):
             self.neighbours.remove(neighbours)
         else:
             self.neighbours.difference_update(neighbours)
-        self.image = self.manager.spritesheet.get_image(self)
+        self.image = self.get_image()
 
     def can_be_snapped(self, curr_pos: Vector[int], prev_pos: Vector[int]) -> Message:
         snap_direction = (curr_pos - prev_pos).to_dir()
@@ -189,8 +179,9 @@ class Gate(Wall, Road):
     image_aspect_ratio = Vector[float](1, 20 / 15)
     overrider = True
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, orientation: Orientation = Orientation.VERTICAL, **kwargs) -> None:
+        self.image_variant: int = orientation
+        super().__init__(*args, orientation, **kwargs)
 
         if self.orientation == Orientation.VERTICAL:
             self.snaps_to = {Direction.N: Road, Direction.E: Wall, Direction.S: Road, Direction.W: Wall}
@@ -229,4 +220,5 @@ class Gate(Wall, Road):
             self.orientation = Orientation.VERTICAL
             self.snaps_to = {Direction.N: Road, Direction.E: Wall, Direction.S: Road, Direction.W: Wall}
 
-        self.image: pg.Surface = self.manager.spritesheet.get_image(self)
+        self.image_variant = self.orientation
+        self.image: pg.Surface = self.get_image()

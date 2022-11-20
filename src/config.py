@@ -1,12 +1,12 @@
 from __future__ import annotations
 import json
-from src.structures import *
+from src.game_mechanics.structures import *
 
 
 class Config:
     def __init__(self) -> None:
         self.tile_size: int = 30
-        self.tick_rate: int = 60
+        self.frame_rate: int = 60
         self.window_size: Vector[int] = Vector[int](1080, 720)
         self.layout_path: str = "../assets/maps/river_L.png"
         self.structures_config_path: str = "../config/structures_config.json"

@@ -4,8 +4,8 @@ from src.core_classes import *
 
 if TYPE_CHECKING:
     from src.config import Config
-    from src.map import MapManager
-    from src.spritesheet import Spritesheet
+    from src.game_mechanics.map import MapManager
+    from src.graphics.spritesheet import Spritesheet
 
 
 class Scene(pg.sprite.Sprite):

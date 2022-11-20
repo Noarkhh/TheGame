@@ -3,8 +3,8 @@ import pygame as pg
 from src.core_classes import *
 if TYPE_CHECKING:
     from src.config import Config
-    from src.structures import Structure
-    from src.spritesheet import Spritesheet
+    from src.game_mechanics.structures import Structure
+    from src.graphics.spritesheet import Spritesheet
 
 U = TypeVar('U')
 

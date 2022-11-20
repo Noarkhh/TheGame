@@ -2,7 +2,7 @@ from __future__ import annotations
 from src.core_classes import *
 if TYPE_CHECKING:
     from src.config import Config
-    from src.structures import Structure
+    from src.game_mechanics.structures import Structure
 
 
 class Treasury:

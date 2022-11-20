@@ -2,28 +2,23 @@ from __future__ import annotations
 import pygame as pg
 from typing import cast
 from src.core_classes import *
-from src.structures import Structure
+from src.game_mechanics.structures import Structure
 
 if TYPE_CHECKING:
     from src.config import Config
-    from src.map import MapManager, Map
-    from src.spritesheet import Spritesheet
-    from src.treasury import Treasury
-    from src.entities import Entities
-    from src.structures import Snapper
+    from src.game_mechanics.map import MapManager, Map
+    from src.game_mechanics.treasury import Treasury
+    from src.game_mechanics.structures import Snapper
 
 
 class StructManager:
-    def __init__(self, config: Config, map_manager: MapManager, spritesheet: Spritesheet, treasury: Treasury,
-                 entities: Entities):
+    def __init__(self, config: Config, map_manager: MapManager, treasury: Treasury):
         Structure.manager = self
         config.set_structures_parameters()
 
         self.map_manager: MapManager = map_manager
-        self.spritesheet: Spritesheet = spritesheet
         self.treasury: Treasury = treasury
 
-        self.entities: Entities = entities
         self.structs: pg.sprite.Group = pg.sprite.Group()
 
     def place(self, new_struct: Structure, previous_pos: Vector[int]) -> Message:
@@ -46,7 +41,5 @@ class StructManager:
             snap_direction = cast(Direction, (new_struct.pos - previous_pos).to_dir())
             cast(Snapper, new_struct).add_neighbours(snap_direction.opposite())
             cast(Snapper, struct_map[previous_pos]).add_neighbours(snap_direction)
-
-
 
         return build_message
