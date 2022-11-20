@@ -26,6 +26,8 @@ class Structure(Entity):
 
         if not is_ghost:
             self.manager.structs.add(self)
+        else:
+            self.image.set_alpha(128)
 
         self.cost: dict[Resource, int] = self.base_cost.copy()
         self.profit: dict[Resource, int] = self.base_profit.copy()
@@ -63,6 +65,9 @@ class Structure(Entity):
                 for resource, amount in self.base_profit.items():
                     self.stockpile[resource] += amount
             self.cooldown_left = self.base_cooldown
+
+    def copy(self):
+        return self.__class__(self.pos, image_variant=self.image_variant, orientation=self.orientation)
 
     def to_json(self) -> dict:
         return {

@@ -8,6 +8,7 @@ from src.game_mechanics.struct_manager import StructManager
 from src.graphics.scene import Scene
 from src.graphics.entities import Entities
 from src.cursor import Cursor
+from src.setup import Setup
 
 from typing import Protocol
 from random import randint
@@ -36,6 +37,7 @@ class Struct:
 
 
 def main() -> None:
+    Setup()
     pg.init()
     pg.mixer.init()
     clock: pg.time.Clock = pg.time.Clock()

@@ -1,7 +1,7 @@
 {
-  "WOOD": 50,
-  "STONE": 50,
-  "WHEAT": 50,
+  "WOOD": 50000,
+  "STONE": 50000,
+  "WHEAT": 50000,
   "COAL": 25,
   "ORE": 25,
   "IRON": 0,
@@ -11,5 +11,5 @@
   "REINFORCED_WOOD": 0,
   "BREAD": 0,
   "METEORITE": 0,
-  "GOLD": 500
+  "GOLD": 500000
 }

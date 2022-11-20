@@ -2,13 +2,12 @@ from __future__ import annotations
 import pygame as pg
 from typing import cast
 from src.core_classes import *
-from src.game_mechanics.structures import Structure
+from src.game_mechanics.structures import Structure, Snapper
 
 if TYPE_CHECKING:
     from src.config import Config
     from src.game_mechanics.map import MapManager, Map
     from src.game_mechanics.treasury import Treasury
-    from src.game_mechanics.structures import Snapper
 
 
 class StructManager:
@@ -21,25 +20,28 @@ class StructManager:
 
         self.structs: pg.sprite.Group = pg.sprite.Group()
 
-    def place(self, new_struct: Structure, previous_pos: Vector[int]) -> Message:
+    def place(self, new_struct: Structure, previous_pos: Vector[int], play_failure_sounds: bool = False,
+              play_success_sound: bool = True) -> Message:
         struct_map: Map[Structure] = self.map_manager.struct_map
 
         build_message: Message = new_struct.can_be_placed()
 
         if build_message.success():
+            new_struct = new_struct.copy()
             if build_message == Message.BUILT:
                 for relative_pos in new_struct.covered_tiles:
                     struct_map[new_struct.pos + relative_pos] = new_struct
+
             if build_message == Message.OVERRODE:
                 cast(Structure, struct_map[new_struct.pos]).kill()
                 struct_map[new_struct.pos] = new_struct
+
             self.treasury.pay_for(new_struct)
 
         snap_message: Message = new_struct.can_be_snapped(new_struct.pos, previous_pos)
 
         if snap_message == Message.SNAPPED:
             snap_direction = cast(Direction, (new_struct.pos - previous_pos).to_dir())
-            cast(Snapper, new_struct).add_neighbours(snap_direction.opposite())
+            cast(Snapper, struct_map[new_struct.pos]).add_neighbours(snap_direction.opposite())
             cast(Snapper, struct_map[previous_pos]).add_neighbours(snap_direction)
-
         return build_message

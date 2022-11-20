@@ -1,10 +1,12 @@
 from __future__ import annotations
 from enum import Enum, IntEnum, auto
 from typing import Optional, Generic, TypeVar, TYPE_CHECKING, overload
+from dataclasses import dataclass
 
 T = TypeVar('T', int, float)
 
 
+@dataclass(init=False, unsafe_hash=True)
 class Vector(Generic[T]):
     @overload
     def __init__(self, x: tuple[T, T]) -> None: ...
@@ -28,6 +30,11 @@ class Vector(Generic[T]):
     @property
     def y(self):
         return self._y
+
+    def __eq__(self, other: object):
+        if isinstance(other, Vector):
+            return self.x == other.x and self.y == other.y
+        return NotImplemented
 
     def __sub__(self, other: Vector[T] | tuple[T, T]) -> Vector[T]:
         if isinstance(other, Vector):

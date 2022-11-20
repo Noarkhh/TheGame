@@ -27,6 +27,9 @@ class Entity(pg.sprite.Sprite):
 
     def update_zoom(self) -> None:
         self.image = pg.transform.scale(self.image, (self.image_aspect_ratio * Tile.size).to_tuple())
+        self.update_rect()
+
+    def update_rect(self) -> None:
         self.rect = self.image.get_rect(bottomright=((self.pos + (1, 1)) * Tile.size).to_tuple())
 
 

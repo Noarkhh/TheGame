@@ -49,8 +49,13 @@ class Cursor(pg.sprite.Sprite):
         self.pos_difference = self.pos - self.previous_pos
         self.pos_px_difference = self.pos_px - self.previous_pos_px
         self.rect.topleft = (self.pos * Tile.size).to_tuple()
+        if self.held_structure is not None:
+            self.held_structure.pos = self.pos
+            self.held_structure.update_rect()
 
     def assign_struct_class(self, struct_class: Type[Structure]):
+        if self.held_structure is not None:
+            self.held_structure.kill()
         self.held_structure = struct_class(self.pos, image_variant=randrange(struct_class.image_variants),
                                            is_ghost=True)
         if type(struct_class) in (Wall, Road, Bridge, Farmland):
@@ -61,3 +66,6 @@ class Cursor(pg.sprite.Sprite):
     def unassign(self):
         self.held_structure.kill()
         self.held_structure = None
+
+    def draw(self, surf: pg.Surface):
+        surf.blit(self.image, self.rect)

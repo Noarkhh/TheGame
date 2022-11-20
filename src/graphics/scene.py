@@ -59,3 +59,6 @@ class Scene(pg.sprite.Sprite):
             self.rect.bottom = self.map_size_px.y
 
         self.image = self.map_image.subsurface(self.rect)
+
+    def reset_image(self) -> None:
+        self.image.blit(self.map_image_raw.subsurface(self.rect), (0, 0))
