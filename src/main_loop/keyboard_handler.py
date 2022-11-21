@@ -21,6 +21,6 @@ class KeyboardHandler:
         elif key == pg.K_n:
             self.cursor.unassign()
         elif key == pg.K_r:
-            if hasattr(self.cursor.held_structure, "rotate"):
+            if isinstance(self.cursor.held_structure, Gate):
                 self.cursor.held_structure.rotate()
 

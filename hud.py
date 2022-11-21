@@ -281,7 +281,7 @@ class PauseMenu(HUD):
         self.is_menu_open = True
 
         while self.is_menu_open:
-            gw.screen.blit(gw.hud.pause_menu.map_image, gw.hud.pause_menu.rect)
+            gw.screen.blit(gw.hud.pause_menu.surf, gw.hud.pause_menu.rect)
             gw.button_handler.hovered_button = None
             gw.button_handler.handle_hovered_buttons(gw, gw.hud.pause_menu.buttons)
 
