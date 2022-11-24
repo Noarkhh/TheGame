@@ -60,6 +60,9 @@ class Vector(Generic[T]):
     def __floordiv__(self, other: int):
         return Vector[int](self.x // other, self.y // other)
 
+    def __truediv__(self, other: int | float):
+        return Vector[float](self.x / other, self.y / other)
+
     def __repr__(self):
         return f"{self.__class__.__name__}({self.x}, {self.y})"
 

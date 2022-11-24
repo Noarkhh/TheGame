@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from src.config import Config
     from src.game_mechanics.map import MapManager
     from src.graphics.spritesheet import Spritesheet
+    from src.cursor import Cursor
 
 
 class Scene(pg.sprite.Sprite):
@@ -20,10 +21,28 @@ class Scene(pg.sprite.Sprite):
         self.window_size: Vector[int] = config.window_size
         self.map_size_px: Vector[int] = map_manager.map_size_px
 
-        self.move_velocity: Vector[float] = Vector[float](0, 0)
-        self.move_velocity_decrement: Vector[float] = Vector[float](0, 0)
+        self.velocity: Vector[float] = Vector[float](0, 0)
+        self.velocity_decrement: Vector[float] = Vector[float](0, 0)
         self.to_decrement: int = 0
-        self.retardation_period: int = 30
+        self.retardation_period: int = 20
+
+    def update_velocity(self, new_velocity: Optional[Vector[float]] = None, slow_down: bool = False):
+        if slow_down and self.velocity != Vector[float](0.0, 0.0):
+            velocity_sign_before = self.velocity.x > 0 - self.velocity.x < 0
+            self.velocity -= self.velocity_decrement
+            velocity_sign_after = self.velocity.x > 0 - self.velocity.x < 0
+            if velocity_sign_before != velocity_sign_after:
+                self.velocity = Vector[float](0.0, 0.0)
+        if new_velocity is not None:
+            self.velocity = new_velocity
+
+    def set_decrement(self):
+        self.velocity_decrement = self.velocity / self.retardation_period
+
+    def update(self):
+        self.move_by_velocity()
+        self.move_screen_border(Vector(pg.mouse.get_pos()))
+        self.update_velocity(slow_down=True)
 
     def move_screen_border(self, curr_mouse_pos: Vector[int]):
         if curr_mouse_pos.x >= self.window_size.x - Tile.size / 2 and \
@@ -40,19 +59,18 @@ class Scene(pg.sprite.Sprite):
 
         self.image = self.map_image.subsurface(self.rect)
 
-    def move_screen_drag(self, curr_mouse_pos: Vector[int], previous_mouse_pos: Vector[int]):
-        self.move_velocity = (previous_mouse_pos - curr_mouse_pos).to_float()
-        new_rect = self.rect.move(*self.move_velocity.to_tuple())
+    def move_by_velocity(self):
+        new_rect = self.rect.move(*self.velocity.to_tuple())
 
         if new_rect.left >= 0 and new_rect.right <= self.map_size_px.x:
-            self.rect.move_ip(self.move_velocity.x, 0)
+            self.rect.move_ip(self.velocity.x, 0)
         elif new_rect.left < 0:
             self.rect.left = 0
         elif new_rect.right > self.map_size_px.x:
             self.rect.right = self.map_size_px.x
 
         if new_rect.top >= 0 and new_rect.bottom < self.map_size_px.y:
-            self.rect.move_ip(0, self.move_velocity.y)
+            self.rect.move_ip(0, self.velocity.y)
         elif new_rect.top < 0:
             self.rect.top = 0
         elif new_rect.bottom > self.map_size_px.y:

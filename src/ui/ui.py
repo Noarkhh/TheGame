@@ -6,6 +6,6 @@ if TYPE_CHECKING:
 
 
 class UI:
-    def __init__(self, button_handler: ButtonManager) -> None:
-        self.button_manager: ButtonManager = button_handler
+    def __init__(self, button_manager: ButtonManager) -> None:
+        self.button_manager: ButtonManager = button_manager
 

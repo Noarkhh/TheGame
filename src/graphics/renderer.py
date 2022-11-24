@@ -23,6 +23,5 @@ class Renderer:
         self.cursor.update(self.scene)
         self.cursor.draw(self.scene.map_image)
         self.screen.blit(self.scene.image, (0, 0))
-        self.scene.move_screen_border(Vector(pg.mouse.get_pos()))
         self.scene.reset_image()
         pg.display.flip()

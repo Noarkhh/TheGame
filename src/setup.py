@@ -11,6 +11,7 @@ from src.main_loop.mouse_handler import MouseHandler
 from src.main_loop.event_handler import EventHandler
 from src.main_loop.main_loop import MainLoop
 from src.ui.ui import UI
+from src.ui.button_manager import ButtonManager
 from src.graphics.renderer import Renderer
 from src.graphics.entities import Entities
 from src.graphics.spritesheet import Spritesheet
@@ -28,7 +29,8 @@ class Setup:
         screen = pg.display.set_mode(config.window_size.to_tuple())
 
         cursor: Cursor = Cursor()
-        ui: UI = UI()
+        button_manager: ButtonManager = ButtonManager(cursor)
+        ui: UI = UI(button_manager)
         treasury: Treasury = Treasury(config)
         spritesheet: Spritesheet = Spritesheet()
         entities: Entities = Entities(spritesheet)
@@ -38,9 +40,9 @@ class Setup:
         renderer: Renderer = Renderer(scene, screen, entities, cursor, ui)
         struct_manager: StructManager = StructManager(config, map_manager, treasury)
         keyboard_handler: KeyboardHandler = KeyboardHandler(cursor, ui, struct_manager)
-        mouse_handler: MouseHandler = MouseHandler(cursor, ui, struct_manager)
+        mouse_handler: MouseHandler = MouseHandler(cursor, ui, struct_manager, scene)
         event_handler: EventHandler = EventHandler(mouse_handler, keyboard_handler)
         print("initialization complete.")
 
-        self.main_loop: MainLoop = MainLoop(event_handler, renderer, config.frame_rate)
+        self.main_loop: MainLoop = MainLoop(event_handler, renderer, scene, config.frame_rate)
 

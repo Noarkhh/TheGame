@@ -6,13 +6,15 @@ if TYPE_CHECKING:
     from src.cursor import Cursor
     from src.ui.ui import UI
     from src.game_mechanics.struct_manager import StructManager
+    from src.graphics.scene import Scene
 
 
 class MouseHandler:
-    def __init__(self, cursor: Cursor, ui: UI, struct_manager: StructManager) -> None:
+    def __init__(self, cursor: Cursor, ui: UI, struct_manager: StructManager, scene: Scene) -> None:
         self.cursor: Cursor = cursor
         self.ui: UI = ui
         self.struct_manager: StructManager = struct_manager
+        self.scene = scene
         self.is_lmb_pressed: bool = False
         self.is_rmb_pressed: bool = False
         self.was_lmb_pressed_last_tick: bool = False
@@ -23,15 +25,18 @@ class MouseHandler:
         self.was_lmb_pressed_last_tick = False
 
     def lmb_release(self) -> None:
+        self.scene.set_decrement()
         self.is_lmb_pressed = False
 
     def lmb_pressed(self) -> None:
         if self.ui.button_manager.hovered_button is not None:
             self.ui.button_manager.button_pressed()
-        if self.cursor.mode == Mode.NORMAL:
+        elif self.cursor.mode == Mode.NORMAL:
             if self.cursor.held_structure is not None:
                 self.struct_manager.place(self.cursor.held_structure, self.cursor.previous_pos,
                                           play_failure_sounds=not self.was_lmb_pressed_last_tick)
+            else:
+                self.scene.update_velocity(-self.cursor.pos_px_difference.to_float(), slow_down=False)
 
         self.was_lmb_pressed_last_tick = True
 
