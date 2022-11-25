@@ -41,7 +41,7 @@ class Entities(pg.sprite.Group):
 
     def draw(self, surface: pg.Surface) -> list[pg.Rect]:
         sprites = self.sprites()
-        for spr in sorted(sprites, key=lambda spr: spr.pos.x):
+        for spr in sorted(sprites, key=lambda spr: spr.pos.y):
             self.spritedict[spr] = surface.blit(spr.image, spr.rect)
         self.lostsprites = []
         dirty = self.lostsprites

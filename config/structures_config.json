@@ -32,5 +32,7 @@
     "profit": {
       "GOLD": -10
     }
-  }
+  },
+  "Road": {},
+  "Bridge": {}
 }

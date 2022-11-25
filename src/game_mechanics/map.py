@@ -1,4 +1,5 @@
 from __future__ import annotations
+from typing import cast
 import pygame as pg
 from src.core_classes import *
 if TYPE_CHECKING:

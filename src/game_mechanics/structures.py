@@ -44,7 +44,7 @@ class Structure(Entity):
         tile_map = self.manager.map_manager.tile_map
         struct_map = self.manager.map_manager.struct_map
 
-        if any(tile_map[self.pos + rel_pos] in self.unsuitable_terrain for rel_pos in self.covered_tiles):
+        if any(tile_map[self.pos + rel_pos].terrain in self.unsuitable_terrain for rel_pos in self.covered_tiles):
             return Message.BAD_LOCATION_TERRAIN
 
         if any(isinstance(struct_map[self.pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
@@ -134,9 +134,11 @@ class Snapper(Structure):
     def can_be_snapped(self, curr_pos: Vector[int], prev_pos: Vector[int]) -> Message:
         snap_direction = (curr_pos - prev_pos).to_dir()
         struct_map = self.manager.map_manager.struct_map
-        curr_struct, prev_struct = struct_map[curr_pos], struct_map[prev_pos]
+        curr_struct = struct_map[curr_pos]
+        prev_struct = struct_map[prev_pos]
 
-        if not issubclass(curr_struct.__class__, self.__class__):
+        if not issubclass(curr_struct.__class__, self.__class__) and \
+                not issubclass(prev_struct.__class__, self.__class__):
             return Message.BAD_CONNECTOR
 
         if snap_direction is None:
@@ -179,14 +181,17 @@ class Farmland(Snapper):
 class Bridge(Snapper):
     unsuitable_terrain = [Terrain.GRASSLAND, Terrain.DESERT]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.snaps_to = {direction: Road for direction in Direction}
+
 
 class Gate(Wall, Road):
     image_aspect_ratio = Vector[float](1, 20 / 15)
     overrider = True
 
-    def __init__(self, *args, orientation: Orientation = Orientation.VERTICAL, **kwargs) -> None:
-        self.image_variant: int = orientation
-        super().__init__(*args, orientation, **kwargs)
+    def __init__(self, *args, image_variant: int = 0, orientation: Orientation = Orientation.VERTICAL, **kwargs) -> None:
+        super().__init__(*args, image_variant=orientation, orientation=orientation, **kwargs)
 
         if self.orientation == Orientation.VERTICAL:
             self.snaps_to = {Direction.N: Road, Direction.E: Wall, Direction.S: Road, Direction.W: Wall}

@@ -39,7 +39,7 @@ class StructManager:
             self.treasury.pay_for(new_struct)
 
         snap_message: Message = new_struct.can_be_snapped(new_struct.pos, previous_pos)
-
+        print(snap_message)
         if snap_message == Message.SNAPPED:
             snap_direction = cast(Direction, (new_struct.pos - previous_pos).to_dir())
             cast(Snapper, struct_map[new_struct.pos]).add_neighbours(snap_direction.opposite())
