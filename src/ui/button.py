@@ -11,14 +11,17 @@ class Button(pg.sprite.Sprite):
 
     def __init__(self, rect: pg.Rect, base_image: pg.Surface, hover_image: pg.Surface,
                  function: Callable, ui_rect: pg.Rect, function_args: Optional[list[Any]] = None,
-                 sound: str = "woodrollover") -> None:
+                 sound: str = "woodrollover", contents_image: Optional[pg.Surface] = None,
+                 contents_height: int = 4) -> None:
 
         self.rect: pg.Rect = rect
         self.collision_rect: pg.Rect = self.rect.move(ui_rect.x, ui_rect.y)
         self.base_image: pg.Surface = base_image
-        self.base_image.set_colorkey("white")
         self.hover_image: pg.Surface = hover_image
-        self.hover_image.set_colorkey("white")
+        if contents_image is not None:
+            contents_rect = contents_image.get_rect(centerx=self.base_image.get_width() / 2, top=contents_height)
+            self.base_image.blit(contents_image, contents_rect)
+            self.hover_image.blit(contents_image, contents_rect.move(0, 4))
         self.image: pg.Surface = self.base_image
 
         self.function: Callable = function

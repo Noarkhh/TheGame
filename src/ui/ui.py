@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pygame as pg
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from src.ui.toolbar import Toolbar
 from src.ui.ui_element import UIElement
 import json
@@ -18,7 +18,7 @@ class UI:
         self.spritesheet: Spritesheet = spritesheet
         self.window_size: Vector[int] = window_size
         with open("../config/button_specs.json", "r") as f:
-            self.button_specs: dict = json.load(f)
+            self.button_specs: dict[str, dict[str, dict[str, Any]]] = json.load(f)
         self.toolbar: Toolbar = Toolbar(button_manager, spritesheet, self.button_specs["Toolbar"])
 
     def draw_elements(self, screen: pg.Surface) -> None:

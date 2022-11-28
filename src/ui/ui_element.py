@@ -1,30 +1,32 @@
 from __future__ import annotations
 import pygame as pg
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, Any
 from abc import ABC, abstractmethod
 
 if TYPE_CHECKING:
     from src.ui.button_manager import ButtonManager
     from src.graphics.spritesheet import Spritesheet
     from src.ui.ui import UI
+    from src.ui.button import Button
 
 
-class UIElement(ABC, pg.sprite.Group):
+class UIElement(ABC):
     ui: ClassVar[UI]
-    buttons: pg.sprite.Group
-    image: pg.Surface
-    rect: pg.Rect
 
-    def __init__(self, button_manager: ButtonManager, spritesheet: Spritesheet) -> None:
-        super().__init__()
+    def __init__(self, image: pg.Surface, rect: pg.Rect, button_manager: ButtonManager,
+                 spritesheet: Spritesheet, button_specs: dict[str, dict[str, str | list[int]]]) -> None:
+        self.image: pg.Surface = image
+        self.rect: pg.Rect = rect
         self.button_manager: ButtonManager = button_manager
         self.spritesheet: Spritesheet = spritesheet
+        self.button_specs: dict[str, dict[str, Any]] = button_specs
+
+        self.buttons: pg.sprite.Group[Button] = pg.sprite.Group()
 
     @abstractmethod
     def load(self) -> None: ...
 
     def draw(self, image: pg.Surface):
-        for button in self.buttons:
-            button.draw(self.image)
+        self.buttons.draw(self.image)
         image.blit(self.image, self.rect)
 

@@ -1,12 +1,13 @@
 from __future__ import annotations
 import pygame as pg
-from src.core_classes import *
 from typing import ClassVar
+from abc import ABC
+from src.core_classes import *
 if TYPE_CHECKING:
     from src.graphics.spritesheet import Spritesheet
 
 
-class Entity(pg.sprite.Sprite):
+class Entity(ABC, pg.sprite.Sprite):
     image_aspect_ratio: ClassVar[Vector[float]] = Vector[float](1, 1)
     covered_tiles: ClassVar[list[Vector[int]]] = [Vector[int](0, 0)]
     image_variants: int = 1
