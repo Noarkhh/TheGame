@@ -23,3 +23,4 @@ class UI:
 
     def draw_elements(self, screen: pg.Surface) -> None:
         screen.blit(self.toolbar.image, self.toolbar.rect)
+        self.toolbar.draw(screen)

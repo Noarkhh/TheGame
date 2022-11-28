@@ -11,6 +11,9 @@ if TYPE_CHECKING:
 
 class UIElement(ABC, pg.sprite.Group):
     ui: ClassVar[UI]
+    buttons: pg.sprite.Group
+    image: pg.Surface
+    rect: pg.Rect
 
     def __init__(self, button_manager: ButtonManager, spritesheet: Spritesheet) -> None:
         super().__init__()
@@ -19,4 +22,9 @@ class UIElement(ABC, pg.sprite.Group):
 
     @abstractmethod
     def load(self) -> None: ...
+
+    def draw(self, image: pg.Surface):
+        for button in self.buttons:
+            button.draw(self.image)
+        image.blit(self.image, self.rect)
 

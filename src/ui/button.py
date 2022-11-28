@@ -10,9 +10,11 @@ class Button(pg.sprite.Sprite):
     button_manager: ClassVar[ButtonManager]
 
     def __init__(self, rect: pg.Rect, base_image: pg.Surface, hover_image: pg.Surface,
-                 function: Callable, function_args: Optional[list[Any]] = None, sound: str = "woodrollover") -> None:
+                 function: Callable, ui_rect: pg.Rect, function_args: Optional[list[Any]] = None,
+                 sound: str = "woodrollover") -> None:
 
         self.rect: pg.Rect = rect
+        self.collision_rect: pg.Rect = self.rect.move(ui_rect.x, ui_rect.y)
         self.base_image: pg.Surface = base_image
         self.base_image.set_colorkey("white")
         self.hover_image: pg.Surface = hover_image

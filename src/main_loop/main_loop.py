@@ -21,6 +21,7 @@ class MainLoop:
 
     def loop(self) -> None:
         while self.running:
+            self.ui.button_manager.check_for_hovers()
             self.event_handler.handle_events()
             self.renderer.render()
             self.scene.update()

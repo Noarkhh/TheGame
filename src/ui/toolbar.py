@@ -25,9 +25,12 @@ class Toolbar(UIElement):
             button_type = button_info["type"]
             button_pos = button_info["position"]
             button_image = self.spritesheet.get_ui_image("Buttons", button_type)
+            button_hover_image = self.spritesheet.get_ui_image("Buttons", button_type + "_hover")
             button_rect = button_image.get_rect(topleft=button_pos)
-            self.buttons.add(Button(button_rect, button_image, button_image, lambda: None))
-        print(self.buttons)
+            self.buttons.add(Button(button_rect, button_image, button_hover_image, lambda: None, self.rect))
+
+        for button in self.buttons:
+            print(button.collision_rect)
         self.buttons.draw(self.image)
 
 
