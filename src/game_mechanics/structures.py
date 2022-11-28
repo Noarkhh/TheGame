@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pygame as pg
-from typing import Type, ClassVar
+from typing import Type, ClassVar, cast
 from src.core_classes import *
 from src.graphics.entities import Entity
 if TYPE_CHECKING:
@@ -44,7 +44,7 @@ class Structure(Entity):
         tile_map = self.manager.map_manager.tile_map
         struct_map = self.manager.map_manager.struct_map
 
-        if any(tile_map[self.pos + rel_pos].terrain in self.unsuitable_terrain for rel_pos in self.covered_tiles):
+        if any(cast(Tile, tile_map[self.pos + rel_pos]).terrain in self.unsuitable_terrain for rel_pos in self.covered_tiles):
             return Message.BAD_LOCATION_TERRAIN
 
         if any(isinstance(struct_map[self.pos + rel_pos], Structure) for rel_pos in self.covered_tiles):

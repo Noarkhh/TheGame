@@ -38,6 +38,7 @@ class Struct:
 
 def main() -> None:
     Setup()
+
     pg.init()
     pg.mixer.init()
     clock: pg.time.Clock = pg.time.Clock()

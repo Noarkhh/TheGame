@@ -1,0 +1,32 @@
+{
+  "Toolbar": {
+    "zoom_in": {
+      "type": "small_round",
+      "position": [32, 4]
+    },
+    "zoom_out": {
+      "type": "small_round",
+      "position": [72, 4]
+    },
+    "drag_mode": {
+      "type": "small_round",
+      "position": [32, 44]
+    },
+    "debug": {
+      "type": "small_round",
+      "position": [72, 44]
+    },
+    "build": {
+      "type": "round",
+      "position": [40, 88]
+    },
+    "demolish": {
+      "type": "round",
+      "position": [40, 154]
+    },
+    "pause": {
+      "type": "round",
+      "position": [40, 220]
+    }
+  }
+}

@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 class Spritesheet:
     def __init__(self) -> None:
         self.sheet: pg.Surface = pg.image.load("../assets/spritesheet.png")
+        self.ui_sheet: pg.Surface = pg.image.load("../assets/ui_sheet.png")
         self.snapper_sheet: pg.Surface = pg.image.load("../assets/snapper_sheet.png")
         with open("../config/spritesheet_coords.json", "r") as f:
             self.coords = json.load(f)
@@ -37,3 +38,12 @@ class Spritesheet:
 
         new_surf.set_colorkey("white", pg.RLEACCEL)
         return new_surf
+
+    def get_ui_image(self, category: str, name: str, scale: int = 4) -> pg.Surface:
+        target_rect = pg.Rect(self.coords["UI"][category][name])
+        new_surf = pg.Surface(target_rect.size)
+        new_surf.blit(self.ui_sheet, (0, 0), target_rect)
+        new_surf = pg.transform.scale(new_surf, (new_surf.get_width() * scale, new_surf.get_height() * scale))
+        new_surf.set_colorkey("white", pg.RLEACCEL)
+        return new_surf
+

@@ -29,10 +29,11 @@ class Setup:
         screen = pg.display.set_mode(config.window_size.to_tuple())
 
         cursor: Cursor = Cursor()
-        button_manager: ButtonManager = ButtonManager(cursor)
-        ui: UI = UI(button_manager)
-        treasury: Treasury = Treasury(config)
         spritesheet: Spritesheet = Spritesheet()
+        button_manager: ButtonManager = ButtonManager(cursor)
+        ui: UI = UI(button_manager, spritesheet, config.window_size)
+        treasury: Treasury = Treasury(config)
+
         entities: Entities = Entities(spritesheet)
         map_manager: MapManager = MapManager(config)
 
@@ -44,5 +45,5 @@ class Setup:
         event_handler: EventHandler = EventHandler(mouse_handler, keyboard_handler)
         print("initialization complete.")
 
-        self.main_loop: MainLoop = MainLoop(event_handler, renderer, scene, config.frame_rate)
+        self.main_loop: MainLoop = MainLoop(event_handler, renderer, scene, ui, config.frame_rate)
 

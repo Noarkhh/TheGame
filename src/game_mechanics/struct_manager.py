@@ -18,7 +18,7 @@ class StructManager:
         self.map_manager: MapManager = map_manager
         self.treasury: Treasury = treasury
 
-        self.structs: pg.sprite.Group = pg.sprite.Group()
+        self.structs: pg.sprite.Group[Structure] = pg.sprite.Group()
 
     def place(self, new_struct: Structure, previous_pos: Vector[int], play_failure_sounds: bool = False,
               play_success_sound: bool = True) -> Message:
@@ -39,9 +39,10 @@ class StructManager:
             self.treasury.pay_for(new_struct)
 
         snap_message: Message = new_struct.can_be_snapped(new_struct.pos, previous_pos)
-        print(snap_message)
+
         if snap_message == Message.SNAPPED:
             snap_direction = cast(Direction, (new_struct.pos - previous_pos).to_dir())
             cast(Snapper, struct_map[new_struct.pos]).add_neighbours(snap_direction.opposite())
             cast(Snapper, struct_map[previous_pos]).add_neighbours(snap_direction)
         return build_message
+
