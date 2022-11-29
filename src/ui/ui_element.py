@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from src.ui.button import Button
 
 
-class UIElement(ABC):
+class UIElement(ABC, pg.sprite.Sprite):
     ui: ClassVar[UI]
 
     def __init__(self, image: pg.Surface, rect: pg.Rect, button_manager: ButtonManager,
@@ -22,6 +22,8 @@ class UIElement(ABC):
         self.button_specs: dict[str, dict[str, Any]] = button_specs
 
         self.buttons: pg.sprite.Group[Button] = pg.sprite.Group()
+        super().__init__()
+        self.ui.ui_elements.add(self)
 
     @abstractmethod
     def load(self) -> None: ...

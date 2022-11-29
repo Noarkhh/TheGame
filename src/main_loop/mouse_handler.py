@@ -21,17 +21,18 @@ class MouseHandler:
         self.was_rmb_pressed_last_tick: bool = False
 
     def lmb_press(self) -> None:
+        self.ui.button_manager.lmb_press()
         self.is_lmb_pressed = True
         self.was_lmb_pressed_last_tick = False
 
     def lmb_release(self) -> None:
         self.scene.set_decrement()
+        self.ui.button_manager.lmb_release()
         self.is_lmb_pressed = False
 
     def lmb_pressed(self) -> None:
-        if self.ui.button_manager.hovered_button is not None:
-            self.ui.button_manager.button_pressed()
-        elif self.cursor.mode == Mode.NORMAL:
+
+        if self.ui.button_manager.held_button is None and self.cursor.mode == Mode.NORMAL:
             if self.cursor.held_structure is not None:
                 self.struct_manager.place(self.cursor.held_structure, self.cursor.previous_pos,
                                           play_failure_sounds=not self.was_lmb_pressed_last_tick)
@@ -48,7 +49,6 @@ class MouseHandler:
         self.is_rmb_pressed = False
 
     def rmb_pressed(self) -> None:
-        # ...
         self.was_rmb_pressed_last_tick = True
 
     def mmb_press(self) -> None:

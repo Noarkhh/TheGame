@@ -7,12 +7,12 @@ if TYPE_CHECKING:
 
 
 class Button(pg.sprite.Sprite):
-    button_manager: ClassVar[ButtonManager]
+    manager: ClassVar[ButtonManager]
 
     def __init__(self, rect: pg.Rect, base_image: pg.Surface, hover_image: pg.Surface,
                  function: Callable, ui_rect: pg.Rect, function_args: Optional[list[Any]] = None,
-                 sound: str = "woodrollover", contents_image: Optional[pg.Surface] = None,
-                 contents_height: int = 4) -> None:
+                 hover_sound: str = "woodrollover", press_sound: str = "woodpush2",
+                 contents_image: Optional[pg.Surface] = None, contents_height: int = 4) -> None:
 
         self.rect: pg.Rect = rect
         self.collision_rect: pg.Rect = self.rect.move(ui_rect.x, ui_rect.y)
@@ -29,13 +29,14 @@ class Button(pg.sprite.Sprite):
             self.function_args: list = []
         else:
             self.function_args = function_args
-        self.sound: str = sound
+        self.hover_sound: str = hover_sound
+        self.press_sound: str = press_sound
 
         self.is_locked: bool = False
         self.is_held_down: bool = False
 
         super().__init__()
-        self.button_manager.buttons.add(self)
+        self.manager.buttons.add(self)
 
     def hover(self) -> None:
         if not self.is_locked:
@@ -46,15 +47,15 @@ class Button(pg.sprite.Sprite):
             self.image = self.base_image
 
     def play_hover_sound(self) -> None:
-        if self.sound == "woodrollover":
-            pass
-        if self.sound == "metrollover":
-            pass
+        self.manager.sound_manager.play_sound(self.hover_sound)
 
-    def press(self, *args, **kwargs) -> Any:
+    def press(self) -> Any:
         if not self.is_locked:
-            return self.function(*self.function_args, *args, **kwargs)
+            return self.function(*self.function_args)
         return None
+
+    def play_press_sound(self) -> None:
+        self.manager.sound_manager.play_sound(self.press_sound)
 
     def draw(self, image: pg.Surface):
         image.blit(self.image, self.rect)

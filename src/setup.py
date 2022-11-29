@@ -16,6 +16,7 @@ from src.graphics.renderer import Renderer
 from src.graphics.entities import Entities
 from src.graphics.spritesheet import Spritesheet
 from src.graphics.scene import Scene
+from src.sound.sound_manager import SoundManager
 
 if TYPE_CHECKING:
     pass
@@ -30,8 +31,10 @@ class Setup:
 
         cursor: Cursor = Cursor()
         spritesheet: Spritesheet = Spritesheet()
-        button_manager: ButtonManager = ButtonManager(cursor)
-        ui: UI = UI(button_manager, spritesheet, config.window_size)
+        sound_manager: SoundManager = SoundManager(config)
+
+        button_manager: ButtonManager = ButtonManager(cursor, sound_manager)
+        ui: UI = UI(config, button_manager, spritesheet)
         treasury: Treasury = Treasury(config)
 
         entities: Entities = Entities(spritesheet)

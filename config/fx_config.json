@@ -1,0 +1,26 @@
+{
+  "buildingwreck_01": {
+    "volume": 70
+  },
+  "drawbridge_control": {},
+  "General_Startgame": {},
+  "Insult": {
+    "volume": 90,
+    "variants": 20
+  },
+  "menusl_": {
+    "volume": 80,
+    "variants": 3
+  },
+  "metpush15" : {},
+  "metrollover": {
+    "variants": 6
+  },
+  "woodpush2" : {
+    "volume": 30
+  },
+  "woodrollover": {
+    "volume": 50,
+    "variants": 4
+  }
+}
