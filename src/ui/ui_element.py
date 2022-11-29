@@ -14,7 +14,7 @@ class UIElement(ABC, pg.sprite.Sprite):
     ui: ClassVar[UI]
 
     def __init__(self, image: pg.Surface, rect: pg.Rect, button_manager: ButtonManager,
-                 spritesheet: Spritesheet, button_specs: dict[str, dict[str, str | list[int]]]) -> None:
+                 spritesheet: Spritesheet, button_specs: dict[str, dict[str, Any]]) -> None:
         self.image: pg.Surface = image
         self.rect: pg.Rect = rect
         self.button_manager: ButtonManager = button_manager
@@ -28,7 +28,7 @@ class UIElement(ABC, pg.sprite.Sprite):
     @abstractmethod
     def load(self) -> None: ...
 
-    def draw(self, image: pg.Surface):
+    def draw(self, image: pg.Surface) -> None:
         self.buttons.draw(self.image)
         image.blit(self.image, self.rect)
 

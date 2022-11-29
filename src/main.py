@@ -1,6 +1,6 @@
 from __future__ import annotations
 from src.game_mechanics.structures import *
-from src.game_mechanics.map import MapManager
+from src.game_mechanics.map_manager import MapManager
 from src.config import Config
 from src.graphics.spritesheet import Spritesheet
 from src.game_mechanics.treasury import Treasury

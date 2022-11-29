@@ -4,7 +4,7 @@ from src.core_classes import *
 
 if TYPE_CHECKING:
     from src.config import Config
-    from src.game_mechanics.map import MapManager
+    from src.game_mechanics.map_manager import MapManager
     from src.graphics.spritesheet import Spritesheet
     from src.cursor import Cursor
 

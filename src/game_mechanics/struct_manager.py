@@ -6,7 +6,8 @@ from src.game_mechanics.structures import Structure, Snapper
 
 if TYPE_CHECKING:
     from src.config import Config
-    from src.game_mechanics.map import MapManager, Map
+    from src.game_mechanics.map import Map
+    from src.game_mechanics.map_manager import MapManager
     from src.game_mechanics.treasury import Treasury
 
 

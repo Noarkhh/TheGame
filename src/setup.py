@@ -5,7 +5,7 @@ from src.cursor import Cursor
 from src.config import Config
 from src.game_mechanics.struct_manager import StructManager
 from src.game_mechanics.treasury import Treasury
-from src.game_mechanics.map import MapManager
+from src.game_mechanics.map_manager import MapManager
 from src.main_loop.keyboard_handler import KeyboardHandler
 from src.main_loop.mouse_handler import MouseHandler
 from src.main_loop.event_handler import EventHandler
@@ -34,13 +34,14 @@ class Setup:
         sound_manager: SoundManager = SoundManager(config)
 
         button_manager: ButtonManager = ButtonManager(cursor, sound_manager)
-        ui: UI = UI(config, button_manager, spritesheet)
         treasury: Treasury = Treasury(config)
 
         entities: Entities = Entities(spritesheet)
         map_manager: MapManager = MapManager(config)
 
         scene: Scene = Scene(config, spritesheet, map_manager)
+        ui: UI = UI(config, button_manager, spritesheet, map_manager, scene)
+
         renderer: Renderer = Renderer(scene, screen, entities, cursor, ui)
         struct_manager: StructManager = StructManager(config, map_manager, treasury)
         keyboard_handler: KeyboardHandler = KeyboardHandler(cursor, ui, struct_manager)
