@@ -20,21 +20,19 @@ class Structure(Entity):
 
     def __init__(self, pos: Vector[int], image_variant: int = 0, orientation: Orientation = Orientation.VERTICAL,
                  is_ghost: bool = False) -> None:
-        super().__init__(pos, image_variant)
+        super().__init__(pos, image_variant, is_ghost)
 
         self.orientation: Orientation = orientation
 
-        if not is_ghost:
+        if not self.is_ghost:
             self.manager.structs.add(self)
-        else:
-            self.image.set_alpha(128)
 
         self.cost: dict[Resource, int] = self.base_cost.copy()
         self.profit: dict[Resource, int] = self.base_profit.copy()
         self.capacity: int = self.base_capacity
         self.cooldown: int = self.base_cooldown
 
-        self.cooldown_left: int = self.base_cooldown
+        self.cooldown_left: int = self.cooldown
         self.stockpile: dict[Resource, int] = {resource: 0 for resource in self.base_profit.keys()}
 
     def __repr__(self):
@@ -66,8 +64,12 @@ class Structure(Entity):
                     self.stockpile[resource] += amount
             self.cooldown_left = self.base_cooldown
 
-    def copy(self):
-        return self.__class__(self.pos, image_variant=self.image_variant, orientation=self.orientation)
+    def copy(self, neighbours: Optional[DirectionSet] = None):
+        new_copy = self.__class__(self.pos, image_variant=self.image_variant, orientation=self.orientation)
+        if neighbours is not None:
+            assert isinstance(new_copy, Snapper)
+            new_copy.add_neighbours(neighbours)
+        return new_copy
 
     def to_json(self) -> dict:
         return {
@@ -197,10 +199,11 @@ class Gate(Wall, Road):
             self.snaps_to = {Direction.N: Road, Direction.E: Wall, Direction.S: Road, Direction.W: Wall}
         elif self.orientation == Orientation.HORIZONTAL:
             self.snaps_to = {Direction.N: Wall, Direction.E: Road, Direction.S: Wall, Direction.W: Road}
+        self.directions_to_connect_to: DirectionSet = DirectionSet()
 
     def can_override(self) -> bool:
         struct_map = self.manager.map_manager.struct_map
-        directions_to_connect_to: DirectionSet = DirectionSet()
+        self.directions_to_connect_to.clear()
 
         if not type(struct_map[self.pos]) in (Wall, Road):
             return False
@@ -211,9 +214,8 @@ class Gate(Wall, Road):
             if isinstance(neighbour, Snapper) and direction_to_neighbour.opposite() in neighbour.neighbours:
                 if self.snaps_to[direction_to_neighbour] != neighbour.snaps_to[direction_to_neighbour.opposite()]:
                     return False
-                directions_to_connect_to.add(direction_to_neighbour)
+                self.directions_to_connect_to.add(direction_to_neighbour)
 
-        self.add_neighbours(directions_to_connect_to)
         return True
 
     def can_be_placed(self) -> Message:

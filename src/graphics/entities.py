@@ -14,9 +14,10 @@ class Entity(ABC, pg.sprite.Sprite):
 
     entities: ClassVar[Entities]
 
-    def __init__(self, pos: Vector[int], image_variant: int = 0) -> None:
+    def __init__(self, pos: Vector[int], image_variant: int, is_ghost: bool) -> None:
         super().__init__()
         self.pos: Vector[int] = pos
+        self.is_ghost: bool = is_ghost
 
         self.image_variant: int = image_variant
         self.image: pg.Surface = self.get_image()
@@ -24,7 +25,10 @@ class Entity(ABC, pg.sprite.Sprite):
         self.entities.add(self)
 
     def get_image(self) -> pg.Surface:
-        return self.entities.spritesheet.get_image(self)
+        image: pg.Surface = self.entities.spritesheet.get_image(self)
+        if self.is_ghost:
+            image.set_alpha(128)
+        return image
 
     def update_zoom(self) -> None:
         self.image = pg.transform.scale(self.image, (self.image_aspect_ratio * Tile.size).to_tuple())

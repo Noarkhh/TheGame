@@ -1,63 +1,64 @@
 {
   "Structures": {
-    "House": [[30, 39, 15, 21], [15, 39, 15, 21]],
-    "Sawmill": [[0, 15, 30, 15]],
-    "Mine": [[0, 30, 15, 30]]
+    "House":   [[30, 39, 15, 21], [15, 39, 15, 21]],
+    "Sawmill": [[0,  15, 30, 15]],
+    "Mine":    [[0,  30, 15, 30]]
   },
   "Terrain": {
-    "GRASSLAND": [0, 60, 15, 15],
-    "DESERT": [15, 60, 15, 15],
-    "WATER": [30, 60, 15, 15]
+    "GRASSLAND": [0,  60, 15, 15],
+    "DESERT":    [15, 60, 15, 15],
+    "WATER":     [30, 60, 15, 15]
   },
   "Snappers": {
-    "Road": [[0, 15, 15]],
-    "Wall": [[20, 15, 15]],
-    "Gate": [[40, 15, 20], [60, 15, 20]],
-    "Farmland": [[80, 15, 15]],
+    "Road":       [[0,   15, 15]],
+    "Wall":       [[20 , 15, 15]],
+    "Gate":       [[40 , 15, 20], [60, 15, 20]],
+    "Farmland":   [[80 , 15, 15]],
     "Demolisher": [[100, 15, 15]],
-    "Bridge": [[120, 15, 15]]
+    "Bridge":     [[120, 15, 15]]
   },
   "UI": {
     "Buttons": {
-      "long_wide": [0, 0, 44, 14],
-      "long_wide_hover": [0, 14, 44, 14],
-      "long_thin": [0, 28, 44, 8],
-      "long_thin_hover": [0, 36, 44, 8],
-      "small_round": [0, 44, 8, 8],
-      "small_round_hover": [8, 44, 8, 8],
-      "round": [16, 44, 14, 14],
-      "round_hover": [30, 44, 14, 14],
-      "rectangle": [44, 0, 23, 32],
-      "rectangle_hover": [44, 32, 23, 32],
-      "rectangle_wide": [67, 0, 38, 32],
+      "long_wide":            [0,  0,  44, 14],
+      "long_wide_hover":      [0,  14, 44, 14],
+      "long_thin":            [0,  28, 44, 8 ],
+      "long_thin_hover":      [0,  36, 44, 8 ],
+      "small_round":          [0,  44, 8,  8 ],
+      "small_round_hover":    [8,  44, 8,  8 ],
+      "round":                [16, 44, 14, 14],
+      "round_hover":          [30, 44, 14, 14],
+      "rectangle":            [44, 0,  23, 32],
+      "rectangle_hover":      [44, 32, 23, 32],
+      "rectangle_wide":       [67, 0,  38, 32],
       "rectangle_wide_hover": [67, 32, 38, 32]
     },
     "Decorative": {
-      "build_menu": [0, 100, 176, 39],
-      "toolbar": [0, 139, 27, 75],
-      "pause_menu": [27, 139, 64, 88],
-      "map_frame": [100, 139, 36, 39]
+      "build_menu":      [0,   100, 176, 39],
+      "toolbar":         [0,   139, 27,  75],
+      "pause_menu":      [27,  139, 64,  88],
+      "map_frame":       [100, 139, 36,  39],
+      "top_bar_segment": [91,  178, 27,  11]
     },
     "Icons": {
-      "zoom_out": [0, 300, 10, 10],
-      "zoom_in": [10, 300, 10, 10],
-      "statistics": [20, 300, 8, 9],
-      "drag_mode": [30, 300, 8, 9],
-      "debug": [40, 300, 8, 9],
-      "transport": [0, 310, 10, 8],
-      "religion": [10, 310, 8, 10],
-      "mining": [20, 310, 8, 10],
-      "military": [30, 310, 6, 10],
-      "manufacturing": [40, 310, 8, 9],
-      "housing": [50, 310, 8, 9],
-      "agriculture": [60, 310, 8, 10],
-      "pause": [0, 320, 12, 12],
-      "demolish": [20, 320, 12, 12],
-      "build": [40, 320, 14, 14],
-      "save": [0, 340, 14, 14],
-      "delete": [20, 340, 13, 13],
-      "load": [40, 340, 14, 14],
-      "back": [60, 340, 14, 14]
+      "zoom_out":      [0,  300, 10, 10],
+      "zoom_in":       [10, 300, 10, 10],
+      "statistics":    [20, 300, 8,  9 ],
+      "drag_mode":     [30, 300, 8,  9 ],
+      "debug":         [40, 300, 8,  9 ],
+      "transport":     [0,  310, 10, 8 ],
+      "religion":      [10, 310, 8,  10],
+      "mining":        [20, 310, 8,  10],
+      "military":      [30, 310, 6,  10],
+      "manufacturing": [40, 310, 8,  9 ],
+      "housing":       [50, 310, 8,  9 ],
+      "agriculture":   [60, 310, 8,  10],
+      "pause":         [0,  320, 12, 12],
+      "demolish":      [20, 320, 12, 12],
+      "build":         [40, 320, 14, 14],
+      "save":          [0,  340, 14, 14],
+      "delete":        [20, 340, 13, 13],
+      "load":          [40, 340, 14, 14],
+      "back":          [60, 340, 14, 14]
     }
   }
 }

@@ -34,7 +34,7 @@ class Config:
     def get_layout(self) -> pg.Surface:
         return pg.image.load(self.layout_path).convert()
 
-    def get_button_specs(self) -> dict[str, dict[str, dict[str, Any]]]:
+    def get_button_specs(self) -> dict[str, dict[str, list]]:
         with open(self.button_specs_path, "r") as f:
             return json.load(f)
 

@@ -3,6 +3,8 @@ import pygame as pg
 from typing import TYPE_CHECKING, Any
 from src.ui.toolbar import Toolbar
 from src.ui.minimap import Minimap
+from src.ui.top_bar import TopBar
+from src.ui.build_menu import BuildMenu
 from src.ui.ui_element import UIElement
 
 if TYPE_CHECKING:
@@ -21,14 +23,15 @@ class UI:
         self.button_manager: ButtonManager = button_manager
         self.spritesheet: Spritesheet = spritesheet
         self.window_size: Vector[int] = config.window_size
-        self.button_specs: dict[str, dict[str, dict[str, Any]]] = config.get_button_specs()
+        self.button_specs: dict[str, dict[str, list]] = config.get_button_specs()
 
-        self.ui_elements: pg.sprite.Group[UIElement] = pg.sprite.Group()
+        self.elements: pg.sprite.Group[UIElement] = pg.sprite.Group()
 
         self.toolbar: Toolbar = Toolbar(button_manager, spritesheet, self.button_specs["Toolbar"])
         self.minimap: Minimap = Minimap(map_manager, spritesheet, scene, button_manager, {})
+        self.top_bar: TopBar = TopBar(spritesheet, button_manager, {})
+        self.build_menu: BuildMenu = BuildMenu(spritesheet, button_manager, self.button_specs["BuildMenu"])
 
     def draw_elements(self, screen: pg.Surface) -> None:
-        screen.blit(self.toolbar.image, self.toolbar.rect)
-        self.toolbar.draw(screen)
-        self.minimap.draw(screen)
+        for element in self.elements:
+            element.draw(screen)

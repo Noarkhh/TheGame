@@ -51,7 +51,7 @@ class Vector(Generic[T]):
     def __neg__(self) -> Vector[T]:
         return Vector[T](-self.x, -self.y)
 
-    def __mul__(self, other: T | Vector[T]) -> Vector[T]:
+    def __mul__(self, other: T) -> Vector[T]:
         if isinstance(other, int) or isinstance(other, float):
             return Vector[T](self.x * other, self.y * other)
         if isinstance(other, Vector):

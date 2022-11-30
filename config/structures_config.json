@@ -1,8 +1,8 @@
 {
   "House": {
     "cost": {
-      "GOLD": 10,
-      "WOOD": 5,
+      "GOLD":  10,
+      "WOOD":  5,
       "STONE": 5
     },
     "profit": {
@@ -11,7 +11,7 @@
   },
   "Wall": {
     "cost": {
-      "WOOD": 1,
+      "WOOD":  1,
       "STONE": 5
     },
     "profit": {
@@ -25,8 +25,8 @@
   },
   "Gate": {
     "cost": {
-      "GOLD": 100,
-      "WOOD": 50,
+      "GOLD":  100,
+      "WOOD":  50,
       "STONE": 50
     },
     "profit": {

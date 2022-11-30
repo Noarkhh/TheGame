@@ -1,32 +1,19 @@
 {
   "Toolbar": {
-    "zoom_in": {
-      "shape": "small_round",
-      "position": [32, 4]
-    },
-    "zoom_out": {
-      "shape": "small_round",
-      "position": [72, 4]
-    },
-    "drag_mode": {
-      "shape": "small_round",
-      "position": [32, 44]
-    },
-    "debug": {
-      "shape": "small_round",
-      "position": [72, 44]
-    },
-    "build": {
-      "shape": "round",
-      "position": [40, 88]
-    },
-    "demolish": {
-      "shape": "round",
-      "position": [40, 154]
-    },
-    "pause": {
-      "shape": "round",
-      "position": [40, 220]
-    }
+    "zoom_in":   ["small_round", [32, 4  ], 2],
+    "zoom_out":  ["small_round", [72, 4  ], 2],
+    "drag_mode": ["small_round", [32, 44 ], 2],
+    "debug":     ["small_round", [72, 44 ], 2],
+    "build":     ["round",       [40, 88 ], 4],
+    "demolish":  ["round",       [40, 154], 4],
+    "pause":     ["round",       [40, 220], 4]
+  },
+  "BuildMenu": {
+    "housing":       ["small_round", [52, 4 ], 2],
+    "military":      ["small_round", [88, 4 ], 2],
+    "transport":     ["small_round", [52, 40], 2],
+    "manufacturing": ["small_round", [88, 40], 2],
+    "agriculture":   ["small_round", [52, 76], 2],
+    "religion":      ["small_round", [88, 76], 2]
   }
 }

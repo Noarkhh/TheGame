@@ -2,7 +2,7 @@ from __future__ import annotations
 import pygame as pg
 from typing import cast
 from src.core_classes import *
-from src.game_mechanics.structures import Structure, Snapper
+from src.game_mechanics.structures import Structure, Snapper, Gate
 
 if TYPE_CHECKING:
     from src.config import Config
@@ -28,12 +28,13 @@ class StructManager:
         build_message: Message = new_struct.can_be_placed()
 
         if build_message.success():
-            new_struct = new_struct.copy()
             if build_message == Message.BUILT:
+                new_struct = new_struct.copy()
                 for relative_pos in new_struct.covered_tiles:
                     struct_map[new_struct.pos + relative_pos] = new_struct
 
             if build_message == Message.OVERRODE:
+                new_struct = new_struct.copy(cast(Gate, new_struct).directions_to_connect_to)
                 cast(Structure, struct_map[new_struct.pos]).kill()
                 struct_map[new_struct.pos] = new_struct
 

@@ -1,15 +1,15 @@
 {
-  "WOOD": 50000,
-  "STONE": 50000,
-  "WHEAT": 50000,
-  "COAL": 25,
-  "ORE": 25,
-  "IRON": 0,
+  "GOLD":     500000,
+  "WOOD":     50000,
+  "STONE":    50000,
+  "WHEAT":    50000,
+  "COAL":     25,
+  "ORE":      25,
+  "IRON":     0,
   "CHARCOAL": 0,
-  "BRICKS": 0,
-  "STEEL": 0,
-  "REINFORCED_WOOD": 0,
-  "BREAD": 0,
+  "BRICKS":   0,
+  "STEEL":    0,
+  "BREAD":    0,
   "METEORITE": 0,
-  "GOLD": 500000
+  "REINFORCED_WOOD": 0
 }
