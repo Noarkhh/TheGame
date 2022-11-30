@@ -30,7 +30,7 @@ class Setup:
         screen = pg.display.set_mode(config.window_size.to_tuple())
 
         cursor: Cursor = Cursor()
-        spritesheet: Spritesheet = Spritesheet()
+        spritesheet: Spritesheet = Spritesheet(config)
         sound_manager: SoundManager = SoundManager(config)
 
         button_manager: ButtonManager = ButtonManager(cursor, sound_manager)

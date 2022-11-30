@@ -1,19 +1,19 @@
 from __future__ import annotations
 import pygame as pg
-import json
+from typing import Any
 from src.game_mechanics.structures import Structure, Snapper
 from src.core_classes import *
 if TYPE_CHECKING:
     from src.graphics.entities import Entity
+    from src.config import Config
 
 
 class Spritesheet:
-    def __init__(self) -> None:
+    def __init__(self, config: Config) -> None:
         self.sheet: pg.Surface = pg.image.load("../assets/spritesheet.png")
         self.ui_sheet: pg.Surface = pg.image.load("../assets/ui_sheet.png")
         self.snapper_sheet: pg.Surface = pg.image.load("../assets/snapper_sheet.png")
-        with open("../config/spritesheet_coords.json", "r") as f:
-            self.coords = json.load(f)
+        self.coords: dict[str, dict[str, Any]] = config.get_spritesheet_coords()
 
     def get_image(self, obj: Entity | Terrain) -> pg.Surface:
         if isinstance(obj, Snapper):

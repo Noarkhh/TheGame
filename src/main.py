@@ -47,7 +47,7 @@ def main() -> None:
     screen = pg.display.set_mode(config.window_size.to_tuple())
     map_manager = MapManager(config)
     cursor = Cursor()
-    spritesheet = Spritesheet()
+    spritesheet = Spritesheet(config)
     entities = Entities(spritesheet=spritesheet)
     treasury = Treasury(config)
     struct_manager = StructManager(config, map_manager, treasury)

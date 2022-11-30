@@ -32,13 +32,12 @@ class UIElement(ABC, pg.sprite.Sprite):
         self.buttons.draw(self.image)
         image.blit(self.image, self.rect)
 
-    def load_button(self, name: str, shape: str, position: list[int], scale: int):
+    def load_button(self, name: str, shape: str, position: list[int], scale: int, **kwargs):
         image = self.spritesheet.get_ui_image("Buttons", shape)
+        rect = image.get_rect(topleft=position)
         contents_image = self.spritesheet.get_ui_image("Icons", name, scale=scale)
         hover_image = self.spritesheet.get_ui_image("Buttons", shape + "_hover")
-        rect = image.get_rect(topleft=position)
-        self.buttons.add(Button(rect, image, hover_image, print_button_name, self.rect,
-                                function_args=[name], contents_image=contents_image))
+        self.buttons.add(Button(rect, image, hover_image, contents_image, print_button_name, self.rect, **kwargs))
 
 
 def print_button_name(button_name: str) -> None:

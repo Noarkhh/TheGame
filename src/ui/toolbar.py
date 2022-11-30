@@ -9,8 +9,7 @@ if TYPE_CHECKING:
 
 
 class Toolbar(UIElement):
-    def __init__(self, button_manager: ButtonManager, spritesheet: Spritesheet,
-                 button_specs: dict[str, list]):
+    def __init__(self, spritesheet: Spritesheet, button_manager: ButtonManager, button_specs: dict[str, list]):
         self.image: pg.Surface = spritesheet.get_ui_image("Decorative", "toolbar")
         self.rect: pg.Rect = self.image.get_rect(right=self.ui.window_size.x, top=184)
 
@@ -19,7 +18,7 @@ class Toolbar(UIElement):
 
     def load(self) -> None:
         for name, (shape, position, scale) in self.button_specs.items():
-            self.load_button(name, shape, position, scale)
+            self.load_button(name, shape, position, scale, function_args=[name])
 
 
 

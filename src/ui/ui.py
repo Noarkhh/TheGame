@@ -27,10 +27,10 @@ class UI:
 
         self.elements: pg.sprite.Group[UIElement] = pg.sprite.Group()
 
-        self.toolbar: Toolbar = Toolbar(button_manager, spritesheet, self.button_specs["Toolbar"])
+        self.toolbar: Toolbar = Toolbar(spritesheet, button_manager, self.button_specs["Toolbar"])
         self.minimap: Minimap = Minimap(map_manager, spritesheet, scene, button_manager, {})
         self.top_bar: TopBar = TopBar(spritesheet, button_manager, {})
-        self.build_menu: BuildMenu = BuildMenu(spritesheet, button_manager, self.button_specs["BuildMenu"])
+        self.build_menu: BuildMenu = BuildMenu(config, spritesheet, button_manager, self.button_specs["BuildMenu"])
 
     def draw_elements(self, screen: pg.Surface) -> None:
         for element in self.elements:

@@ -14,13 +14,14 @@
   },
   "metpush15" : {},
   "metrollover": {
+    "volume": 30,
     "variants": 6
   },
   "woodpush2" : {
     "volume": 30
   },
   "woodrollover": {
-    "volume": 50,
+    "volume": 40,
     "variants": 4
   }
 }

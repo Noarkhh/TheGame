@@ -1,7 +1,7 @@
 from __future__ import annotations
 import json
 from src.game_mechanics.structures import *
-from typing import Any
+from src.ui.build_menu import Category
 
 
 class Config:
@@ -10,10 +10,12 @@ class Config:
         self.frame_rate: int = 60
         self.window_size: Vector[int] = Vector[int](1080, 720)
         self.layout_path: str = "../assets/maps/river_L.png"
+        self.spritesheet_coords_path: str = "../config/spritesheet_coords.json"
         self.structures_config_path: str = "../config/structures_config.json"
         self.starting_resources_path: str = "../config/starting_resources.json"
         self.button_specs_path: str = "../config/button_specs.json"
         self.fx_config_path: str = "../config/fx_config.json"
+        self.structure_categories_path: str = "../config/structure_categories.json"
 
         Tile.size = self.tile_size
 
@@ -41,3 +43,12 @@ class Config:
     def get_fx_config(self) -> dict[str, dict[str, int]]:
         with open(self.fx_config_path, "r") as f:
             return json.load(f)
+
+    def get_spritesheet_coords(self) -> dict[str, dict[str, list]]:
+        with open(self.spritesheet_coords_path, "r") as f:
+            return json.load(f)
+
+    def get_structure_categories(self) -> dict[Category, list[Type[Structure]]]:
+        with open(self.structure_categories_path, "r") as f:
+            return {Category[category]: [globals()[class_name] for class_name in classes] for category, classes in
+                    json.load(f).items()}
