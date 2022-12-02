@@ -34,5 +34,7 @@
     }
   },
   "Road": {},
-  "Bridge": {}
+  "Bridge": {},
+  "Tower": {},
+  "Sawmill": {}
 }

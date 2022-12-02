@@ -11,10 +11,10 @@ class Button(pg.sprite.Sprite):
 
     def __init__(self, rect: pg.Rect, base_image: pg.Surface, hover_image: pg.Surface, contents_image: pg.Surface,
                  function: Callable, ui_rect: pg.Rect, function_args: Optional[list[Any]] = None,
-                 hover_sound: str = "woodrollover", press_sound: str = "woodpush2", contents_height: int = 4) -> None:
+                 hover_sound: str = "woodrollover", press_sound: str = "woodpush", contents_height: int = 4,
+                 self_reference: bool = False) -> None:
 
-        self.rect: pg.Rect = rect
-        self.collision_rect: pg.Rect = self.rect.move(ui_rect.x, ui_rect.y)
+        self.rect: pg.Rect = rect.move(ui_rect.x, ui_rect.y)
         self.base_image: pg.Surface = base_image
         self.hover_image: pg.Surface = hover_image
         contents_rect = contents_image.get_rect(centerx=self.base_image.get_width() / 2, top=contents_height)
@@ -24,10 +24,11 @@ class Button(pg.sprite.Sprite):
         self.image: pg.Surface = self.base_image
 
         self.function: Callable = function
-        if function_args is None:
-            self.function_args: list = []
-        else:
-            self.function_args = function_args
+
+        self.function_args: list = [] if function_args is None else function_args
+        if self_reference:
+            self.function_args.append(self)
+
         self.hover_sound: str = hover_sound
         self.press_sound: str = press_sound
 
@@ -49,17 +50,14 @@ class Button(pg.sprite.Sprite):
         self.manager.sound_manager.play_sound(self.hover_sound)
 
     def press(self) -> Any:
-        if not self.is_locked:
-            return self.function(*self.function_args)
-        return None
+        return self.function(*self.function_args)
 
     def play_press_sound(self) -> None:
         self.manager.sound_manager.play_sound(self.press_sound)
 
-    def draw(self, image: pg.Surface) -> None:
-        image.blit(self.image, self.rect)
-
-    def lock(self) -> None:
+    def lock(self, in_pressed_state: bool = False) -> None:
+        if in_pressed_state:
+            self.hover()
         self.is_locked = True
 
     def unlock(self) -> None:

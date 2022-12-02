@@ -46,5 +46,7 @@ class StructManager:
             snap_direction = cast(Direction, (new_struct.pos - previous_pos).to_dir())
             cast(Snapper, struct_map[new_struct.pos]).add_neighbours(snap_direction.opposite())
             cast(Snapper, struct_map[previous_pos]).add_neighbours(snap_direction)
+
+
         return build_message
 

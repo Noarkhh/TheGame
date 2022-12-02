@@ -13,25 +13,29 @@ if TYPE_CHECKING:
     from src.graphics.scene import Scene
     from src.core_classes import Vector
     from src.config import Config
+    from src.cursor import Cursor
     from src.game_mechanics.map_manager import MapManager
 
 
 class UI:
     def __init__(self, config: Config, button_manager: ButtonManager, spritesheet: Spritesheet,
-                 map_manager: MapManager, scene: Scene) -> None:
+                 map_manager: MapManager, scene: Scene, cursor: Cursor) -> None:
         UIElement.ui = self
         self.button_manager: ButtonManager = button_manager
         self.spritesheet: Spritesheet = spritesheet
+        self.cursor: Cursor = cursor
+
         self.window_size: Vector[int] = config.window_size
         self.button_specs: dict[str, dict[str, list]] = config.get_button_specs()
 
         self.elements: pg.sprite.Group[UIElement] = pg.sprite.Group()
 
-        self.toolbar: Toolbar = Toolbar(spritesheet, button_manager, self.button_specs["Toolbar"])
+        self.build_menu: BuildMenu = BuildMenu(config, spritesheet, button_manager, self.button_specs["BuildMenu"])
         self.minimap: Minimap = Minimap(map_manager, spritesheet, scene, button_manager, {})
         self.top_bar: TopBar = TopBar(spritesheet, button_manager, {})
-        self.build_menu: BuildMenu = BuildMenu(config, spritesheet, button_manager, self.button_specs["BuildMenu"])
+        self.toolbar: Toolbar = Toolbar(spritesheet, button_manager, self.button_specs["Toolbar"])
 
     def draw_elements(self, screen: pg.Surface) -> None:
         for element in self.elements:
-            element.draw(screen)
+            if element.is_loaded:
+                element.draw(screen)

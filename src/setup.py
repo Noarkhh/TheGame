@@ -40,7 +40,7 @@ class Setup:
         map_manager: MapManager = MapManager(config)
 
         scene: Scene = Scene(config, spritesheet, map_manager)
-        ui: UI = UI(config, button_manager, spritesheet, map_manager, scene)
+        ui: UI = UI(config, button_manager, spritesheet, map_manager, scene, cursor)
 
         renderer: Renderer = Renderer(scene, screen, entities, cursor, ui)
         struct_manager: StructManager = StructManager(config, map_manager, treasury)

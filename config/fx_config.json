@@ -1,5 +1,5 @@
 {
-  "buildingwreck_01": {
+  "buildingwreck": {
     "volume": 70
   },
   "drawbridge_control": {},
@@ -12,12 +12,12 @@
     "volume": 80,
     "variants": 3
   },
-  "metpush15" : {},
+  "metpush" : {},
   "metrollover": {
     "volume": 30,
     "variants": 6
   },
-  "woodpush2" : {
+  "woodpush" : {
     "volume": 30
   },
   "woodrollover": {

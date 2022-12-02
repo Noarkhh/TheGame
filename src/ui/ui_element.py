@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pygame as pg
-from typing import TYPE_CHECKING, ClassVar, Any
+from typing import TYPE_CHECKING, ClassVar, Optional, Callable
 from abc import ABC, abstractmethod
 from src.ui.button import Button
 
@@ -22,22 +22,45 @@ class UIElement(ABC, pg.sprite.Sprite):
         self.button_specs: dict[str, list] = button_specs
 
         self.buttons: pg.sprite.Group[Button] = pg.sprite.Group()
+        self.is_loaded: bool = True
         super().__init__()
         self.ui.elements.add(self)
 
-    @abstractmethod
-    def load(self) -> None: ...
+    def load(self) -> None:
+        self.is_loaded = True
+
+    def unload(self) -> None:
+        self.is_loaded = False
+        for button in self.buttons:
+            button.kill()
+
+    def toggle(self) -> None:
+        if self.is_loaded:
+            self.unload()
+        else:
+            self.load()
 
     def draw(self, image: pg.Surface) -> None:
-        self.buttons.draw(self.image)
         image.blit(self.image, self.rect)
+        self.buttons.draw(image)
 
-    def load_button(self, name: str, shape: str, position: list[int], scale: int, **kwargs):
+    def create_icon_button(self, icon_name: str, shape: str, position: list[int], scale: int,
+                           function: Optional[Callable] = None, **kwargs) -> Button:
+        contents_image = self.spritesheet.get_ui_image("Icons", icon_name, scale=scale)
+        return self.create_image_button(shape, position, contents_image, function, **kwargs)
+
+    def create_text_button(self) -> None:
+        pass
+
+    def create_image_button(self, shape: str, position: list[int], contents_image: pg.Surface,
+                            function: Optional[Callable] = None, **kwargs) -> Button:
         image = self.spritesheet.get_ui_image("Buttons", shape)
         rect = image.get_rect(topleft=position)
-        contents_image = self.spritesheet.get_ui_image("Icons", name, scale=scale)
         hover_image = self.spritesheet.get_ui_image("Buttons", shape + "_hover")
-        self.buttons.add(Button(rect, image, hover_image, contents_image, print_button_name, self.rect, **kwargs))
+        new_button: Button = Button(rect, image, hover_image, contents_image,
+                                    print_button_name if function is None else function, self.rect, **kwargs)
+        self.buttons.add(new_button)
+        return new_button
 
 
 def print_button_name(button_name: str) -> None:

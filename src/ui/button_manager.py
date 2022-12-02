@@ -34,7 +34,7 @@ class ButtonManager:
     def check_for_hovers(self) -> None:
         self.hovered_button = None
         for button in self.buttons:
-            if button.collision_rect.collidepoint(pg.mouse.get_pos()):
+            if button.rect.collidepoint(pg.mouse.get_pos()):
                 self.hovered_button = button
             else:
                 button.unhover()

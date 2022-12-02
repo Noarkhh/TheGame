@@ -1,5 +1,6 @@
 from __future__ import annotations
 import pygame as pg
+from src.core_classes import Message
 from typing import TYPE_CHECKING
 from random import choice
 if TYPE_CHECKING:
@@ -26,7 +27,7 @@ class SoundManager:
             else:
                 sound = pg.mixer.Sound(f"../assets/fx/{sound_name}.wav")
                 sound.set_volume(volume)
-                self.sounds[f"{sound_name}"] = sound
+                self.sounds[sound_name] = sound
 
     def play_sound(self, sound_name: str):
         selected_sounds = self.sounds[sound_name]
@@ -34,5 +35,11 @@ class SoundManager:
             choice(selected_sounds).play()
         else:
             selected_sounds.play()
+
+    def handle_placement_sounds(self, play_failure_sounds: bool, play_success_sound: bool,
+                                build_message: Message, snap_message: Message) -> None:
+        if play_success_sound:
+            if build_message.success() or snap_message.success():
+                self.play_sound("draw")
 
 
