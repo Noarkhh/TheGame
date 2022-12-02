@@ -2,7 +2,9 @@
   "buildingwreck": {
     "volume": 70
   },
-  "drawbridge_control": {},
+  "drawbridge_control": {
+    "volume": 20
+  },
   "General_Startgame": {},
   "Insult": {
     "volume": 90,
@@ -23,5 +25,12 @@
   "woodrollover": {
     "volume": 40,
     "variants": 4
+  },
+  "Resource_Need": {
+    "volume": 30,
+    "variants": 3
+  },
+  "Placement_Warning" : {
+    "volume": 20
   }
 }

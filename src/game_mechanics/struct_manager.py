@@ -9,15 +9,17 @@ if TYPE_CHECKING:
     from src.game_mechanics.map import Map
     from src.game_mechanics.map_manager import MapManager
     from src.game_mechanics.treasury import Treasury
+    from src.sound.sound_manager import SoundManager
 
 
 class StructManager:
-    def __init__(self, config: Config, map_manager: MapManager, treasury: Treasury):
+    def __init__(self, config: Config, map_manager: MapManager, treasury: Treasury, sound_manager: SoundManager):
         Structure.manager = self
         config.set_structures_parameters()
 
         self.map_manager: MapManager = map_manager
         self.treasury: Treasury = treasury
+        self.sound_manager: SoundManager = sound_manager
 
         self.structs: pg.sprite.Group[Structure] = pg.sprite.Group()
 
@@ -41,12 +43,14 @@ class StructManager:
             self.treasury.pay_for(new_struct)
 
         snap_message: Message = new_struct.can_be_snapped(new_struct.pos, previous_pos)
+        print(snap_message, build_message)
 
         if snap_message == Message.SNAPPED:
             snap_direction = cast(Direction, (new_struct.pos - previous_pos).to_dir())
             cast(Snapper, struct_map[new_struct.pos]).add_neighbours(snap_direction.opposite())
             cast(Snapper, struct_map[previous_pos]).add_neighbours(snap_direction)
 
+        self.sound_manager.handle_placement_sounds(play_failure_sounds, play_success_sound, build_message, snap_message)
 
         return build_message
 

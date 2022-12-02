@@ -43,7 +43,7 @@ class Setup:
         ui: UI = UI(config, button_manager, spritesheet, map_manager, scene, cursor)
 
         renderer: Renderer = Renderer(scene, screen, entities, cursor, ui)
-        struct_manager: StructManager = StructManager(config, map_manager, treasury)
+        struct_manager: StructManager = StructManager(config, map_manager, treasury, sound_manager)
         keyboard_handler: KeyboardHandler = KeyboardHandler(cursor, ui, struct_manager)
         mouse_handler: MouseHandler = MouseHandler(cursor, ui, struct_manager, scene)
         event_handler: EventHandler = EventHandler(mouse_handler, keyboard_handler)

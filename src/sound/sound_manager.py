@@ -10,6 +10,10 @@ if TYPE_CHECKING:
 class SoundManager:
     def __init__(self, config: Config) -> None:
         self.fx_config = config.get_fx_config()
+        pg.mixer.set_num_channels(5)
+
+        self.fx_channel = pg.mixer.Channel(1)
+        self.speech_channel = pg.mixer.Channel(2)
         self.sounds: dict[str, pg.mixer.Sound | list[pg.mixer.Sound]] = {}
         self.load_sounds()
 
@@ -29,17 +33,33 @@ class SoundManager:
                 sound.set_volume(volume)
                 self.sounds[sound_name] = sound
 
-    def play_sound(self, sound_name: str):
+    def play_sound(self, sound_name: str, channel: pg.mixer.Channel):
         selected_sounds = self.sounds[sound_name]
         if isinstance(selected_sounds, list):
-            choice(selected_sounds).play()
+            channel.play(choice(selected_sounds))
         else:
-            selected_sounds.play()
+            channel.play(selected_sounds)
+
+    def play_speech(self, sound_name: str):
+        self.play_sound(sound_name, self.speech_channel)
+
+    def play_fx(self, sound_name: str):
+        self.play_sound(sound_name, self.fx_channel)
 
     def handle_placement_sounds(self, play_failure_sounds: bool, play_success_sound: bool,
                                 build_message: Message, snap_message: Message) -> None:
-        if play_success_sound:
-            if build_message.success() or snap_message.success():
-                self.play_sound("draw")
+        if play_success_sound and (build_message.success() or snap_message.success()):
+            self.play_fx("drawbridge_control")
+        if play_failure_sounds:
+            if not snap_message.success() and not build_message.success():
+                if build_message == Message.NO_RESOURCES:
+                    self.play_speech("Resource_Need")
+                elif snap_message not in (Message.NOT_ADJACENT, Message.ALREADY_SNAPPED) and \
+                        (build_message in (Message.BAD_LOCATION_STRUCT, Message.BAD_LOCATION_TERRAIN) or
+                         snap_message in (Message.BAD_CONNECTOR, Message.ONE_CANT_SNAP, Message.NOT_A_SNAPPER)):
+                    self.play_speech("Placement_Warning")
+
+
+
 
 
