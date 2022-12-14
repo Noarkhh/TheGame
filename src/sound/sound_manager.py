@@ -1,7 +1,7 @@
 from __future__ import annotations
 import pygame as pg
 from src.core_classes import Message
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from random import choice
 if TYPE_CHECKING:
     from src.config import Config
@@ -33,18 +33,23 @@ class SoundManager:
                 sound.set_volume(volume)
                 self.sounds[sound_name] = sound
 
-    def play_sound(self, sound_name: str, channel: pg.mixer.Channel):
+    def play_sound(self, sound_name: str, channel: Optional[pg.mixer.Channel] = None):
         selected_sounds = self.sounds[sound_name]
         if isinstance(selected_sounds, list):
-            channel.play(choice(selected_sounds))
+            sound_to_play: pg.mixer.Sound = choice(selected_sounds)
         else:
-            channel.play(selected_sounds)
+            sound_to_play = selected_sounds
+
+        if channel is not None:
+            channel.play(sound_to_play)
+        else:
+            sound_to_play.play()
 
     def play_speech(self, sound_name: str):
         self.play_sound(sound_name, self.speech_channel)
 
     def play_fx(self, sound_name: str):
-        self.play_sound(sound_name, self.fx_channel)
+        self.play_sound(sound_name)
 
     def handle_placement_sounds(self, play_failure_sounds: bool, play_success_sound: bool,
                                 build_message: Message, snap_message: Message) -> None:

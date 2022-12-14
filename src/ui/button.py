@@ -47,13 +47,13 @@ class Button(pg.sprite.Sprite):
             self.image = self.base_image
 
     def play_hover_sound(self) -> None:
-        self.manager.sound_manager.play_sound(self.hover_sound)
+        self.manager.sound_manager.play_fx(self.hover_sound)
 
     def press(self) -> Any:
         return self.function(*self.function_args)
 
     def play_press_sound(self) -> None:
-        self.manager.sound_manager.play_sound(self.press_sound)
+        self.manager.sound_manager.play_fx(self.press_sound)
 
     def lock(self, in_pressed_state: bool = False) -> None:
         if in_pressed_state:
