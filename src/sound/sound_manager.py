@@ -33,7 +33,7 @@ class SoundManager:
                 sound.set_volume(volume)
                 self.sounds[sound_name] = sound
 
-    def play_sound(self, sound_name: str, channel: Optional[pg.mixer.Channel] = None):
+    def play_sound(self, sound_name: str, channel: Optional[pg.mixer.Channel] = None) -> None:
         selected_sounds = self.sounds[sound_name]
         if isinstance(selected_sounds, list):
             sound_to_play: pg.mixer.Sound = choice(selected_sounds)
@@ -45,10 +45,10 @@ class SoundManager:
         else:
             sound_to_play.play()
 
-    def play_speech(self, sound_name: str):
+    def play_speech(self, sound_name: str) -> None:
         self.play_sound(sound_name, self.speech_channel)
 
-    def play_fx(self, sound_name: str):
+    def play_fx(self, sound_name: str) -> None:
         self.play_sound(sound_name)
 
     def handle_placement_sounds(self, play_failure_sounds: bool, play_success_sound: bool,

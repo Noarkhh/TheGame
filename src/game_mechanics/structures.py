@@ -1,10 +1,12 @@
 from __future__ import annotations
 import pygame as pg
-from typing import Type, ClassVar, cast
+from typing import Type, ClassVar, cast, Any
 from src.core_classes import *
 from src.graphics.entities import Entity
 if TYPE_CHECKING:
     from src.game_mechanics.struct_manager import StructManager
+
+SelfStructure = TypeVar("SelfStructure", bound="Structure")
 
 
 class Structure(Entity):
@@ -35,7 +37,7 @@ class Structure(Entity):
         self.cooldown_left: int = self.cooldown
         self.stockpile: dict[Resource, int] = {resource: 0 for resource in self.base_profit.keys()}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.__class__.__name__}(pos: {self.pos})'
 
     def can_be_placed(self) -> Message:
@@ -64,7 +66,7 @@ class Structure(Entity):
                     self.stockpile[resource] += amount
             self.cooldown_left = self.base_cooldown
 
-    def copy(self, neighbours: Optional[DirectionSet] = None):
+    def copy(self: SelfStructure, neighbours: Optional[DirectionSet] = None) -> SelfStructure:
         new_copy = self.__class__(self.pos, image_variant=self.image_variant, orientation=self.orientation)
         if neighbours is not None:
             assert isinstance(new_copy, Snapper)
@@ -114,7 +116,7 @@ class Tower(Structure):
 
 
 class Snapper(Structure):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self.snaps_to: dict[Direction, Type[Structure]] = {direction: self.__class__ for direction in Direction}
         self.neighbours: DirectionSet = DirectionSet()
         super().__init__(*args, **kwargs)
@@ -183,7 +185,7 @@ class Farmland(Snapper):
 class Bridge(Snapper):
     unsuitable_terrain = [Terrain.GRASSLAND, Terrain.DESERT]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.snaps_to = {direction: Road for direction in Direction}
 
@@ -192,7 +194,8 @@ class Gate(Wall, Road):
     image_aspect_ratio = Vector[float](1, 20 / 15)
     overrider = True
 
-    def __init__(self, *args, image_variant: int = 0, orientation: Orientation = Orientation.VERTICAL, **kwargs) -> None:
+    def __init__(self, *args: Any, image_variant: int = 0,
+                 orientation: Orientation = Orientation.VERTICAL, **kwargs: Any) -> None:
         super().__init__(*args, image_variant=orientation, orientation=orientation, **kwargs)
 
         if self.orientation == Orientation.VERTICAL:

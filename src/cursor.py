@@ -40,7 +40,7 @@ class Cursor(pg.sprite.Sprite):
 
         self.held_structure: Optional[Structure] = None
 
-    def update(self, scene: Scene):
+    def update(self, scene: Scene) -> None:
         self.previous_pos = self.pos
         self.previous_pos_px = self.pos_px
 
@@ -53,7 +53,7 @@ class Cursor(pg.sprite.Sprite):
             self.held_structure.pos = self.pos
             self.held_structure.update_rect()
 
-    def assign_struct_class(self, struct_class: Type[Structure]):
+    def assign_struct_class(self, struct_class: Type[Structure]) -> None:
         if self.held_structure is not None:
             self.held_structure.kill()
         self.held_structure = struct_class(self.pos, image_variant=randrange(struct_class.image_variants),
@@ -63,9 +63,10 @@ class Cursor(pg.sprite.Sprite):
         else:
             self.mode = Mode.NORMAL
 
-    def unassign(self):
-        self.held_structure.kill()
-        self.held_structure = None
+    def unassign(self) -> None:
+        if self.held_structure is not None:
+            self.held_structure.kill()
+            self.held_structure = None
 
-    def draw(self, surf: pg.Surface):
+    def draw(self, surf: pg.Surface) -> None:
         surf.blit(self.image, self.rect)

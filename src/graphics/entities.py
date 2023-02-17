@@ -53,6 +53,6 @@ class Entities(pg.sprite.Group):
 
         return dirty
 
-    def update_zoom(self):
+    def update_zoom(self) -> None:
         for spr in self.sprites():
             spr.update_zoom()

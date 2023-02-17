@@ -11,7 +11,8 @@ if TYPE_CHECKING:
 
 
 class Minimap(UIElement):
-    def __init__(self, map_manager: MapManager, spritesheet: Spritesheet, scene: Scene, *args):
+    def __init__(self, map_manager: MapManager, spritesheet: Spritesheet, scene: Scene,
+                 button_manager: ButtonManager, button_specs: dict[str, list]) -> None:
         self.map_manager: MapManager = map_manager
         self.scene: Scene = scene
 
@@ -31,7 +32,7 @@ class Minimap(UIElement):
         self.image: pg.Surface = pg.Surface(self.frame.get_size())
         self.image.set_colorkey("black")
         self.rect: pg.Rect = self.image.get_rect(topright=(self.ui.window_size.x, 44))
-        super().__init__(self.image, self.rect, spritesheet, *args)
+        super().__init__(self.image, self.rect, spritesheet, button_manager, button_specs)
 
     def load(self) -> None:
         self.map_image.blit(self.map_image_raw, (0, 0))

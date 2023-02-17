@@ -26,7 +26,7 @@ class Scene(pg.sprite.Sprite):
         self.to_decrement: int = 0
         self.retardation_period: int = 20
 
-    def update_velocity(self, new_velocity: Optional[Vector[float]] = None, slow_down: bool = False):
+    def update_velocity(self, new_velocity: Optional[Vector[float]] = None, slow_down: bool = False) -> None:
         if slow_down and self.velocity != Vector[float](0.0, 0.0):
             velocity_sign_before = self.velocity.x > 0 - self.velocity.x < 0
             self.velocity -= self.velocity_decrement
@@ -36,15 +36,15 @@ class Scene(pg.sprite.Sprite):
         if new_velocity is not None:
             self.velocity = new_velocity
 
-    def set_decrement(self):
+    def set_decrement(self) -> None:
         self.velocity_decrement = self.velocity / self.retardation_period
 
-    def update(self):
+    def update(self) -> None:
         self.move_by_velocity()
         self.move_screen_border(Vector(pg.mouse.get_pos()))
         self.update_velocity(slow_down=True)
 
-    def move_screen_border(self, curr_mouse_pos: Vector[int]):
+    def move_screen_border(self, curr_mouse_pos: Vector[int]) -> None:
         if curr_mouse_pos.x >= self.window_size.x - Tile.size / 2 and \
                 self.rect.right <= self.map_size_px.x - Tile.size / 2:
             self.rect.move_ip(Tile.size / 2, 0)
@@ -59,7 +59,7 @@ class Scene(pg.sprite.Sprite):
 
         self.image = self.map_image.subsurface(self.rect)
 
-    def move_by_velocity(self):
+    def move_by_velocity(self) -> None:
         new_rect = self.rect.move(*self.velocity.to_tuple())
 
         if new_rect.left >= 0 and new_rect.right <= self.map_size_px.x:

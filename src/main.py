@@ -9,6 +9,7 @@ from src.graphics.scene import Scene
 from src.graphics.entities import Entities
 from src.cursor import Cursor
 from src.setup import Setup
+from src.sound.sound_manager import SoundManager
 
 from typing import Protocol
 from random import randint
@@ -50,7 +51,8 @@ def main() -> None:
     spritesheet = Spritesheet(config)
     entities = Entities(spritesheet=spritesheet)
     treasury = Treasury(config)
-    struct_manager = StructManager(config, map_manager, treasury)
+    sound_manager = SoundManager(config)
+    struct_manager = StructManager(config, map_manager, treasury, sound_manager)
     scene = Scene(config, spritesheet, map_manager)
 
     structs = [House(Vector(1, 1)), Wall(Vector(1, 4)), Mine(Vector(0, 1), is_ghost=True), Gate(Vector(5, 5))]

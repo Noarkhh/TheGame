@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pygame as pg
-from typing import TYPE_CHECKING, ClassVar, Optional, Callable
+from typing import TYPE_CHECKING, ClassVar, Optional, Callable, Any
 from abc import ABC, abstractmethod
 from src.ui.button import Button
 
@@ -45,23 +45,27 @@ class UIElement(ABC, pg.sprite.Sprite):
         self.buttons.draw(image)
 
     def create_icon_button(self, icon_name: str, shape: str, position: list[int], scale: int,
-                           function: Optional[Callable] = None, **kwargs) -> Button:
+                           function: Optional[Callable] = None, **kwargs: Any) -> Button:
         contents_image = self.spritesheet.get_ui_image("Icons", icon_name, scale=scale)
-        return self.create_image_button(shape, position, contents_image, function, **kwargs)
+        return self.create_image_button(contents_image, shape, position, function, **kwargs)
 
-    def create_text_button(self) -> None:
-        pass
+    def create_text_button(self, text: str, shape: str, position: list[int], scale: int,
+                           function: Optional[Callable] = None, **kwargs: Any) -> Button:
+        contents_image = pg.font.Font('../assets/Minecraft.otf', scale).render(text, False, (62, 61, 58), "black")
+        contents_image.set_colorkey("black")
+        return self.create_image_button(contents_image, shape, position, function, **kwargs)
 
-    def create_image_button(self, shape: str, position: list[int], contents_image: pg.Surface,
-                            function: Optional[Callable] = None, **kwargs) -> Button:
+    def create_image_button(self, contents_image: pg.Surface, shape: str, position: list[int],
+                            function: Optional[Callable] = None, **kwargs: Any) -> Button:
         image = self.spritesheet.get_ui_image("Buttons", shape)
         rect = image.get_rect(topleft=position)
         hover_image = self.spritesheet.get_ui_image("Buttons", shape + "_hover")
-        new_button: Button = Button(rect, image, hover_image, contents_image,
-                                    print_button_name if function is None else function, self.rect, **kwargs)
+        if function is None:
+            function = foo
+        new_button: Button = Button(rect, image, hover_image, contents_image, function, self.rect, **kwargs)
         self.buttons.add(new_button)
         return new_button
 
 
-def print_button_name(button_name: str) -> None:
-    print(button_name)
+def foo(button: Button) -> None:
+    print(button)

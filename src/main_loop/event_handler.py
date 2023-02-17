@@ -14,6 +14,7 @@ class EventHandler:
     def handle_events(self) -> None:
         for event in pg.event.get():
             if event.type == pg.QUIT:
+                pg.quit()
                 quit()
             if event.type == pg.MOUSEBUTTONDOWN:
                 if event.button == 1:

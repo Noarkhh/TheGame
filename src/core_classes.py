@@ -24,46 +24,46 @@ class Vector(Generic[T]):
             raise TypeError
 
     @property
-    def x(self):
+    def x(self) -> T:
         return self._x
 
     @property
-    def y(self):
+    def y(self) -> T:
         return self._y
 
-    def __eq__(self, other: object):
+    def __eq__(self, other: object) -> bool:
         if isinstance(other, Vector):
             return self.x == other.x and self.y == other.y
         return NotImplemented
 
     def __sub__(self, other: Vector[T] | tuple[T, T]) -> Vector[T]:
         if isinstance(other, Vector):
-            return Vector[T](self.x - other.x, self.y - other.y)
+            return Vector(self.x - other.x, self.y - other.y)
         if isinstance(other, tuple):
-            return Vector[T](self.x - other[0], self.y - other[1])
+            return Vector(self.x - other[0], self.y - other[1])
 
     def __add__(self, other: Vector[T] | tuple[T, T]) -> Vector[T]:
         if isinstance(other, Vector):
-            return Vector[T](self.x + other.x, self.y + other.y)
+            return Vector(self.x + other.x, self.y + other.y)
         if isinstance(other, tuple):
-            return Vector[T](self.x + other[0], self.y + other[1])
+            return Vector(self.x + other[0], self.y + other[1])
 
     def __neg__(self) -> Vector[T]:
-        return Vector[T](-self.x, -self.y)
+        return Vector(-self.x, -self.y)
 
     def __mul__(self, other: T) -> Vector[T]:
         if isinstance(other, int) or isinstance(other, float):
-            return Vector[T](self.x * other, self.y * other)
+            return Vector(self.x * other, self.y * other)
         if isinstance(other, Vector):
-            return Vector[T](self.x * other.x, self.y * other.y)
+            return Vector(self.x * other.x, self.y * other.y)
 
-    def __floordiv__(self, other: int):
-        return Vector[int](self.x // other, self.y // other)
+    def __floordiv__(self, other: int) -> Vector[int]:
+        return Vector(int(self.x // other), int(self.y // other))
 
-    def __truediv__(self, other: int | float):
-        return Vector[float](self.x / other, self.y / other)
+    def __truediv__(self, other: int | float) -> Vector[float]:
+        return Vector(self.x / other, self.y / other)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.x}, {self.y})"
 
     def to_dir(self: Vector[int]) -> Optional[Direction]:
@@ -75,10 +75,10 @@ class Vector(Generic[T]):
     def to_tuple(self) -> tuple[T, T]:
         return self.x, self.y
 
-    def to_float(self: Vector[int]):
+    def to_float(self: Vector[int]) -> Vector[float]:
         return Vector(float(self.x), float(self.y))
 
-    def to_int(self: Vector[float]):
+    def to_int(self: Vector[float]) -> Vector[int]:
         return Vector(int(self.x), int(self.y))
 
 

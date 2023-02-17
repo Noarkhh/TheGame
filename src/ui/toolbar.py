@@ -10,21 +10,30 @@ if TYPE_CHECKING:
 
 
 class Toolbar(UIElement):
-    def __init__(self, spritesheet: Spritesheet, button_manager: ButtonManager, button_specs: dict[str, list]):
+    def __init__(self, spritesheet: Spritesheet, button_manager: ButtonManager, button_specs: dict[str, list]) -> None:
         self.image: pg.Surface = spritesheet.get_ui_image("Decorative", "toolbar")
         self.rect: pg.Rect = self.image.get_rect(right=self.ui.window_size.x, top=184)
 
         super().__init__(self.image, self.rect, spritesheet, button_manager, button_specs)
+        self.buttons_to_functions: dict[str, Optional[Callable]] = {
+            "zoom_in": None,
+            "zoom_out": None,
+            "drag_mode": None,
+            "debug": None,
+            "build": self.toggle_build_menu,
+            "demolish": None,
+            "pause": self.pause
+        }
+
         self.load()
 
     def load(self) -> None:
         super().load()
         for name, (shape, position, scale) in self.button_specs.items():
+            new_button = self.create_icon_button(name, shape, position, scale, self.buttons_to_functions[name],
+                                                 self_reference=True)
             if name == "build":
-                self.create_icon_button(name, shape, position, scale, self.toggle_build_menu, self_reference=True).lock(
-                    in_pressed_state=True)
-            else:
-                self.create_icon_button(name, shape, position, scale, function_args=[name])
+                new_button.lock(in_pressed_state=True)
 
     def toggle_build_menu(self, button: Button) -> None:
         self.ui.build_menu.toggle()
@@ -32,3 +41,6 @@ class Toolbar(UIElement):
             button.lock(in_pressed_state=True)
         else:
             button.unlock()
+
+    def pause(self, button: Button) -> None:
+        self.ui.pause_menu.load()

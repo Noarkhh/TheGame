@@ -24,7 +24,7 @@ class Category(Enum):
 
 class BuildMenu(UIElement):
     def __init__(self, config: Config, spritesheet: Spritesheet, button_manager: ButtonManager,
-                 button_specs: dict[str, list]):
+                 button_specs: dict[str, list]) -> None:
         self.image: pg.Surface = spritesheet.get_ui_image("Decorative", "build_menu")
         self.rect: pg.Rect = self.image.get_rect(centerx=self.ui.window_size.x // 2, top=44)
         self.structure_buttons_field_pos_x: int = 136
@@ -57,7 +57,7 @@ class BuildMenu(UIElement):
             icon_image = self.spritesheet.get_image(struct_class, scale=60)
             shape = "rectangle_wide" if icon_image.get_width() > 60 else "rectangle"
             contents_height = 120 - icon_image.get_height()
-            new_button: Button = self.create_image_button(shape, [button_pos_x, 0], icon_image,
+            new_button: Button = self.create_image_button(icon_image, shape, [button_pos_x, 0],
                                                           self.ui.cursor.assign_struct_class,
                                                           function_args=[struct_class], contents_height=contents_height)
             self.current_category_structs_buttons.add(new_button)

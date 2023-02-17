@@ -10,7 +10,7 @@ class Button(pg.sprite.Sprite):
     manager: ClassVar[ButtonManager]
 
     def __init__(self, rect: pg.Rect, base_image: pg.Surface, hover_image: pg.Surface, contents_image: pg.Surface,
-                 function: Callable, ui_rect: pg.Rect, function_args: Optional[list[Any]] = None,
+                 function: Callable, ui_rect: pg.Rect, function_args: Optional[list] = None,
                  hover_sound: str = "woodrollover", press_sound: str = "woodpush", contents_height: int = 4,
                  self_reference: bool = False) -> None:
 

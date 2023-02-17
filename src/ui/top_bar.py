@@ -4,10 +4,11 @@ from src.ui.ui_element import UIElement
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from src.graphics.spritesheet import Spritesheet
+    from src.ui.button_manager import ButtonManager
 
 
 class TopBar(UIElement):
-    def __init__(self, spritesheet: Spritesheet, *args):
+    def __init__(self, spritesheet: Spritesheet, button_manager: ButtonManager, button_specs: dict[str, list]):
         self.image: pg.Surface = pg.Surface((self.ui.window_size.x, 44))
         self.rect: pg.Rect = self.image.get_rect()
 
@@ -17,7 +18,7 @@ class TopBar(UIElement):
             self.image.blit(bar_segment, (next_bar_segment_x, 0))
             next_bar_segment_x += bar_segment.get_width()
 
-        super().__init__(self.image, self.rect, spritesheet, *args)
+        super().__init__(self.image, self.rect, spritesheet, button_manager, button_specs)
 
     def load(self) -> None:
         pass

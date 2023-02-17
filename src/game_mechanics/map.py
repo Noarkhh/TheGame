@@ -7,16 +7,16 @@ U = TypeVar('U')
 
 class Map(Generic[U]):
     def __init__(self, size: Vector[int]) -> None:
-        self.elements: list[list[Optional[U]]] = [[None for _ in range(size.y)] for _ in range(size.x)]
+        self.elements: dict[tuple[int, int], U] = {}
         self.size: Vector[int] = size
 
     def __getitem__(self, pos: Vector[int] | tuple[int, int]) -> Optional[U]:
         if not self.contains(pos):
             return None
         if isinstance(pos, Vector):
-            return self.elements[pos.x][pos.y]
+            return self.elements[pos.to_tuple()]
         elif isinstance(pos, tuple):
-            return self.elements[pos[0]][pos[1]]
+            return self.elements[pos]
         else:
             raise TypeError
 
@@ -24,9 +24,9 @@ class Map(Generic[U]):
         if not self.contains(pos):
             return None
         if isinstance(pos, Vector):
-            self.elements[pos.x][pos.y] = element
+            self.elements[pos.to_tuple()] = element
         elif isinstance(pos, tuple):
-            self.elements[pos[0]][pos[1]] = element
+            self.elements[pos] = element
         else:
             raise TypeError
 

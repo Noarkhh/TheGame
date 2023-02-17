@@ -23,8 +23,8 @@ class StructManager:
 
         self.structs: pg.sprite.Group[Structure] = pg.sprite.Group()
 
-    def place(self, new_struct: Structure, previous_pos: Vector[int], play_failure_sounds: bool = False,
-              play_success_sound: bool = True) -> Message:
+    def place(self, new_struct: Structure, previous_pos: Vector[int],
+              play_failure_sounds: bool = False, play_success_sound: bool = True) -> Message:
         struct_map: Map[Structure] = self.map_manager.struct_map
 
         build_message: Message = new_struct.can_be_placed()
@@ -35,7 +35,7 @@ class StructManager:
                 for relative_pos in new_struct.covered_tiles:
                     struct_map[new_struct.pos + relative_pos] = new_struct
 
-            if build_message == Message.OVERRODE:
+            elif build_message == Message.OVERRODE:
                 new_struct = new_struct.copy(cast(Gate, new_struct).directions_to_connect_to)
                 cast(Structure, struct_map[new_struct.pos]).kill()
                 struct_map[new_struct.pos] = new_struct
@@ -43,7 +43,6 @@ class StructManager:
             self.treasury.pay_for(new_struct)
 
         snap_message: Message = new_struct.can_be_snapped(new_struct.pos, previous_pos)
-        print(snap_message, build_message)
 
         if snap_message == Message.SNAPPED:
             snap_direction = cast(Direction, (new_struct.pos - previous_pos).to_dir())

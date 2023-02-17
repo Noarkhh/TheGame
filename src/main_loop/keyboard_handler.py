@@ -23,4 +23,6 @@ class KeyboardHandler:
         elif key == pg.K_r:
             if isinstance(self.cursor.held_structure, Gate):
                 self.cursor.held_structure.rotate()
+        elif key == pg.K_ESCAPE:
+            self.ui.pause_menu.load()
 

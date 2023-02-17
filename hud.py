@@ -121,9 +121,9 @@ class Button:
 
     def play_hover_sound(self, gw):
         if self.sound == "woodrollover":
-            gw.sounds["woodrollover" + str(randint(2, 5))].play()
+            gw.sounds["woodrollover" + str(randint(1, 4))].play()
         if self.sound == "metrollover":
-            gw.sounds["metrollover" + str(randint(2, 7))].play()
+            gw.sounds["metrollover" + str(randint(1, 6))].play()
 
     def press(self, gw, *args):
         return self.function(gw, self, self.value, *args)
@@ -141,7 +141,7 @@ class ButtonHandler:
             if self.hovered_button is not None:
                 self.hovered_button.is_held_down = True
                 self.held_button = self.hovered_button
-                gw.sounds["woodpush2"].play()
+                gw.sounds["woodpush"].play()
         if event.type == pg.MOUSEBUTTONUP and event.button == 1:
             if self.held_button is not None:
                 if not self.held_button.is_locked:

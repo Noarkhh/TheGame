@@ -25,6 +25,6 @@ class Renderer:
         self.screen.blit(self.scene.image, (0, 0))
         self.scene.reset_image()
 
-        self.ui.draw_elements(self.screen)
+        self.ui.draw_elements()
 
         pg.display.flip()
