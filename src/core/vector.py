@@ -1,7 +1,8 @@
 from __future__ import annotations
-from enum import Enum, IntEnum, auto
 from typing import Optional, Generic, TypeVar, TYPE_CHECKING, overload
 from dataclasses import dataclass
+import src.core.enums as enums
+
 
 T = TypeVar('T', int, float)
 
@@ -66,11 +67,11 @@ class Vector(Generic[T]):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.x}, {self.y})"
 
-    def to_dir(self: Vector[int]) -> Optional[Direction]:
-        return {Vector(0, -1): Direction.N,
-                Vector(1, 0): Direction.E,
-                Vector(0, 1): Direction.S,
-                Vector(-1, 0): Direction.W}.get(self)
+    def to_dir(self: Vector[int]) -> Optional[enums.Direction]:
+        return {Vector(0, -1): enums.Direction.N,
+                Vector(1, 0): enums.Direction.E,
+                Vector(0, 1): enums.Direction.S,
+                Vector(-1, 0): enums.Direction.W}.get(self)
 
     def to_tuple(self) -> tuple[T, T]:
         return self.x, self.y
@@ -80,90 +81,3 @@ class Vector(Generic[T]):
 
     def to_int(self: Vector[float]) -> Vector[int]:
         return Vector(int(self.x), int(self.y))
-
-
-class Direction(IntEnum):
-    N = 0
-    E = 1
-    S = 2
-    W = 3
-
-    def to_vector(self) -> Vector:
-        return {self.N: Vector(0, -1),
-                self.E: Vector(1, 0),
-                self.S: Vector(0, 1),
-                self.W: Vector(-1, 0)}[self]
-
-    def opposite(self) -> Direction:
-        return {self.N: Direction.S,
-                self.E: Direction.W,
-                self.S: Direction.N,
-                self.W: Direction.E}[self]
-
-
-class DirectionSet(set):
-    def get_id(self) -> int:
-        return sum(2 ** elem for elem in self)
-
-
-class Orientation(IntEnum):
-    VERTICAL = 0
-    HORIZONTAL = 1
-
-
-class Tile:
-    size: int
-
-    def __init__(self, terrain: Terrain, resource: Optional[Resource] = None) -> None:
-        self.terrain: Terrain = terrain
-        self.resource: Optional[Resource] = resource
-
-
-class Terrain(Enum):
-    GRASSLAND = auto()
-    DESERT = auto()
-    WATER = auto()
-
-    def __repr__(self) -> str:
-        return self.name
-
-
-class Resource(Enum):
-    WOOD = auto()
-    STONE = auto()
-    WHEAT = auto()
-    COAL = auto()
-    ORE = auto()
-    IRON = auto()
-    CHARCOAL = auto()
-    BRICKS = auto()
-    STEEL = auto()
-    REINFORCED_WOOD = auto()
-    BREAD = auto()
-    METEORITE = auto()
-    GOLD = auto()
-
-    def __repr__(self) -> str:
-        return self.name
-
-
-class Message(Enum):
-    BUILT = auto()
-    SNAPPED = auto()
-    OVERRODE = auto()
-
-    BAD_LOCATION_TERRAIN = auto()
-    BAD_LOCATION_STRUCT = auto()
-    NO_RESOURCES = auto()
-
-    NOT_A_SNAPPER = auto()
-    BAD_CONNECTOR = auto()
-    NOT_ADJACENT = auto()
-    ONE_CANT_SNAP = auto()
-    BAD_MATCH = auto()
-    ALREADY_SNAPPED = auto()
-
-    CANT_OVERRIDE = auto()
-
-    def success(self) -> bool:
-        return self in (Message.BUILT, Message.SNAPPED, Message.OVERRODE)

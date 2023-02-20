@@ -3,7 +3,7 @@ import pygame as pg
 from typing import TYPE_CHECKING, Optional
 from src.ui.button import Button
 if TYPE_CHECKING:
-    from src.cursor import Cursor
+    from src.core.cursor import Cursor
     from src.sound.sound_manager import SoundManager
 
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pygame as pg
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from src.ui.toolbar import Toolbar
 from src.ui.minimap import Minimap
 from src.ui.top_bar import TopBar
@@ -12,9 +12,9 @@ if TYPE_CHECKING:
     from src.ui.button_manager import ButtonManager
     from src.graphics.spritesheet import Spritesheet
     from src.graphics.scene import Scene
-    from src.core_classes import Vector
-    from src.config import Config
-    from src.cursor import Cursor
+    from src.core.enums import Vector
+    from src.core.config import Config
+    from src.core.cursor import Cursor
     from src.game_mechanics.map_manager import MapManager
 
 

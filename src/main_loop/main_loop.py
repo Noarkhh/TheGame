@@ -6,10 +6,12 @@ if TYPE_CHECKING:
     from src.graphics.renderer import Renderer
     from src.graphics.scene import Scene
     from src.ui.ui import UI
+    from src.sound.soundtrack import Soundtrack
 
 
 class MainLoop:
-    def __init__(self, event_handler: EventHandler, renderer: Renderer, scene: Scene, ui: UI, frame_rate: int) -> None:
+    def __init__(self, event_handler: EventHandler, renderer: Renderer, scene: Scene, ui: UI, soundtrack: Soundtrack,
+                 frame_rate: int) -> None:
         self.clock: pg.time.Clock = pg.time.Clock()
         self.running: bool = True
         self.event_handler: EventHandler = event_handler
@@ -17,6 +19,9 @@ class MainLoop:
         self.scene: Scene = scene
         self.ui: UI = ui
         self.frame_rate: int = frame_rate
+
+        soundtrack.start()
+
         self.loop()
 
     def loop(self) -> None:

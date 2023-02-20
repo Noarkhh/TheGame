@@ -1,9 +1,9 @@
 from __future__ import annotations
 import pygame as pg
-from src.core_classes import *
+from src.core.enums import *
 from src.game_mechanics.map import Map
 if TYPE_CHECKING:
-    from src.config import Config
+    from src.core.config import Config
     from src.game_mechanics.structures import Structure
     from src.graphics.spritesheet import Spritesheet
 

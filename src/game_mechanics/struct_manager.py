@@ -1,11 +1,11 @@
 from __future__ import annotations
 import pygame as pg
 from typing import cast
-from src.core_classes import *
+from src.core.enums import *
 from src.game_mechanics.structures import Structure, Snapper, Gate
 
 if TYPE_CHECKING:
-    from src.config import Config
+    from src.core.config import Config
     from src.game_mechanics.map import Map
     from src.game_mechanics.map_manager import MapManager
     from src.game_mechanics.treasury import Treasury

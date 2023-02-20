@@ -1,12 +1,10 @@
 from __future__ import annotations
 import pygame as pg
-from typing import Type, ClassVar, cast, Any
-from src.core_classes import *
+from typing import Type, ClassVar, cast, Any, Self
+from src.core.enums import *
 from src.graphics.entities import Entity
 if TYPE_CHECKING:
     from src.game_mechanics.struct_manager import StructManager
-
-SelfStructure = TypeVar("SelfStructure", bound="Structure")
 
 
 class Structure(Entity):
@@ -66,7 +64,7 @@ class Structure(Entity):
                     self.stockpile[resource] += amount
             self.cooldown_left = self.base_cooldown
 
-    def copy(self: SelfStructure, neighbours: Optional[DirectionSet] = None) -> SelfStructure:
+    def copy(self: Self, neighbours: Optional[DirectionSet] = None) -> Self:
         new_copy = self.__class__(self.pos, image_variant=self.image_variant, orientation=self.orientation)
         if neighbours is not None:
             assert isinstance(new_copy, Snapper)

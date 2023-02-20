@@ -1,8 +1,8 @@
 from __future__ import annotations
 import pygame as pg
 from typing import TYPE_CHECKING
-from src.cursor import Cursor
-from src.config import Config
+from src.core.cursor import Cursor
+from src.core.config import Config
 from src.game_mechanics.struct_manager import StructManager
 from src.game_mechanics.treasury import Treasury
 from src.game_mechanics.map_manager import MapManager
@@ -17,6 +17,7 @@ from src.graphics.entities import Entities
 from src.graphics.spritesheet import Spritesheet
 from src.graphics.scene import Scene
 from src.sound.sound_manager import SoundManager
+from src.sound.soundtrack import Soundtrack
 
 if TYPE_CHECKING:
     pass
@@ -32,6 +33,7 @@ class Setup:
         cursor: Cursor = Cursor()
         spritesheet: Spritesheet = Spritesheet(config)
         sound_manager: SoundManager = SoundManager(config)
+        soundtrack: Soundtrack = Soundtrack()
 
         button_manager: ButtonManager = ButtonManager(cursor, sound_manager)
         treasury: Treasury = Treasury(config)
@@ -44,10 +46,10 @@ class Setup:
 
         renderer: Renderer = Renderer(scene, screen, entities, cursor, ui)
         struct_manager: StructManager = StructManager(config, map_manager, treasury, sound_manager)
-        keyboard_handler: KeyboardHandler = KeyboardHandler(cursor, ui, struct_manager)
+        keyboard_handler: KeyboardHandler = KeyboardHandler(cursor, ui, struct_manager, soundtrack)
         mouse_handler: MouseHandler = MouseHandler(cursor, ui, struct_manager, scene)
-        event_handler: EventHandler = EventHandler(mouse_handler, keyboard_handler)
+        event_handler: EventHandler = EventHandler(mouse_handler, keyboard_handler, soundtrack)
         print("initialization complete.")
 
-        self.main_loop: MainLoop = MainLoop(event_handler, renderer, scene, ui, config.frame_rate)
+        self.main_loop: MainLoop = MainLoop(event_handler, renderer, scene, ui, soundtrack, config.frame_rate)
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
-from src.core_classes import *
+from src.core.enums import *
 if TYPE_CHECKING:
-    from src.config import Config
+    from src.core.config import Config
     from src.game_mechanics.structures import Structure
 
 

@@ -1,18 +1,18 @@
 from __future__ import annotations
 from src.game_mechanics.structures import *
 from src.game_mechanics.map_manager import MapManager
-from src.config import Config
+from src.core.config import Config
 from src.graphics.spritesheet import Spritesheet
 from src.game_mechanics.treasury import Treasury
 from src.game_mechanics.struct_manager import StructManager
 from src.graphics.scene import Scene
 from src.graphics.entities import Entities
-from src.cursor import Cursor
-from src.setup import Setup
+from src.core.cursor import Cursor
+from src.core.setup import Setup
 from src.sound.sound_manager import SoundManager
 
 from typing import Protocol
-from random import randint
+
 
 class _HasImageAndRect(Protocol):
     rect: pg.rect.Rect

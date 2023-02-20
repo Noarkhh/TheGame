@@ -1,7 +1,6 @@
 from __future__ import annotations
 import pygame as pg
 from src.ui.ui_element import UIElement
-from src.core_classes import Vector
 from typing import TYPE_CHECKING, Type
 from enum import Enum, auto
 
@@ -9,7 +8,7 @@ if TYPE_CHECKING:
     from src.graphics.spritesheet import Spritesheet
     from src.ui.button_manager import ButtonManager
     from src.ui.button import Button
-    from src.config import Config
+    from src.core.config import Config
     from src.game_mechanics.structures import Structure
 
 
@@ -58,7 +57,7 @@ class BuildMenu(UIElement):
             shape = "rectangle_wide" if icon_image.get_width() > 60 else "rectangle"
             contents_height = 120 - icon_image.get_height()
             new_button: Button = self.create_image_button(icon_image, shape, [button_pos_x, 0],
-                                                          self.ui.cursor.assign_struct_class,
+                                                          self.ui.cursor.assign_entity_class,
                                                           function_args=[struct_class], contents_height=contents_height)
             self.current_category_structs_buttons.add(new_button)
 

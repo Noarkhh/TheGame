@@ -1,11 +1,10 @@
 from __future__ import annotations
 import pygame as pg
-from src.core_classes import Vector
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from src.graphics.entities import Entities
     from src.graphics.scene import Scene
-    from src.cursor import Cursor
+    from src.core.cursor import Cursor
     from src.ui.ui import UI
 
 

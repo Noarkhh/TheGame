@@ -1,12 +1,11 @@
 from __future__ import annotations
 import pygame as pg
-from src.core_classes import *
+from src.core.enums import *
 
 if TYPE_CHECKING:
-    from src.config import Config
+    from src.core.config import Config
     from src.game_mechanics.map_manager import MapManager
     from src.graphics.spritesheet import Spritesheet
-    from src.cursor import Cursor
 
 
 class Scene(pg.sprite.Sprite):

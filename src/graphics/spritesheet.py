@@ -2,10 +2,11 @@ from __future__ import annotations
 import pygame as pg
 from typing import Any, Type
 from src.game_mechanics.structures import Structure, Snapper
-from src.core_classes import *
+from src.game_mechanics.demolisher import Demolisher
+from src.core.enums import *
 if TYPE_CHECKING:
     from src.graphics.entities import Entity
-    from src.config import Config
+    from src.core.config import Config
 
 
 class Spritesheet:
@@ -30,7 +31,7 @@ class Spritesheet:
             sheet = self.sheet
             aspect_ratio = Vector[float](1, 1)
         elif isinstance(obj, type):
-            if issubclass(obj, Snapper):
+            if issubclass(obj, Snapper) or obj == Demolisher:
                 target_rect = pg.Rect([150] + self.coords["Snappers"][obj.__name__][0])
                 sheet = self.snapper_sheet
                 aspect_ratio = obj.image_aspect_ratio

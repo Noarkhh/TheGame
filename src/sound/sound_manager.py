@@ -1,10 +1,10 @@
 from __future__ import annotations
 import pygame as pg
-from src.core_classes import Message
+from src.core.enums import Message
 from typing import TYPE_CHECKING, Optional
 from random import choice
 if TYPE_CHECKING:
-    from src.config import Config
+    from src.core.config import Config
 
 
 class SoundManager:
@@ -12,8 +12,14 @@ class SoundManager:
         self.fx_config = config.get_fx_config()
         pg.mixer.set_num_channels(5)
 
-        self.fx_channel = pg.mixer.Channel(1)
-        self.speech_channel = pg.mixer.Channel(2)
+        self.speech_channel = pg.mixer.Channel(0)
+        self.fx_channels = [pg.mixer.Channel(i) for i in range(1, 5)]
+        pg.mixer.set_num_channels(len(self.fx_channels) + 1)
+        pg.mixer.set_reserved(1)
+        for channel in self.fx_channels:
+            channel.set_volume(0.5)
+        self.speech_channel.set_volume(0.5)
+
         self.sounds: dict[str, pg.mixer.Sound | list[pg.mixer.Sound]] = {}
         self.load_sounds()
 
@@ -49,20 +55,19 @@ class SoundManager:
         self.play_sound(sound_name, self.speech_channel)
 
     def play_fx(self, sound_name: str) -> None:
-        self.play_sound(sound_name)
+        self.play_sound(sound_name, pg.mixer.find_channel(force=True))
 
     def handle_placement_sounds(self, play_failure_sounds: bool, play_success_sound: bool,
                                 build_message: Message, snap_message: Message) -> None:
         if play_success_sound and (build_message.success() or snap_message.success()):
             self.play_fx("drawbridge_control")
-        if play_failure_sounds:
-            if not snap_message.success() and not build_message.success():
-                if build_message == Message.NO_RESOURCES:
-                    self.play_speech("Resource_Need")
-                elif snap_message not in (Message.NOT_ADJACENT, Message.ALREADY_SNAPPED) and \
-                        (build_message in (Message.BAD_LOCATION_STRUCT, Message.BAD_LOCATION_TERRAIN) or
-                         snap_message in (Message.BAD_CONNECTOR, Message.ONE_CANT_SNAP, Message.NOT_A_SNAPPER)):
-                    self.play_speech("Placement_Warning")
+        if play_failure_sounds and not (snap_message.success() or build_message.success()):
+            if build_message == Message.NO_RESOURCES:
+                self.play_speech("Resource_Need")
+            elif snap_message not in (Message.NOT_ADJACENT, Message.ALREADY_SNAPPED) and \
+                    (build_message in (Message.BAD_LOCATION_STRUCT, Message.BAD_LOCATION_TERRAIN) or
+                     snap_message in (Message.BAD_CONNECTOR, Message.ONE_CANT_SNAP, Message.NOT_A_SNAPPER)):
+                self.play_speech("Placement_Warning")
 
 
 

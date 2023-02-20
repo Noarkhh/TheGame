@@ -67,5 +67,5 @@ class UIElement(ABC, pg.sprite.Sprite):
         return new_button
 
 
-def foo(button: Button) -> None:
+def foo(button: Optional[Button] = None) -> None:
     print(button)

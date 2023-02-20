@@ -21,7 +21,7 @@ class Toolbar(UIElement):
             "drag_mode": None,
             "debug": None,
             "build": self.toggle_build_menu,
-            "demolish": None,
+            "demolish": self.ui.cursor.assign_entity_class,
             "pause": self.pause
         }
 

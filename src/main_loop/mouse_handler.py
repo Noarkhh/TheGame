@@ -1,11 +1,12 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from src.cursor import Mode
+from src.core.cursor import Mode
 
 if TYPE_CHECKING:
-    from src.cursor import Cursor
+    from src.core.cursor import Cursor
     from src.ui.ui import UI
     from src.game_mechanics.struct_manager import StructManager
+    from src.game_mechanics.structures import Structure
     from src.graphics.scene import Scene
 
 
@@ -33,8 +34,8 @@ class MouseHandler:
     def lmb_pressed(self) -> None:
 
         if self.ui.button_manager.held_button is None and self.cursor.mode == Mode.NORMAL:
-            if self.cursor.held_structure is not None:
-                self.struct_manager.place(self.cursor.held_structure, self.cursor.previous_pos,
+            if isinstance(self.cursor.held_entity, Structure):
+                self.struct_manager.place(self.cursor.held_entity, self.cursor.previous_pos,
                                           play_failure_sounds=not self.was_lmb_pressed_last_tick)
             else:
                 self.scene.update_velocity(-self.cursor.pos_px_difference.to_float(), slow_down=False)
@@ -54,7 +55,7 @@ class MouseHandler:
     def mmb_press(self) -> None:
         selected_struct = self.struct_manager.map_manager.struct_map[self.cursor.pos]
         if selected_struct is not None:
-            self.cursor.held_structure = selected_struct.copy()
+            self.cursor.held_entity = selected_struct.copy()
 
     def handle_pressed(self) -> None:
         if self.is_lmb_pressed:

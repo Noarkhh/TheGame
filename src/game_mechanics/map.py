@@ -1,6 +1,5 @@
 from __future__ import annotations
-import pygame as pg
-from src.core_classes import *
+from src.core.enums import *
 
 U = TypeVar('U')
 
@@ -14,9 +13,9 @@ class Map(Generic[U]):
         if not self.contains(pos):
             return None
         if isinstance(pos, Vector):
-            return self.elements[pos.to_tuple()]
+            return self.elements.get(pos.to_tuple())
         elif isinstance(pos, tuple):
-            return self.elements[pos]
+            return self.elements.get(pos)
         else:
             raise TypeError
 

@@ -27,11 +27,10 @@ class PauseMenu(UIElement):
             "Load": self.load_loading_view,
             "Options": None,
             "Quit": self.quit,
-            "Delete": None,
-            "Save0": None,
-            "Load0": None,
-            "Back": None,
-            "Savefile": None
+            "delete": None,
+            "save": None,
+            "load": None,
+            "back": None
         }
         with open("../saves/save_dates.json", "r") as f:
             self.save_names = json.load(f)
@@ -69,12 +68,10 @@ class PauseMenu(UIElement):
             if event.type == pg.QUIT:
                 pg.quit()
                 quit()
-            if event.type == pg.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    self.ui.button_manager.lmb_press()
-            if event.type == pg.MOUSEBUTTONUP:
-                if event.button == 1:
-                    self.ui.button_manager.lmb_release()
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                self.ui.button_manager.lmb_press()
+            if event.type == pg.MOUSEBUTTONUP and event.button == 1:
+                self.ui.button_manager.lmb_release()
             if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
                 self.unload()
 
