@@ -41,7 +41,7 @@ class BuildMenu(UIElement):
         for (button_name, (shape, position, scale)), category in zip(self.button_specs.items(), self.categories):
             self.category_buttons[category] = \
                 self.create_icon_button(button_name, shape, position, scale, self.load_category,
-                                        function_args=[category], hover_sound="metrollover", self_reference=True)
+                                        function_args=(category,), hover_sound="metrollover", self_reference=True)
         self.load_category(self.current_category, self.category_buttons[self.current_category])
 
     def load_category(self, category: Category, category_button: Button) -> None:
@@ -58,7 +58,7 @@ class BuildMenu(UIElement):
             contents_height = 120 - icon_image.get_height()
             new_button: Button = self.create_image_button(icon_image, shape, [button_pos_x, 0],
                                                           self.ui.cursor.assign_entity_class,
-                                                          function_args=[struct_class], contents_height=contents_height)
+                                                          function_args=(struct_class,), contents_height=contents_height)
             self.current_category_structs_buttons.add(new_button)
 
             button_pos_x += new_button.rect.width - 4

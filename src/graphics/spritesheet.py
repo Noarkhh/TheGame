@@ -17,9 +17,9 @@ class Spritesheet:
         self.coords: dict[str, dict[str, Any]] = config.get_spritesheet_coords()
 
     def get_image(self, obj: Entity | Type[Entity] | Terrain, scale: Optional[int] = None) -> pg.Surface:
-        if isinstance(obj, Snapper):
-            target_rect = pg.Rect(
-                [obj.neighbours.get_id() * 15] + self.coords["Snappers"][obj.__class__.__name__][obj.image_variant])
+        if isinstance(obj, Snapper) or isinstance(obj, Demolisher):
+            x_coord = obj.neighbours.get_id() * 15 if isinstance(obj, Snapper) else 0
+            target_rect = pg.Rect([x_coord] + self.coords["Snappers"][obj.__class__.__name__][obj.image_variant])
             sheet = self.snapper_sheet
             aspect_ratio = obj.image_aspect_ratio
         elif isinstance(obj, Structure):

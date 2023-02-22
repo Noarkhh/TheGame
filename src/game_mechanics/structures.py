@@ -2,12 +2,13 @@ from __future__ import annotations
 import pygame as pg
 from typing import Type, ClassVar, cast, Any, Self
 from src.core.enums import *
-from src.graphics.entities import Entity
+from src.graphics.tile_entity import TileEntity, DragShape
+from abc import ABCMeta
 if TYPE_CHECKING:
     from src.game_mechanics.struct_manager import StructManager
 
 
-class Structure(Entity):
+class Structure(TileEntity, metaclass=ABCMeta):
     unsuitable_terrain: ClassVar[list[Terrain]] = [Terrain.WATER]
     overrider: ClassVar[bool] = False
 
@@ -42,7 +43,8 @@ class Structure(Entity):
         tile_map = self.manager.map_manager.tile_map
         struct_map = self.manager.map_manager.struct_map
 
-        if any(cast(Tile, tile_map[self.pos + rel_pos]).terrain in self.unsuitable_terrain for rel_pos in self.covered_tiles):
+        if any(cast(Tile, tile_map[self.pos + rel_pos]).terrain in
+               self.unsuitable_terrain for rel_pos in self.covered_tiles):
             return Message.BAD_LOCATION_TERRAIN
 
         if any(isinstance(struct_map[self.pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
@@ -169,18 +171,26 @@ class Snapper(Structure):
 
 
 class Wall(Snapper):
+    is_draggable = True
+    drag_shape = DragShape.LINE
     pass
 
 
 class Road(Snapper):
+    is_draggable = True
+    drag_shape = DragShape.LINE
     pass
 
 
 class Farmland(Snapper):
+    is_draggable = True
+    drag_shape = DragShape.RECTANGLE
     pass
 
 
 class Bridge(Snapper):
+    is_draggable = True
+    drag_shape = DragShape.LINE
     unsuitable_terrain = [Terrain.GRASSLAND, Terrain.DESERT]
 
     def __init__(self, *args: Any, **kwargs: Any):

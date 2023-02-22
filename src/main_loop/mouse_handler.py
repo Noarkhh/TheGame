@@ -1,13 +1,15 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
-from src.core.cursor import Mode
+from typing import TYPE_CHECKING, Optional
+from src.game_mechanics.demolisher import Demolisher
+from src.game_mechanics.structures import Structure
+from src.effects.area_ghost_factory import area_ghost_factory
 
 if TYPE_CHECKING:
     from src.core.cursor import Cursor
     from src.ui.ui import UI
     from src.game_mechanics.struct_manager import StructManager
-    from src.game_mechanics.structures import Structure
     from src.graphics.scene import Scene
+    from src.effects.area_ghost import AreaGhost
 
 
 class MouseHandler:
@@ -16,6 +18,7 @@ class MouseHandler:
         self.ui: UI = ui
         self.struct_manager: StructManager = struct_manager
         self.scene = scene
+        self.area_ghost: Optional[AreaGhost] = None
         self.is_lmb_pressed: bool = False
         self.is_rmb_pressed: bool = False
         self.was_lmb_pressed_last_tick: bool = False
@@ -25,6 +28,8 @@ class MouseHandler:
         self.ui.button_manager.lmb_press()
         self.is_lmb_pressed = True
         self.was_lmb_pressed_last_tick = False
+        if self.cursor.held_entity is not None and self.cursor.held_entity.is_draggable:
+            self.area_ghost = area_ghost_factory(self.struct_manager, self.cursor, self.cursor.held_entity.__class__)
 
     def lmb_release(self) -> None:
         self.scene.set_decrement()
@@ -33,12 +38,18 @@ class MouseHandler:
 
     def lmb_pressed(self) -> None:
 
-        if self.ui.button_manager.held_button is None and self.cursor.mode == Mode.NORMAL:
+        if self.ui.button_manager.held_button is not None:
+            self.was_lmb_pressed_last_tick = True
+            return
+
+        if self.cursor.held_entity is not None:
             if isinstance(self.cursor.held_entity, Structure):
                 self.struct_manager.place(self.cursor.held_entity, self.cursor.previous_pos,
                                           play_failure_sounds=not self.was_lmb_pressed_last_tick)
-            else:
-                self.scene.update_velocity(-self.cursor.pos_px_difference.to_float(), slow_down=False)
+        else:
+            self.scene.update_velocity(-self.cursor.pos_px_difference.to_float(), slow_down=False)
+        if self.area_ghost is not None:
+            self.area_ghost.update_segments()
 
         self.was_lmb_pressed_last_tick = True
 

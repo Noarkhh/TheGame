@@ -95,7 +95,7 @@ class PauseMenu(UIElement):
         self.create_icon_button("back", *self.button_specs["back"], function=self.load_main_view)
         for save_id in range(5):
             self.create_text_button(self.save_names[save_id], *self.button_specs["savefile" + str(save_id)],
-                                    function=self.choose_savefile, function_args=[save_id], self_reference=True)
+                                    function=self.choose_savefile, function_args=(save_id,), self_reference=True)
 
     # noinspection PyTypeChecker
     def choose_savefile(self, save_id: int, savefile_button: Button) -> None:
@@ -109,16 +109,16 @@ class PauseMenu(UIElement):
         if self.is_in_saving_mode:
             self.action_buttons.add(self.create_icon_button("save", *self.button_specs["save"],
                                                             function=self.savefile_save,
-                                                            function_args=[save_id]))
+                                                            function_args=(save_id,)))
 
         if self.save_names[save_id] != "Empty slot":
             self.action_buttons.add(self.create_icon_button("delete", *self.button_specs["delete"],
                                                             function=self.savefile_delete,
-                                                            function_args=[save_id]))
+                                                            function_args=(save_id,)))
             if not self.is_in_saving_mode:
                 self.action_buttons.add(self.create_icon_button("load", *self.button_specs["load"],
                                                                 function=self.savefile_load,
-                                                                function_args=[save_id]))
+                                                                function_args=(save_id,)))
 
     def savefile_save(self, save_id: int) -> None:
         pass
