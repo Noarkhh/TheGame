@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from src.game_mechanics.struct_manager import StructManager
 
 
-class AreaEffect(ABC):
+class AreaAction(ABC):
     struct_manager: StructManager
     vector: Vector
 

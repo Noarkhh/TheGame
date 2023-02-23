@@ -1,0 +1,6 @@
+
+
+class Connector:
+    def add_neighbours(self) -> None: ...
+    def remove_neighbours(self) -> None: ...
+

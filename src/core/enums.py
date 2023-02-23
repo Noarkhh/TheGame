@@ -3,6 +3,7 @@ from enum import Enum, IntEnum, auto
 from typing import Optional, Generic, TypeVar, TYPE_CHECKING, overload
 from src.core.vector import Vector
 
+
 class Direction(IntEnum):
     N = 0
     E = 1
@@ -14,6 +15,12 @@ class Direction(IntEnum):
                 self.E: Vector(1, 0),
                 self.S: Vector(0, 1),
                 self.W: Vector(-1, 0)}[self]
+
+    def to_tuple(self) -> tuple[int, int]:
+        return {self.N: (0, -1),
+                self.E: (1, 0),
+                self.S: (0, 1),
+                self.W: (-1, 0)}[self]
 
     def opposite(self) -> Direction:
         return {self.N: Direction.S,

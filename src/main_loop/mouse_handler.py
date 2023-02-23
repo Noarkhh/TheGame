@@ -35,6 +35,9 @@ class MouseHandler:
         self.scene.set_decrement()
         self.ui.button_manager.lmb_release()
         self.is_lmb_pressed = False
+        if self.area_ghost is not None:
+            self.area_ghost.resolve()
+            self.area_ghost = None
 
     def lmb_pressed(self) -> None:
 
@@ -42,14 +45,13 @@ class MouseHandler:
             self.was_lmb_pressed_last_tick = True
             return
 
-        if self.cursor.held_entity is not None:
-            if isinstance(self.cursor.held_entity, Structure):
-                self.struct_manager.place(self.cursor.held_entity, self.cursor.previous_pos,
-                                          play_failure_sounds=not self.was_lmb_pressed_last_tick)
+        if self.area_ghost is not None:
+            self.area_ghost.find_new_segments()
+        elif self.cursor.held_entity is not None and isinstance(self.cursor.held_entity, Structure):
+            self.struct_manager.place(self.cursor.held_entity, self.cursor.previous_pos,
+                                      play_failure_sounds=not self.was_lmb_pressed_last_tick)
         else:
             self.scene.update_velocity(-self.cursor.pos_px_difference.to_float(), slow_down=False)
-        if self.area_ghost is not None:
-            self.area_ghost.update_segments()
 
         self.was_lmb_pressed_last_tick = True
 

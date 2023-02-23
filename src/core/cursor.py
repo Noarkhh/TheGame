@@ -61,6 +61,7 @@ class Cursor(pg.sprite.Sprite):
 
         if entity_class.is_draggable:
             self.mode = Mode.DRAG
+            self.show_image = False
         else:
             self.mode = Mode.NORMAL
 
