@@ -24,10 +24,6 @@ class Cursor(pg.sprite.Sprite):
         self.image: pg.Surface = pg.transform.scale(pg.image.load("../assets/cursor2.png").convert(),
                                                     (Tile.size, Tile.size))
         self.image.set_colorkey("white")
-        self.image_demolish: pg.Surface = pg.transform.scale(pg.image.load(
-            "../assets/cursor_demolish.png").convert(), (Tile.size, Tile.size))
-        self.image_demolish.set_colorkey("white")
-        self.image_demolish.set_alpha(128)
         self.show_image: bool = True
         self.rect: pg.Rect = self.image.get_rect()
 

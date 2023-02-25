@@ -56,7 +56,7 @@ class Structure(TileEntity, metaclass=ABCMeta):
 
         return Message.BUILT
 
-    def can_be_snapped(self, curr_pos: Vector[int], prev_pos: Vector[int]) -> Message:
+    def can_be_snapped(self, prev_pos: Vector[int], connector: Type[Structure]) -> Message:
         return Message.NOT_A_SNAPPER
 
     def produce(self) -> None:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
-from src.game_mechanics.demolisher import Demolisher
+from src.game_mechanics.snapper import Snapper
 from src.game_mechanics.structures import Structure
 from src.effects.area_ghost_factory import area_ghost_factory
 
@@ -28,7 +28,7 @@ class MouseHandler:
         self.ui.button_manager.lmb_press()
         self.is_lmb_pressed = True
         self.was_lmb_pressed_last_tick = False
-        if self.cursor.held_entity is not None and self.cursor.held_entity.is_draggable:
+        if isinstance(self.cursor.held_entity, Snapper) and self.cursor.held_entity.is_draggable:
             self.area_ghost = area_ghost_factory(self.struct_manager, self.cursor, self.cursor.held_entity.__class__)
 
     def lmb_release(self) -> None:
@@ -48,8 +48,7 @@ class MouseHandler:
         if self.area_ghost is not None:
             self.area_ghost.find_new_segments()
         elif self.cursor.held_entity is not None and isinstance(self.cursor.held_entity, Structure):
-            self.struct_manager.place(self.cursor.held_entity, self.cursor.previous_pos,
-                                      play_failure_sounds=not self.was_lmb_pressed_last_tick)
+            self.struct_manager.place(self.cursor.held_entity, play_failure_sounds=not self.was_lmb_pressed_last_tick)
         else:
             self.scene.update_velocity(-self.cursor.pos_px_difference.to_float(), slow_down=False)
 

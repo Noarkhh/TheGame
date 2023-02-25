@@ -1,11 +1,13 @@
 from __future__ import annotations
-from src.effects.area_ghost import AreaGhost, T
-from src.core.enums import Direction
-from typing import TYPE_CHECKING, Generic
+
+from abc import ABCMeta
+from typing import Generic
+
 from src.core.vector import Vector
+from src.effects.area_ghost import AreaGhost, T
 
 
-class RectangleGhost(AreaGhost, Generic[T]):
+class RectangleGhost(AreaGhost[T], metaclass=ABCMeta):
     def find_new_segments(self) -> None:
         if self.cursor.pos_difference == Vector(0, 0):
             return
@@ -16,7 +18,3 @@ class RectangleGhost(AreaGhost, Generic[T]):
                                                             for y in range(top_left.y, bottom_right.y + 1)}
 
         self.update_segments(updated_segments_positions)
-
-    def resolve(self) -> None:
-        self.area_action.resolve([Vector(pos) for pos in self.segments])
-        super().resolve()

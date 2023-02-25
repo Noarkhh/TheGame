@@ -58,18 +58,21 @@ class SoundManager:
         self.play_sound(sound_name, pg.mixer.find_channel(force=True))
 
     def handle_placement_sounds(self, play_failure_sounds: bool, play_success_sound: bool,
-                                build_message: Message, snap_message: Message) -> None:
-        if play_success_sound and (build_message.success() or snap_message.success()):
+                                build_message: Message) -> None:
+        if play_success_sound and build_message.success():
             self.play_fx("drawbridge_control")
-        if play_failure_sounds and not (snap_message.success() or build_message.success()):
+        if play_failure_sounds and not build_message.success():
             if build_message == Message.NO_RESOURCES:
                 self.play_speech("Resource_Need")
-            elif snap_message not in (Message.NOT_ADJACENT, Message.ALREADY_SNAPPED) and \
-                    (build_message in (Message.BAD_LOCATION_STRUCT, Message.BAD_LOCATION_TERRAIN) or
-                     snap_message in (Message.BAD_CONNECTOR, Message.ONE_CANT_SNAP, Message.NOT_A_SNAPPER)):
+            if build_message in (Message.BAD_LOCATION_STRUCT, Message.BAD_LOCATION_TERRAIN):
                 self.play_speech("Placement_Warning")
 
-
+    def handle_snapping_sounds(self, play_failure_sounds: bool, play_success_sound: bool, snap_message: Message) -> None:
+        if play_success_sound and snap_message.success():
+            self.play_fx("drawbridge_control")
+        if play_failure_sounds and not snap_message.success():
+            if snap_message in (Message.BAD_CONNECTOR, Message.ONE_CANT_SNAP, Message.NOT_A_SNAPPER):
+                self.play_speech("Placement_Warning")
 
 
 

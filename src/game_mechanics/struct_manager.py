@@ -1,6 +1,6 @@
 from __future__ import annotations
 import pygame as pg
-from typing import cast
+from typing import cast, Type
 from src.core.enums import *
 from src.game_mechanics.structures import Structure, Snapper, Gate
 
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class StructManager:
-    def __init__(self, config: Config, map_manager: MapManager, treasury: Treasury, sound_manager: SoundManager):
+    def __init__(self, config: Config, map_manager: MapManager, treasury: Treasury, sound_manager: SoundManager) -> None:
         Structure.manager = self
         config.set_structures_parameters()
 
@@ -23,8 +23,8 @@ class StructManager:
 
         self.structs: pg.sprite.Group[Structure] = pg.sprite.Group()
 
-    def place(self, new_struct: Structure, previous_pos: Vector[int],
-              play_failure_sounds: bool = False, play_success_sound: bool = True) -> Message:
+    def place(self, new_struct: Structure, play_failure_sounds: bool = False,
+              play_success_sound: bool = True) -> Message:
         struct_map: Map[Structure] = self.map_manager.struct_map
 
         build_message: Message = new_struct.can_be_placed()
@@ -42,14 +42,22 @@ class StructManager:
 
             self.treasury.pay_for(new_struct)
 
-        snap_message: Message = new_struct.can_be_snapped(new_struct.pos, previous_pos)
-
-        if snap_message == Message.SNAPPED:
-            snap_direction = cast(Direction, (new_struct.pos - previous_pos).to_dir())
-            cast(Snapper, struct_map[new_struct.pos]).add_neighbours(snap_direction.opposite())
-            cast(Snapper, struct_map[previous_pos]).add_neighbours(snap_direction)
-
-        self.sound_manager.handle_placement_sounds(play_failure_sounds, play_success_sound, build_message, snap_message)
+        self.sound_manager.handle_placement_sounds(play_failure_sounds, play_success_sound, build_message)
 
         return build_message
 
+    def snap(self, position1: Vector[int], position2: Vector[int], connector: Type[Structure]) -> Message:
+        struct1 = self.map_manager.struct_map[position1]
+        struct2 = self.map_manager.struct_map[position2]
+
+        if struct1 is None:
+            return Message.NOT_A_SNAPPER
+
+        snap_message: Message = struct1.can_be_snapped(position2, connector)
+
+        if snap_message == Message.SNAPPED:
+            snap_direction = cast(Direction, (position1 - position2).to_dir())
+            cast(Snapper, struct1).add_neighbours(snap_direction.opposite())
+            cast(Snapper, struct2).add_neighbours(snap_direction)
+
+        return snap_message

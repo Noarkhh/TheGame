@@ -1,23 +1,26 @@
 from __future__ import annotations
-import pygame as pg
+
 from typing import TYPE_CHECKING
-from src.core.cursor import Cursor
+
+import pygame as pg
+
 from src.core.config import Config
+from src.core.cursor import Cursor
+from src.game_mechanics.map_manager import MapManager
 from src.game_mechanics.struct_manager import StructManager
 from src.game_mechanics.treasury import Treasury
-from src.game_mechanics.map_manager import MapManager
-from src.main_loop.keyboard_handler import KeyboardHandler
-from src.main_loop.mouse_handler import MouseHandler
-from src.main_loop.event_handler import EventHandler
-from src.main_loop.main_loop import MainLoop
-from src.ui.ui import UI
-from src.ui.button_manager import ButtonManager
-from src.graphics.renderer import Renderer
 from src.graphics.entities import Entities
-from src.graphics.spritesheet import Spritesheet
+from src.graphics.renderer import Renderer
 from src.graphics.scene import Scene
+from src.graphics.spritesheet import Spritesheet
+from src.main_loop.event_handler import EventHandler
+from src.main_loop.keyboard_handler import KeyboardHandler
+from src.main_loop.main_loop import MainLoop
+from src.main_loop.mouse_handler import MouseHandler
 from src.sound.sound_manager import SoundManager
 from src.sound.soundtrack import Soundtrack
+from src.ui.button_manager import ButtonManager
+from src.ui.ui import UI
 
 if TYPE_CHECKING:
     pass

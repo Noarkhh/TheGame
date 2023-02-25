@@ -21,15 +21,17 @@ class AreaGhost(ABC, Generic[T]):
     segments: dict[tuple[int, int], T]
     origin: Vector[int]
     tile_entity_class: Type[T]
-    area_action: AreaAction
 
-    def __init__(self, cursor: Cursor, origin: Vector[int],
-                 tile_entity_class: Type[T], area_effect: AreaAction) -> None:
+    def __init__(self, cursor: Cursor, struct_manager: StructManager, origin: Vector[int],
+                 tile_entity_class: Type[T]) -> None:
         self.cursor = cursor
+        self.struct_manager = struct_manager
         self.segments = {}
         self.origin = origin
-        self.area_action = area_effect
         self.tile_entity_class = tile_entity_class
+
+    @abstractmethod
+    def resolve(self) -> None: ...
 
     @abstractmethod
     def find_new_segments(self) -> None: ...
@@ -47,11 +49,6 @@ class AreaGhost(ABC, Generic[T]):
             self.segments[position] = self.tile_entity_class(Vector(position), is_ghost=True)
             self.add_all_neighbours_to(position)
 
-    def resolve(self) -> None:
-        for segment in self.segments.values():
-            segment.kill()
-        print("resolved!")
-
     def add_all_neighbours_to(self, position: tuple[int, int]) -> None:
         for direction in Direction:
             neighbouring_pos = (position[0] + direction.to_tuple()[0], position[1] + direction.to_tuple()[1])
@@ -64,3 +61,7 @@ class AreaGhost(ABC, Generic[T]):
             neighbouring_pos = (position[0] + direction.to_tuple()[0], position[1] + direction.to_tuple()[1])
             if neighbouring_pos in self.segments:
                 self.segments[neighbouring_pos].remove_neighbours(direction.opposite())
+
+    def kill_segments(self) -> None:
+        for segment in self.segments.values():
+            segment.kill()
