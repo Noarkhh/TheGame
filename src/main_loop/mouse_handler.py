@@ -1,15 +1,17 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Optional
-from src.game_mechanics.snapper import Snapper
-from src.game_mechanics.structures import Structure
-from src.effects.area_ghost_factory import area_ghost_factory
+
+from src.area_actions.area_action_factory import area_action_factory
+from src.entities.snapper import Snapper
+from src.entities.structures import Structure
 
 if TYPE_CHECKING:
     from src.core.cursor import Cursor
     from src.ui.ui import UI
     from src.game_mechanics.struct_manager import StructManager
     from src.graphics.scene import Scene
-    from src.effects.area_ghost import AreaGhost
+    from src.area_actions.area_action import AreaAction
 
 
 class MouseHandler:
@@ -18,7 +20,7 @@ class MouseHandler:
         self.ui: UI = ui
         self.struct_manager: StructManager = struct_manager
         self.scene = scene
-        self.area_ghost: Optional[AreaGhost] = None
+        self.area_action: Optional[AreaAction] = None
         self.is_lmb_pressed: bool = False
         self.is_rmb_pressed: bool = False
         self.was_lmb_pressed_last_tick: bool = False
@@ -28,16 +30,17 @@ class MouseHandler:
         self.ui.button_manager.lmb_press()
         self.is_lmb_pressed = True
         self.was_lmb_pressed_last_tick = False
-        if isinstance(self.cursor.held_entity, Snapper) and self.cursor.held_entity.is_draggable:
-            self.area_ghost = area_ghost_factory(self.struct_manager, self.cursor, self.cursor.held_entity.__class__)
+        if isinstance(self.cursor.held_entity, Snapper) and self.cursor.held_entity.is_draggable and \
+                self.ui.button_manager.held_button is None:
+            self.area_action = area_action_factory(self.struct_manager, self.cursor, self.cursor.held_entity.__class__)
 
     def lmb_release(self) -> None:
         self.scene.set_decrement()
         self.ui.button_manager.lmb_release()
         self.is_lmb_pressed = False
-        if self.area_ghost is not None:
-            self.area_ghost.resolve()
-            self.area_ghost = None
+        if self.area_action is not None:
+            self.area_action.resolve()
+            self.area_action = None
 
     def lmb_pressed(self) -> None:
 
@@ -45,9 +48,9 @@ class MouseHandler:
             self.was_lmb_pressed_last_tick = True
             return
 
-        if self.area_ghost is not None:
-            self.area_ghost.find_new_segments()
-        elif self.cursor.held_entity is not None and isinstance(self.cursor.held_entity, Structure):
+        if self.area_action is not None:
+            self.area_action.find_current_segments()
+        elif isinstance(self.cursor.held_entity, Structure):
             self.struct_manager.build(self.cursor.held_entity, failure_sound=not self.was_lmb_pressed_last_tick)
         else:
             self.scene.update_velocity(-self.cursor.pos_px_difference.to_float(), slow_down=False)

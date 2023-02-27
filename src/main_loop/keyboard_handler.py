@@ -1,7 +1,9 @@
 from __future__ import annotations
-from src.game_mechanics.structures import *
-from src.game_mechanics.demolisher import Demolisher
-from typing import TYPE_CHECKING
+
+from typing import Type
+
+from src.entities.demolisher import Demolisher
+from src.entities.structures import *
 
 if TYPE_CHECKING:
     from src.core.cursor import Cursor
@@ -52,4 +54,3 @@ class KeyboardHandler:
                 self.soundtrack.change_volume(0.005)
 
             self.pressed_keys_time[key] += 1
-

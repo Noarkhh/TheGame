@@ -1,11 +1,11 @@
 from __future__ import annotations
-import pygame as pg
+
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Generic, TypeVar, Type
-from src.graphics.tile_entity import TileEntity
+
 from src.core.enums import Direction
-from src.game_mechanics.snapper import Snapper
 from src.core.vector import Vector
+from src.entities.snapper import Snapper
 
 if TYPE_CHECKING:
     from src.game_mechanics.struct_manager import StructManager
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 T = TypeVar("T", bound=Snapper)
 
 
-class AreaGhost(ABC, Generic[T]):
+class AreaAction(ABC, Generic[T]):
     struct_manager: StructManager
     cursor: Cursor
     segments: dict[tuple[int, int], T]
@@ -28,13 +28,13 @@ class AreaGhost(ABC, Generic[T]):
         self.segments = {}
         self.origin = origin
         self.tile_entity_class = tile_entity_class
-        self.find_new_segments(initial=True)
+        self.find_current_segments(initial=True)
+
+    @abstractmethod
+    def find_current_segments(self, initial: bool = False) -> None: ...
 
     @abstractmethod
     def resolve(self) -> None: ...
-
-    @abstractmethod
-    def find_new_segments(self, initial: bool = False) -> None: ...
 
     def update_segments(self, updated_segments_positions: set[tuple[int, int]]) -> None:
         for (position, segment) in list(self.segments.items()):

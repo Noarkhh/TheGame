@@ -1,8 +1,11 @@
 from __future__ import annotations
-import pygame as pg
-from src.ui.ui_element import UIElement
-from typing import TYPE_CHECKING, Callable, Optional
+
 import json
+from typing import TYPE_CHECKING, Callable, Optional
+
+import pygame as pg
+
+from src.ui.elements.ui_element import UIElement
 
 if TYPE_CHECKING:
     from src.ui.button_manager import ButtonManager

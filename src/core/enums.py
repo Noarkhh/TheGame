@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from enum import Enum, IntEnum, auto
-from typing import Optional, Generic, TypeVar, TYPE_CHECKING, overload
+from typing import Optional
+
 from src.core.vector import Vector
 
 

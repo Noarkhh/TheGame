@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import Optional, Generic, TypeVar, TYPE_CHECKING, overload
-from dataclasses import dataclass
-import src.core.enums as enums
 
+from dataclasses import dataclass
+from typing import Optional, Generic, TypeVar, overload
+
+import src.core.enums as enums
 
 T = TypeVar('T', int, float)
 

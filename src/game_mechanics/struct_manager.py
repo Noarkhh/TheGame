@@ -1,10 +1,13 @@
 from __future__ import annotations
+
+from typing import cast, Type, TYPE_CHECKING
+
 import pygame as pg
-from typing import cast, Type
-from src.core.enums import *
-from src.game_mechanics.structures import Snapper, Gate
-from src.game_mechanics.structure import Structure
-from src.game_mechanics.structure_snapper import StructureSnapper
+
+from src.core.enums import Message, Direction
+from src.entities.structure import Structure
+from src.entities.structure_snapper import StructureSnapper
+from src.entities.structures import Gate
 
 if TYPE_CHECKING:
     from src.core.config import Config
@@ -12,10 +15,12 @@ if TYPE_CHECKING:
     from src.game_mechanics.map_manager import MapManager
     from src.game_mechanics.treasury import Treasury
     from src.sound.sound_manager import SoundManager
+    from src.core.vector import Vector
 
 
 class StructManager:
-    def __init__(self, config: Config, map_manager: MapManager, treasury: Treasury, sound_manager: SoundManager) -> None:
+    def __init__(self, config: Config, map_manager: MapManager,
+                 treasury: Treasury, sound_manager: SoundManager) -> None:
         Structure.manager = self
         config.set_structures_parameters()
 
@@ -59,8 +64,8 @@ class StructManager:
 
         if snap_message == Message.SNAPPED:
             snap_direction = cast(Direction, (position1 - position2).to_dir())
-            cast(Snapper, struct1).add_neighbours(snap_direction.opposite())
-            cast(Snapper, struct2).add_neighbours(snap_direction)
+            cast(StructureSnapper, struct1).add_neighbours(snap_direction.opposite())
+            cast(StructureSnapper, struct2).add_neighbours(snap_direction)
 
         self.sound_manager.handle_snapping_sounds(failure_sound, success_sound, snap_message)
 

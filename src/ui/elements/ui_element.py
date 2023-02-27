@@ -1,7 +1,10 @@
 from __future__ import annotations
-import pygame as pg
+
+from abc import ABC
 from typing import TYPE_CHECKING, ClassVar, Optional, Callable, Any
-from abc import ABC, abstractmethod
+
+import pygame as pg
+
 from src.ui.button import Button
 
 if TYPE_CHECKING:

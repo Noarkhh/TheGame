@@ -1,11 +1,13 @@
-from src.graphics.entity import Entity
-import pygame as pg
-from typing import ClassVar, Optional, TYPE_CHECKING
-from enum import Enum, auto
 from abc import ABCMeta
-from src.core.enums import Vector, Tile
+from enum import Enum, auto
+from typing import ClassVar, Optional, TYPE_CHECKING
+
+from src.core.enums import Tile
+from src.core.vector import Vector
+from src.entities.entity import Entity
+
 if TYPE_CHECKING:
-    from src.graphics.entities import Entities
+    pass
 
 
 class DragShape(Enum):

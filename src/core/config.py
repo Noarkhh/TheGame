@@ -1,7 +1,14 @@
 from __future__ import annotations
+
 import json
-from src.game_mechanics.structures import *
-from src.ui.build_menu import Category
+from typing import Type
+
+import pygame as pg
+
+from src.core.enums import Resource, Tile
+from src.core.vector import Vector
+from src.entities.structure import Structure
+from src.ui.elements.build_menu import Category
 
 
 class Config:

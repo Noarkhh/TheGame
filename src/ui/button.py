@@ -1,7 +1,9 @@
 from __future__ import annotations
-import pygame as pg
+
 from typing import TYPE_CHECKING, ClassVar, Callable, Optional, Any
-from random import randint
+
+import pygame as pg
+
 if TYPE_CHECKING:
     from src.ui.button_manager import ButtonManager
 

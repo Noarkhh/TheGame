@@ -7,10 +7,10 @@ import pygame as pg
 from src.core.config import Config
 from src.core.cursor import Cursor
 from src.core.vector import Vector
+from src.entities.entities import Entities
 from src.game_mechanics.map_manager import MapManager
 from src.game_mechanics.struct_manager import StructManager
 from src.game_mechanics.treasury import Treasury
-from src.graphics.entities import Entities
 from src.graphics.renderer import Renderer
 from src.graphics.scene import Scene
 from src.graphics.spritesheet import Spritesheet

@@ -1,8 +1,12 @@
 from __future__ import annotations
-import pygame as pg
-from src.core.enums import Message
-from typing import TYPE_CHECKING, Optional
+
 from random import choice
+from typing import TYPE_CHECKING, Optional
+
+import pygame as pg
+
+from src.core.enums import Message
+
 if TYPE_CHECKING:
     from src.core.config import Config
 
@@ -74,6 +78,3 @@ class SoundManager:
         if play_failure_sounds and not snap_message.success():
             if snap_message in (Message.BAD_CONNECTOR, Message.OTHER_CANT_SNAP, Message.NOT_A_SNAPPER):
                 self.play_speech("Placement_Warning")
-
-
-

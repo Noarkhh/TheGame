@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Type
+from typing import Type, TYPE_CHECKING
 
-from src.core.enums import *
-from src.game_mechanics.structure import Structure
-from src.game_mechanics.snapper import Snapper
+from src.core.enums import Message, DirectionSet
+from src.entities.snapper import Snapper
+from src.entities.structure import Structure
+
+if TYPE_CHECKING:
+    from src.core.vector import Vector
 
 
 class StructureSnapper(Structure, Snapper):

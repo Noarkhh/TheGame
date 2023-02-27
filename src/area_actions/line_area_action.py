@@ -1,12 +1,11 @@
-from typing import Generic
 from abc import ABCMeta
 
+from src.area_actions.area_action import AreaAction, T
 from src.core.enums import Orientation
 from src.core.vector import Vector
-from src.effects.area_ghost import AreaGhost, T
 
 
-class LineGhost(AreaGhost[T], metaclass=ABCMeta):
+class LineAreaAction(AreaAction[T], metaclass=ABCMeta):
     main_axis: Orientation = Orientation.VERTICAL
     listening_for_main_axis: bool = True
 
@@ -21,7 +20,7 @@ class LineGhost(AreaGhost[T], metaclass=ABCMeta):
 
         self.listening_for_main_axis = False
 
-    def find_new_segments(self, initial: bool = False) -> None:
+    def find_current_segments(self, initial: bool = False) -> None:
         if self.origin == self.cursor.pos:
             self.listening_for_main_axis = True
         if self.cursor.pos_difference == Vector(0, 0) and not initial:
@@ -46,4 +45,3 @@ class LineGhost(AreaGhost[T], metaclass=ABCMeta):
                 updated_segments_positions.add((x, y_const))
 
         self.update_segments(updated_segments_positions)
-

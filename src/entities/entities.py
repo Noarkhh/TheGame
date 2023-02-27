@@ -1,7 +1,11 @@
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pygame as pg
-from src.graphics.entity import Entity
-from src.core.enums import *
+
+from src.entities.entity import Entity
+
 if TYPE_CHECKING:
     from src.graphics.spritesheet import Spritesheet
 
@@ -14,7 +18,7 @@ class Entities(pg.sprite.Group):
 
     def draw(self, surface: pg.Surface) -> list[pg.Rect]:
         sprites = self.sprites()
-        for spr in sorted(sprites, key=lambda spr: (spr.pos.y, spr.is_ghost)):
+        for spr in sorted(sprites, key=lambda entity: (entity.pos.y, entity.is_ghost)):
             self.spritedict[spr] = surface.blit(spr.image, spr.rect)
         self.lostsprites = []
         dirty = self.lostsprites

@@ -1,15 +1,19 @@
 from __future__ import annotations
-import pygame as pg
-from src.core.enums import *
-from src.game_mechanics.demolisher import Demolisher
+
 from enum import Enum, auto
-from typing import Type
 from random import randrange
+from typing import Type, TYPE_CHECKING, Optional
+
+import pygame as pg
+
+from src.core.vector import Vector
+from src.entities.demolisher import Demolisher
 from src.ui.button import Button
+from src.core.enums import Tile
 
 if TYPE_CHECKING:
     from src.graphics.scene import Scene
-    from src.graphics.tile_entity import TileEntity
+    from src.entities.tile_entity import TileEntity
     from src.ui.ui import UI
 
 

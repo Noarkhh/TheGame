@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from abc import ABCMeta
-from typing import Generic
 
+from src.area_actions.area_action import AreaAction, T
 from src.core.vector import Vector
-from src.effects.area_ghost import AreaGhost, T
 
 
-class RectangleGhost(AreaGhost[T], metaclass=ABCMeta):
-    def find_new_segments(self, initial: bool = False) -> None:
+class RectangleAreaAction(AreaAction[T], metaclass=ABCMeta):
+    def find_current_segments(self, initial: bool = False) -> None:
         if self.cursor.pos_difference == Vector(0, 0) and not initial:
             return
 

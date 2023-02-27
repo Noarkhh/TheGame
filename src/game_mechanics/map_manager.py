@@ -1,10 +1,16 @@
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pygame as pg
-from src.core.enums import *
+
+from src.core.enums import Tile, Terrain
+from src.core.vector import Vector
 from src.game_mechanics.map import Map
+
 if TYPE_CHECKING:
     from src.core.config import Config
-    from src.game_mechanics.structures import Structure
+    from src.entities.structures import Structure
     from src.graphics.spritesheet import Spritesheet
 
 

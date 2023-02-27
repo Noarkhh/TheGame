@@ -1,12 +1,15 @@
 from __future__ import annotations
-import pygame as pg
-from typing import Type, ClassVar, cast, Any, Self
-from src.core.enums import *
-from src.graphics.tile_entity import TileEntity, DragShape
-from src.game_mechanics.snapper import Snapper
+
 from abc import ABCMeta
+from typing import Type, ClassVar, cast, Self, TYPE_CHECKING, Optional
+
+from src.core.enums import Terrain, Resource, Message, Orientation, DirectionSet, Tile
+from src.entities.snapper import Snapper
+from src.entities.tile_entity import TileEntity
+
 if TYPE_CHECKING:
     from src.game_mechanics.struct_manager import StructManager
+    from src.core.vector import Vector
 
 
 class Structure(TileEntity, metaclass=ABCMeta):

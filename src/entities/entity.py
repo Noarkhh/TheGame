@@ -1,10 +1,14 @@
 from __future__ import annotations
-import pygame as pg
-from typing import ClassVar
+
 from abc import ABC, abstractmethod
+from typing import ClassVar, TYPE_CHECKING
+
+import pygame as pg
+
 from src.core.enums import *
+
 if TYPE_CHECKING:
-    from src.graphics.entities import Entities
+    from src.entities.entities import Entities
 
 
 class Entity(ABC, pg.sprite.Sprite):

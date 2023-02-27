@@ -1,5 +1,8 @@
 from __future__ import annotations
-from src.core.enums import *
+
+from typing import Generic, Optional, TypeVar
+
+from src.core.vector import Vector
 
 U = TypeVar('U')
 

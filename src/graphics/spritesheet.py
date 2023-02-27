@@ -1,12 +1,16 @@
 from __future__ import annotations
+
+from typing import Any, Type, TYPE_CHECKING, Optional
+
 import pygame as pg
-from typing import Any, Type
-from src.game_mechanics.structures import Structure, Snapper
-from src.game_mechanics.demolisher import Demolisher
-from src.core.enums import *
+
+from src.core.enums import Terrain, Tile
+from src.core.vector import Vector
+from src.entities.snapper import Snapper
+from src.entities.structures import Structure
 
 if TYPE_CHECKING:
-    from src.graphics.entities import Entity
+    from src.entities.entities import Entity
     from src.core.config import Config
 
 

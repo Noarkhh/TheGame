@@ -1,12 +1,15 @@
 from __future__ import annotations
-import pygame as pg
+
 from typing import TYPE_CHECKING
-from src.ui.toolbar import Toolbar
-from src.ui.minimap import Minimap
-from src.ui.top_bar import TopBar
-from src.ui.build_menu import BuildMenu
-from src.ui.pause_menu import PauseMenu
-from src.ui.ui_element import UIElement
+
+import pygame as pg
+
+from src.ui.elements.build_menu import BuildMenu
+from src.ui.elements.minimap import Minimap
+from src.ui.elements.pause_menu import PauseMenu
+from src.ui.elements.toolbar import Toolbar
+from src.ui.elements.top_bar import TopBar
+from src.ui.elements.ui_element import UIElement
 
 if TYPE_CHECKING:
     from src.ui.button_manager import ButtonManager

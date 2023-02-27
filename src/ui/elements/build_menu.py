@@ -1,15 +1,18 @@
 from __future__ import annotations
-import pygame as pg
-from src.ui.ui_element import UIElement
-from typing import TYPE_CHECKING, Type
+
 from enum import Enum, auto
+from typing import TYPE_CHECKING, Type
+
+import pygame as pg
+
+from src.ui.elements.ui_element import UIElement
 
 if TYPE_CHECKING:
     from src.graphics.spritesheet import Spritesheet
     from src.ui.button_manager import ButtonManager
     from src.ui.button import Button
     from src.core.config import Config
-    from src.game_mechanics.structures import Structure
+    from src.entities.structures import Structure
 
 
 class Category(Enum):

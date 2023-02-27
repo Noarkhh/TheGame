@@ -1,20 +1,16 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar
 from collections import deque
+from typing import TypeVar
 
-from src.effects.rectangle_ghost import RectangleGhost
-from src.game_mechanics.structure_snapper import StructureSnapper
-from src.core.vector import Vector
-from src.core.enums import Direction, Message
-
-if TYPE_CHECKING:
-    pass
+from src.area_actions.rectangle_area_action import RectangleAreaAction
+from src.core.enums import Message
+from src.entities.structure_snapper import StructureSnapper
 
 S = TypeVar("S", bound=StructureSnapper)
 
 
-class RectangleGhostBuild(RectangleGhost[S]):
+class RectangleAreaActionBuild(RectangleAreaAction[S]):
 
     def resolve(self) -> None:
         segments_queue: deque[tuple[int, int]] = deque([self.origin.to_tuple()])

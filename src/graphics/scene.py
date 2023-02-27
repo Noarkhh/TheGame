@@ -1,6 +1,11 @@
 from __future__ import annotations
+
+from typing import Optional, TYPE_CHECKING
+
 import pygame as pg
-from src.core.enums import *
+
+from src.core.enums import Tile
+from src.core.vector import Vector
 
 if TYPE_CHECKING:
     from src.core.config import Config

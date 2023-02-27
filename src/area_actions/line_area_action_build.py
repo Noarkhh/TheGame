@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar, Optional
 
-from src.core.vector import Vector
+from src.area_actions.line_area_action import LineAreaAction
 from src.core.enums import Message
-from src.effects.line_ghost import LineGhost
-from src.game_mechanics.structure_snapper import StructureSnapper
+from src.core.vector import Vector
+from src.entities.structure_snapper import StructureSnapper
 
 if TYPE_CHECKING:
     pass
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 S = TypeVar("S", bound=StructureSnapper)
 
 
-class LineGhostBuild(LineGhost[S]):
+class LineAreaActionBuild(LineAreaAction[S]):
 
     def resolve(self) -> None:
         def dist_from_origin(segment: tuple[int, int]) -> int:

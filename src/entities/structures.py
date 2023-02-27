@@ -1,14 +1,17 @@
 from __future__ import annotations
+
+from typing import ClassVar, Any, TYPE_CHECKING, Optional
+
 import pygame as pg
-from typing import Type, ClassVar, cast, Any
-from src.core.enums import *
-from src.graphics.tile_entity import TileEntity, DragShape
-from src.game_mechanics.structure import Structure
-from src.game_mechanics.snapper import Snapper
-from src.game_mechanics.structure_snapper import StructureSnapper
-from abc import ABCMeta
+
+from src.core.enums import Terrain, Direction, DirectionSet, Orientation, Message
+from src.core.vector import Vector
+from src.entities.structure import Structure
+from src.entities.structure_snapper import StructureSnapper
+from src.entities.tile_entity import DragShape
+
 if TYPE_CHECKING:
-    from src.game_mechanics.struct_manager import StructManager
+    pass
 
 
 class House(Structure):
@@ -78,7 +81,7 @@ class Gate(Wall, Road):
         for direction_to_neighbour in Direction:
             neighbour_pos = self.pos + direction_to_neighbour.to_vector()
             neighbour = struct_map[neighbour_pos]
-            if isinstance(neighbour, Snapper) and direction_to_neighbour.opposite() in neighbour.neighbours:
+            if isinstance(neighbour, StructureSnapper) and direction_to_neighbour.opposite() in neighbour.neighbours:
                 if self.snaps_to[direction_to_neighbour] != neighbour.snaps_to[direction_to_neighbour.opposite()]:
                     return False
                 self.directions_to_connect_to.add(direction_to_neighbour)

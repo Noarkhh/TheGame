@@ -1,7 +1,11 @@
 from __future__ import annotations
-import pygame as pg
+
 from typing import TYPE_CHECKING
+
+import pygame as pg
+
 from src.sound.soundtrack import Soundtrack, END_TRACK
+
 if TYPE_CHECKING:
     from src.main_loop.mouse_handler import MouseHandler
     from src.main_loop.keyboard_handler import KeyboardHandler
@@ -40,5 +44,3 @@ class EventHandler:
 
         self.mouse_handler.handle_pressed()
         self.keyboard_handler.handle_pressed()
-
-

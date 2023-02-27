@@ -1,7 +1,10 @@
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pygame as pg
-from typing import TYPE_CHECKING, Any
-from src.ui.ui_element import UIElement
+
+from src.ui.elements.ui_element import UIElement
 
 if TYPE_CHECKING:
     from src.game_mechanics.map_manager import MapManager

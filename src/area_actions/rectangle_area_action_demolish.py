@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+from src.area_actions.rectangle_area_action import RectangleAreaAction
 from src.core.vector import Vector
-from src.effects.rectangle_ghost import RectangleGhost
-from src.game_mechanics.demolisher import Demolisher
+from src.entities.demolisher import Demolisher
 
 
-class RectangleGhostDemolish(RectangleGhost[Demolisher]):
+class RectangleAreaActionDemolish(RectangleAreaAction[Demolisher]):
 
     def resolve(self) -> None:
         demolish_sound: bool = False
@@ -15,4 +15,3 @@ class RectangleGhostDemolish(RectangleGhost[Demolisher]):
         if demolish_sound:
             self.struct_manager.sound_manager.play_sound("buildingwreck")
         self.kill_segments()
-

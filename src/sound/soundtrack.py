@@ -1,5 +1,6 @@
-import pygame as pg
 import os
+
+import pygame as pg
 
 END_TRACK = pg.USEREVENT + 1
 

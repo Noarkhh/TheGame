@@ -1,8 +1,12 @@
 from __future__ import annotations
-from src.core.enums import *
+
+from typing import TYPE_CHECKING
+
+from src.core.enums import Resource
+
 if TYPE_CHECKING:
     from src.core.config import Config
-    from src.game_mechanics.structures import Structure
+    from src.entities.structures import Structure
 
 
 class Treasury:
