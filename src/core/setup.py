@@ -6,6 +6,7 @@ import pygame as pg
 
 from src.core.config import Config
 from src.core.cursor import Cursor
+from src.core.vector import Vector
 from src.game_mechanics.map_manager import MapManager
 from src.game_mechanics.struct_manager import StructManager
 from src.game_mechanics.treasury import Treasury
@@ -31,7 +32,11 @@ class Setup:
         pg.init()
         pg.mixer.init()
         config: Config = Config()
-        screen = pg.display.set_mode(config.window_size.to_tuple())
+        if config.fullscreen:
+            screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
+            config.window_size = Vector(pg.display.get_window_size())
+        else:
+            screen = pg.display.set_mode(config.window_size.to_tuple())
 
         cursor: Cursor = Cursor()
         spritesheet: Spritesheet = Spritesheet(config)

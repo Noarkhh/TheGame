@@ -9,6 +9,7 @@ class Config:
         self.tile_size: int = 30
         self.frame_rate: int = 60
         self.window_size: Vector[int] = Vector(1080, 720)
+        self.fullscreen: bool = False
         self.layout_path: str = "../assets/maps/river_L.png"
         self.spritesheet_coords_path: str = "../config/spritesheet_coords.json"
         self.structures_config_path: str = "../config/structures_config.json"

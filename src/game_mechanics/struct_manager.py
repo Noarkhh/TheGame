@@ -2,7 +2,9 @@ from __future__ import annotations
 import pygame as pg
 from typing import cast, Type
 from src.core.enums import *
-from src.game_mechanics.structures import Structure, Snapper, Gate
+from src.game_mechanics.structures import Snapper, Gate
+from src.game_mechanics.structure import Structure
+from src.game_mechanics.structure_snapper import StructureSnapper
 
 if TYPE_CHECKING:
     from src.core.config import Config
@@ -23,8 +25,7 @@ class StructManager:
 
         self.structs: pg.sprite.Group[Structure] = pg.sprite.Group()
 
-    def place(self, new_struct: Structure, play_failure_sounds: bool = False,
-              play_success_sound: bool = True) -> Message:
+    def build(self, new_struct: Structure, failure_sound: bool = False, success_sound: bool = True) -> Message:
         struct_map: Map[Structure] = self.map_manager.struct_map
 
         build_message: Message = new_struct.can_be_placed()
@@ -42,11 +43,12 @@ class StructManager:
 
             self.treasury.pay_for(new_struct)
 
-        self.sound_manager.handle_placement_sounds(play_failure_sounds, play_success_sound, build_message)
+        self.sound_manager.handle_placement_sounds(failure_sound, success_sound, build_message)
 
         return build_message
 
-    def snap(self, position1: Vector[int], position2: Vector[int], connector: Type[Structure]) -> Message:
+    def snap(self, position1: Vector[int], position2: Vector[int], connector: Type[Structure],
+             failure_sound: bool = False, success_sound: bool = True) -> Message:
         struct1 = self.map_manager.struct_map[position1]
         struct2 = self.map_manager.struct_map[position2]
 
@@ -60,4 +62,20 @@ class StructManager:
             cast(Snapper, struct1).add_neighbours(snap_direction.opposite())
             cast(Snapper, struct2).add_neighbours(snap_direction)
 
+        self.sound_manager.handle_snapping_sounds(failure_sound, success_sound, snap_message)
+
         return snap_message
+
+    def demolish(self, position: Vector[int], demolish_sound: bool = False) -> bool:
+        struct_to_demolish = self.map_manager.struct_map.pop(position)
+        if struct_to_demolish is None:
+            return False
+        struct_to_demolish.kill()
+        if demolish_sound:
+            self.sound_manager.play_fx("buildingwreck")
+        if not isinstance(struct_to_demolish, StructureSnapper):
+            return True
+        for direction_to_neighbour in struct_to_demolish.neighbours:
+            neighbour = self.map_manager.struct_map[position + direction_to_neighbour.to_vector()]
+            cast(StructureSnapper, neighbour).remove_neighbours(direction_to_neighbour.opposite())
+        return True

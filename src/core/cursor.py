@@ -10,6 +10,7 @@ from src.ui.button import Button
 if TYPE_CHECKING:
     from src.graphics.scene import Scene
     from src.graphics.tile_entity import TileEntity
+    from src.ui.ui import UI
 
 
 class Mode(Enum):
@@ -20,6 +21,7 @@ class Mode(Enum):
 class Cursor(pg.sprite.Sprite):
     def __init__(self) -> None:
         super().__init__()
+        self.ui: Optional[UI] = None
         self.mode: Mode = Mode.NORMAL
         self.image: pg.Surface = pg.transform.scale(pg.image.load("../assets/cursor2.png").convert(),
                                                     (Tile.size, Tile.size))
@@ -51,8 +53,7 @@ class Cursor(pg.sprite.Sprite):
             self.held_entity.update_rect()
 
     def assign_entity_class(self, entity_class: Type[TileEntity], button: Optional[Button] = None) -> None:
-        if self.held_entity is not None:
-            self.held_entity.kill()
+        self.unassign()
         self.held_entity = entity_class(self.pos, image_variant=randrange(entity_class.image_variants), is_ghost=True)
 
         if entity_class.is_draggable:
@@ -61,12 +62,15 @@ class Cursor(pg.sprite.Sprite):
         else:
             self.mode = Mode.NORMAL
 
-        if issubclass(entity_class, Demolisher) and button is not None:
-            button.lock(in_pressed_state=True)
-            self.show_image = False
+        assert self.ui is not None
+        if issubclass(entity_class, Demolisher) and self.ui.toolbar.demolish_button is not None:
+            self.ui.toolbar.demolish_button.lock(in_pressed_state=True)
 
     def unassign(self) -> None:
         if self.held_entity is not None:
+            assert self.ui is not None
+            if isinstance(self.held_entity, Demolisher) and self.ui.toolbar.demolish_button is not None:
+                self.ui.toolbar.demolish_button.unlock()
             self.held_entity.kill()
             self.held_entity = None
             self.mode = Mode.NORMAL

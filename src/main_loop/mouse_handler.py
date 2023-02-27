@@ -48,7 +48,7 @@ class MouseHandler:
         if self.area_ghost is not None:
             self.area_ghost.find_new_segments()
         elif self.cursor.held_entity is not None and isinstance(self.cursor.held_entity, Structure):
-            self.struct_manager.place(self.cursor.held_entity, play_failure_sounds=not self.was_lmb_pressed_last_tick)
+            self.struct_manager.build(self.cursor.held_entity, failure_sound=not self.was_lmb_pressed_last_tick)
         else:
             self.scene.update_velocity(-self.cursor.pos_px_difference.to_float(), slow_down=False)
 

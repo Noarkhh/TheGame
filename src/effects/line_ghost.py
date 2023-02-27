@@ -21,10 +21,10 @@ class LineGhost(AreaGhost[T], metaclass=ABCMeta):
 
         self.listening_for_main_axis = False
 
-    def find_new_segments(self) -> None:
+    def find_new_segments(self, initial: bool = False) -> None:
         if self.origin == self.cursor.pos:
             self.listening_for_main_axis = True
-        if self.cursor.pos_difference == Vector(0, 0):
+        if self.cursor.pos_difference == Vector(0, 0) and not initial:
             return
         self.update_main_axis()
 

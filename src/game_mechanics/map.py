@@ -39,3 +39,14 @@ class Map(Generic[U]):
             return 0 <= pos[0] < self.size.x and 0 <= pos[1] < self.size.y
         else:
             raise TypeError
+
+    def pop(self, pos: Vector[int] | tuple[int, int]) -> Optional[U]:
+        if isinstance(pos, Vector):
+            if pos.to_tuple() not in self.elements:
+                return None
+            return self.elements.pop(pos.to_tuple())
+        if isinstance(pos, tuple):
+            if pos not in self.elements:
+                return None
+            return self.elements.pop(pos)
+        raise TypeError

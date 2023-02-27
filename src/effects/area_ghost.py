@@ -10,7 +10,6 @@ from src.core.vector import Vector
 if TYPE_CHECKING:
     from src.game_mechanics.struct_manager import StructManager
     from src.core.cursor import Cursor
-    from src.effects.area_action import AreaAction
 
 T = TypeVar("T", bound=Snapper)
 
@@ -29,12 +28,13 @@ class AreaGhost(ABC, Generic[T]):
         self.segments = {}
         self.origin = origin
         self.tile_entity_class = tile_entity_class
+        self.find_new_segments(initial=True)
 
     @abstractmethod
     def resolve(self) -> None: ...
 
     @abstractmethod
-    def find_new_segments(self) -> None: ...
+    def find_new_segments(self, initial: bool = False) -> None: ...
 
     def update_segments(self, updated_segments_positions: set[tuple[int, int]]) -> None:
         for (position, segment) in list(self.segments.items()):

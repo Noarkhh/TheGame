@@ -1,5 +1,6 @@
 from __future__ import annotations
 from src.game_mechanics.structures import *
+from src.game_mechanics.demolisher import Demolisher
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -35,6 +36,10 @@ class KeyboardHandler:
             self.soundtrack.change_volume(0.01)
         elif key == pg.K_ESCAPE:
             self.ui.pause_menu.load()
+        elif key == pg.K_d:
+            self.cursor.assign_entity_class(Demolisher)
+        elif key == pg.K_v:
+            self.ui.build_menu.toggle()
 
     def key_released(self, key: int) -> None:
         self.pressed_keys_time.pop(key)

@@ -81,3 +81,9 @@ class Vector(Generic[T]):
 
     def to_int(self: Vector[float]) -> Vector[int]:
         return Vector(int(self.x), int(self.y))
+
+    def neighbours(self: Vector[int]) -> tuple[Vector, Vector, Vector, Vector]:
+        return (Vector(self.x, self.y - 1),
+                Vector(self.x + 1, self.y),
+                Vector(self.x, self.y + 1),
+                Vector(self.x - 1, self.y))

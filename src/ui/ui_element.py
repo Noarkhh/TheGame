@@ -53,7 +53,7 @@ class UIElement(ABC, pg.sprite.Sprite):
                            function: Optional[Callable] = None, **kwargs: Any) -> Button:
         contents_image = pg.font.Font('../assets/Minecraft.otf', scale).render(text, False, (62, 61, 58), "black")
         contents_image.set_colorkey("black")
-        return self.create_image_button(contents_image, shape, position, function, **kwargs)
+        return self.create_image_button(contents_image, shape, position, function, contents_height=8, **kwargs)
 
     def create_image_button(self, contents_image: pg.Surface, shape: str, position: list[int],
                             function: Optional[Callable] = None, **kwargs: Any) -> Button:

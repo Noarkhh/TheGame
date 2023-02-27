@@ -29,7 +29,7 @@ class Direction(IntEnum):
                 self.W: Direction.E}[self]
 
 
-class DirectionSet(set):
+class DirectionSet(set[Direction]):
     def get_id(self) -> int:
         return sum(2 ** elem for elem in self)
 
@@ -87,7 +87,8 @@ class Message(Enum):
     NOT_A_SNAPPER = auto()
     BAD_CONNECTOR = auto()
     NOT_ADJACENT = auto()
-    ONE_CANT_SNAP = auto()
+    OTHER_IS_NONE = auto()
+    OTHER_CANT_SNAP = auto()
     BAD_MATCH = auto()
     ALREADY_SNAPPED = auto()
 

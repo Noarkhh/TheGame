@@ -67,11 +67,12 @@ class SoundManager:
             if build_message in (Message.BAD_LOCATION_STRUCT, Message.BAD_LOCATION_TERRAIN):
                 self.play_speech("Placement_Warning")
 
-    def handle_snapping_sounds(self, play_failure_sounds: bool, play_success_sound: bool, snap_message: Message) -> None:
+    def handle_snapping_sounds(self, play_failure_sounds: bool, play_success_sound: bool,
+                               snap_message: Message) -> None:
         if play_success_sound and snap_message.success():
             self.play_fx("drawbridge_control")
         if play_failure_sounds and not snap_message.success():
-            if snap_message in (Message.BAD_CONNECTOR, Message.ONE_CANT_SNAP, Message.NOT_A_SNAPPER):
+            if snap_message in (Message.BAD_CONNECTOR, Message.OTHER_CANT_SNAP, Message.NOT_A_SNAPPER):
                 self.play_speech("Placement_Warning")
 
 

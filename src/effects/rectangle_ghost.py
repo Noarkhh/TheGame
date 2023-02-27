@@ -8,8 +8,8 @@ from src.effects.area_ghost import AreaGhost, T
 
 
 class RectangleGhost(AreaGhost[T], metaclass=ABCMeta):
-    def find_new_segments(self) -> None:
-        if self.cursor.pos_difference == Vector(0, 0):
+    def find_new_segments(self, initial: bool = False) -> None:
+        if self.cursor.pos_difference == Vector(0, 0) and not initial:
             return
 
         top_left: Vector[int] = Vector(min(self.origin.x, self.cursor.pos.x), min(self.origin.y, self.cursor.pos.y))
