@@ -8,6 +8,7 @@ from src.core.enums import Terrain, Tile
 from src.core.vector import Vector
 from src.entities.snapper import Snapper
 from src.entities.structures import Structure
+from src.core.cursor import Cursor
 
 if TYPE_CHECKING:
     from src.entities.entities import Entity
@@ -35,6 +36,10 @@ class Spritesheet:
             target_rect = pg.Rect(self.coords["Terrain"][obj.name])
             sheet = self.sheet
             aspect_ratio = Vector[float](1, 1)
+        elif isinstance(obj, Cursor):
+            image = pg.transform.scale(pg.image.load("../assets/cursor2.png").convert(), (Tile.size, Tile.size))
+            image.set_colorkey("white", pg.RLEACCEL)
+            return image
         elif isinstance(obj, type):
             if issubclass(obj, Snapper):
                 target_rect = pg.Rect([150] + self.coords["Snappers"][obj.__name__][0])

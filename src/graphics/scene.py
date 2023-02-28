@@ -11,9 +11,12 @@ if TYPE_CHECKING:
     from src.core.config import Config
     from src.game_mechanics.map_manager import MapManager
     from src.graphics.spritesheet import Spritesheet
+    from src.ui.button_manager import ButtonManager
 
 
 class Scene(pg.sprite.Sprite):
+    button_manager: ButtonManager
+
     def __init__(self, config: Config, spritesheet: Spritesheet, map_manager: MapManager) -> None:
         super().__init__()
         self.map_image: pg.Surface = map_manager.load_terrain(spritesheet)
@@ -48,7 +51,26 @@ class Scene(pg.sprite.Sprite):
         self.move_screen_border(Vector(pg.mouse.get_pos()))
         self.update_velocity(slow_down=True)
 
+    def update_zoom(self, factor: float) -> None:
+        self.map_size_px = Vector(int(self.map_size_px.x * factor), int(self.map_size_px.y * factor))
+        self.map_image = pg.transform.scale(self.map_image, self.map_size_px.to_tuple())
+        self.map_image_raw = pg.transform.scale(self.map_image_raw, self.map_size_px.to_tuple())
+
+        self.rect.center = (self.rect.centerx * factor, self.rect.centery * factor)
+
+        if self.rect.right > self.map_size_px.x:
+            self.rect.right = self.map_size_px.x
+        elif self.rect.left < 0:
+            self.rect.left = 0
+
+        if self.rect.bottom > self.map_size_px.y:
+            self.rect.bottom = self.map_size_px.y
+        elif self.rect.top < 0:
+            self.rect.top = 0
+
     def move_screen_border(self, curr_mouse_pos: Vector[int]) -> None:
+        if self.button_manager.hovered_button is not None:
+            return
         if curr_mouse_pos.x >= self.window_size.x - Tile.size / 2 and \
                 self.rect.right <= self.map_size_px.x - Tile.size / 2:
             self.rect.move_ip(Tile.size / 2, 0)

@@ -35,6 +35,8 @@ class Entity(ABC, pg.sprite.Sprite):
 
     def update_zoom(self) -> None:
         self.image = pg.transform.scale(self.image, (self.image_aspect_ratio * Tile.size).to_tuple())
+        if self.alpha < 255:
+            self.image.set_alpha(self.alpha)
         self.update_rect()
 
     @abstractmethod

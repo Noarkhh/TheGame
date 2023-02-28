@@ -36,3 +36,6 @@ class MapManager:
                 self.tile_map[(x, y)] = Tile(terrain)
                 scene_image.blit(spritesheet.get_image(terrain), (x * Tile.size, y * Tile.size))
         return scene_image
+
+    def update_zoom(self, factor: float) -> None:
+        self.map_size_px = Vector(int(self.map_size_px.x * factor), int(self.map_size_px.y * factor))

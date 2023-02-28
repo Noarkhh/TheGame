@@ -8,6 +8,7 @@ import pygame as pg
 from src.core.enums import Resource, Tile
 from src.core.vector import Vector
 from src.entities.structure import Structure
+from src.entities.structures import *
 from src.ui.elements.build_menu import Category
 
 
@@ -15,7 +16,7 @@ class Config:
     def __init__(self) -> None:
         self.tile_size: int = 30
         self.frame_rate: int = 60
-        self.window_size: Vector[int] = Vector(1080, 720)
+        self.window_size: Vector[int] = Vector(1440, 900)
         self.fullscreen: bool = False
         self.layout_path: str = "../assets/maps/river_L.png"
         self.spritesheet_coords_path: str = "../config/spritesheet_coords.json"

@@ -2,7 +2,7 @@ import os
 
 import pygame as pg
 
-END_TRACK = pg.USEREVENT + 1
+from src.core.user_events import END_TRACK
 
 
 class Soundtrack:

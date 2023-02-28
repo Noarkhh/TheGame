@@ -60,6 +60,10 @@ class MouseHandler:
     def rmb_press(self) -> None:
         self.is_rmb_pressed = True
         self.was_rmb_pressed_last_tick = False
+        if self.area_action is not None:
+            self.area_action.kill_segments()
+            self.area_action = None
+            self.lmb_release()
 
     def rmb_release(self) -> None:
         self.is_rmb_pressed = False

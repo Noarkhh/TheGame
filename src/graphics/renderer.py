@@ -21,11 +21,10 @@ class Renderer:
         self.ui: UI = ui
 
     def render(self) -> None:
+        self.scene.reset_image()
         self.entities.draw(self.scene.map_image)
         self.cursor.update(self.scene)
-        self.cursor.draw(self.scene.map_image)
         self.screen.blit(self.scene.image, (0, 0))
-        self.scene.reset_image()
 
         self.ui.draw_elements()
 

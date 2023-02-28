@@ -22,6 +22,7 @@ from src.sound.sound_manager import SoundManager
 from src.sound.soundtrack import Soundtrack
 from src.ui.button_manager import ButtonManager
 from src.ui.ui import UI
+from src.graphics.zoomer import Zoomer
 
 if TYPE_CHECKING:
     pass
@@ -38,23 +39,25 @@ class Setup:
         else:
             screen = pg.display.set_mode(config.window_size.to_tuple())
 
-        cursor: Cursor = Cursor()
         spritesheet: Spritesheet = Spritesheet(config)
+        entities: Entities = Entities(spritesheet)
+
         sound_manager: SoundManager = SoundManager(config)
         soundtrack: Soundtrack = Soundtrack()
 
-        button_manager: ButtonManager = ButtonManager(cursor, sound_manager)
+        cursor: Cursor = Cursor()
         treasury: Treasury = Treasury(config)
 
-        entities: Entities = Entities(spritesheet)
         map_manager: MapManager = MapManager(config)
 
         scene: Scene = Scene(config, spritesheet, map_manager)
+        button_manager: ButtonManager = ButtonManager(cursor, sound_manager, scene)
         ui: UI = UI(config, button_manager, spritesheet, map_manager, scene, cursor, screen)
 
+        zoomer: Zoomer = Zoomer(entities, scene, map_manager, cursor, ui)
         renderer: Renderer = Renderer(scene, screen, entities, cursor, ui)
         struct_manager: StructManager = StructManager(config, map_manager, treasury, sound_manager)
-        keyboard_handler: KeyboardHandler = KeyboardHandler(cursor, ui, struct_manager, soundtrack)
+        keyboard_handler: KeyboardHandler = KeyboardHandler(cursor, ui, struct_manager, soundtrack, zoomer)
         mouse_handler: MouseHandler = MouseHandler(cursor, ui, struct_manager, scene)
         event_handler: EventHandler = EventHandler(mouse_handler, keyboard_handler, soundtrack)
         print("initialization complete.")

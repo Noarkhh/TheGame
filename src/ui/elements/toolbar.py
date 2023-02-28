@@ -6,6 +6,7 @@ import pygame as pg
 
 from src.entities.demolisher import Demolisher
 from src.ui.elements.ui_element import UIElement
+from src.ui.button_dict import ButtonDict
 
 if TYPE_CHECKING:
     from src.ui.button_manager import ButtonManager
@@ -29,8 +30,9 @@ class Toolbar(UIElement):
             "pause": (self.pause, ())
         }
 
-        self.build_button: Optional[Button] = None
-        self.demolish_button: Optional[Button] = None
+        self.named_buttons: ButtonDict = ButtonDict()
+        # self.build_button: Optional[Button] = None
+        # self.demolish_button: Optional[Button] = None
 
         self.load()
 
@@ -39,10 +41,11 @@ class Toolbar(UIElement):
         for name, (shape, position, scale) in self.button_specs.items():
             new_button = self.create_icon_button(name, shape, position, scale, self.buttons_to_functions[name][0],
                                                  function_args=self.buttons_to_functions[name][1], self_reference=True)
-            if name == "build":
-                self.build_button = new_button
-            if name == "demolish":
-                self.demolish_button = new_button
+            # if name == "build":
+            #     self.build_button = new_button
+            # if name == "demolish":
+            #     self.demolish_button = new_button
+            self.named_buttons[name] = new_button
 
     def toggle_build_menu(self, button: Button) -> None:
         self.ui.build_menu.toggle()
@@ -53,3 +56,8 @@ class Toolbar(UIElement):
 
     def pause(self, button: Button) -> None:
         self.ui.pause_menu.load()
+
+    def assign_function(self, button_name: str, function: Callable, function_args: tuple = ()) -> None:
+        button = self.named_buttons[button_name]
+        button.function = function
+        button.function_args = (*function_args, button) if button in button.function_args else function_args

@@ -10,6 +10,7 @@ from src.core.vector import Vector
 from src.entities.demolisher import Demolisher
 from src.ui.button import Button
 from src.core.enums import Tile
+from src.entities.tile_entity import TileEntity
 
 if TYPE_CHECKING:
     from src.graphics.scene import Scene
@@ -22,18 +23,14 @@ class Mode(Enum):
     DRAG = auto()
 
 
-class Cursor(pg.sprite.Sprite):
+class Cursor(TileEntity):
     def __init__(self) -> None:
-        super().__init__()
+        super().__init__(Vector(0, 0), 1, False)
         self.ui: Optional[UI] = None
         self.mode: Mode = Mode.NORMAL
-        self.image: pg.Surface = pg.transform.scale(pg.image.load("../assets/cursor2.png").convert(),
-                                                    (Tile.size, Tile.size))
-        self.image.set_colorkey("white")
-        self.show_image: bool = True
-        self.rect: pg.Rect = self.image.get_rect()
 
-        self.pos: Vector[int] = Vector(0, 0)
+        self.show_image: bool = True
+
         self.previous_pos: Vector[int] = Vector(0, 0)
         self.pos_difference: Vector[int] = Vector(0, 0)
 
@@ -67,14 +64,14 @@ class Cursor(pg.sprite.Sprite):
             self.mode = Mode.NORMAL
 
         assert self.ui is not None
-        if issubclass(entity_class, Demolisher) and self.ui.toolbar.demolish_button is not None:
-            self.ui.toolbar.demolish_button.lock(in_pressed_state=True)
+        if issubclass(entity_class, Demolisher) and self.ui.toolbar.named_buttons.demolish is not None:
+            self.ui.toolbar.named_buttons.demolish.lock(in_pressed_state=True)
 
     def unassign(self) -> None:
         if self.held_entity is not None:
             assert self.ui is not None
-            if isinstance(self.held_entity, Demolisher) and self.ui.toolbar.demolish_button is not None:
-                self.ui.toolbar.demolish_button.unlock()
+            if isinstance(self.held_entity, Demolisher) and self.ui.toolbar.named_buttons.demolish is not None:
+                self.ui.toolbar.named_buttons.demolish.unlock()
             self.held_entity.kill()
             self.held_entity = None
             self.mode = Mode.NORMAL

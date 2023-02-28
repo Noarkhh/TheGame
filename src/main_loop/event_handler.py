@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import pygame as pg
-
-from src.sound.soundtrack import Soundtrack, END_TRACK
+from src.sound.soundtrack import Soundtrack
+from src.core.user_events import *
 
 if TYPE_CHECKING:
     from src.main_loop.mouse_handler import MouseHandler
@@ -22,24 +21,28 @@ class EventHandler:
             if event.type == pg.QUIT:
                 pg.quit()
                 quit()
-            if event.type == pg.MOUSEBUTTONDOWN:
+            elif event.type == pg.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     self.mouse_handler.lmb_press()
-                if event.button == 2:
+                elif event.button == 2:
                     self.mouse_handler.mmb_press()
-                if event.button == 3:
+                elif event.button == 3:
                     self.mouse_handler.rmb_press()
-            if event.type == pg.MOUSEBUTTONUP:
+            elif event.type == pg.MOUSEBUTTONUP:
                 if event.button == 1:
                     self.mouse_handler.lmb_release()
-                if event.button == 3:
+                elif event.button == 3:
                     self.mouse_handler.rmb_release()
-            if event.type == pg.KEYDOWN:
+            elif event.type == pg.KEYDOWN:
                 self.keyboard_handler.key_pressed(event.key)
-            if event.type == pg.KEYUP:
+            elif event.type == pg.KEYUP:
                 self.keyboard_handler.key_released(event.key)
+            elif event.type == ALL_KEYS_AND_BUTTONS_UP:
+                self.mouse_handler.lmb_release()
+                self.mouse_handler.rmb_release()
+                self.keyboard_handler.pressed_keys_time.clear()
 
-            if event.type == END_TRACK:
+            elif event.type == END_TRACK:
                 self.soundtrack.queue_next_track()
 
         self.mouse_handler.handle_pressed()

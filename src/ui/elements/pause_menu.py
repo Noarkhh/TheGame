@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Callable, Optional
 import pygame as pg
 
 from src.ui.elements.ui_element import UIElement
+from src.core.user_events import ALL_KEYS_AND_BUTTONS_UP
 
 if TYPE_CHECKING:
     from src.ui.button_manager import ButtonManager
@@ -64,6 +65,7 @@ class PauseMenu(UIElement):
             pg.display.flip()
             clock.tick(60)
 
+        pg.event.post(pg.event.Event(ALL_KEYS_AND_BUTTONS_UP))
         button_manager.buttons = global_buttons
 
     def handle_pause_events(self) -> None:

@@ -41,13 +41,13 @@ class BuildMenu(UIElement):
 
     def unload(self) -> None:
         super().unload()
-        if self.ui.toolbar.build_button is not None:
-            self.ui.toolbar.build_button.unlock()
+        if self.ui.toolbar.named_buttons.build is not None:
+            self.ui.toolbar.named_buttons.build.unlock()
 
     def load(self) -> None:
         super().load()
-        if self.ui.toolbar.build_button is not None:
-            self.ui.toolbar.build_button.lock(in_pressed_state=True)
+        if self.ui.toolbar.named_buttons.build is not None:
+            self.ui.toolbar.named_buttons.build.lock(in_pressed_state=True)
         for (button_name, (shape, position, scale)), category in zip(self.button_specs.items(), self.categories):
             self.category_buttons[category] = \
                 self.create_icon_button(button_name, shape, position, scale, self.load_category,

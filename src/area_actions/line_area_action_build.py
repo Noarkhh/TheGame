@@ -31,6 +31,8 @@ class LineAreaActionBuild(LineAreaAction[S]):
             if not (build_message.success() or build_message == Message.BAD_LOCATION_STRUCT):
                 break
             if previous_segment_position is None and build_message == Message.BAD_LOCATION_STRUCT:
+                if len(segments_to_build) == 1:
+                    break
                 second_segment = self.segments[segments_to_build[1].to_tuple()]
                 test_snap_message = second_segment.can_be_snapped(segment_position, self.tile_entity_class)
                 if not (test_snap_message.success() or test_snap_message == Message.ALREADY_SNAPPED):

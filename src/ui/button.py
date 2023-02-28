@@ -12,7 +12,7 @@ class Button(pg.sprite.Sprite):
     manager: ClassVar[ButtonManager]
 
     def __init__(self, rect: pg.Rect, base_image: pg.Surface, hover_image: pg.Surface, contents_image: pg.Surface,
-                 function: Callable, ui_rect: pg.Rect, function_args: Optional[tuple] = None,
+                 function: Callable, ui_rect: pg.Rect, function_args: tuple = (),
                  hover_sound: str = "woodrollover", press_sound: str = "woodpush", contents_height: int = 4,
                  self_reference: bool = False) -> None:
 
@@ -27,9 +27,9 @@ class Button(pg.sprite.Sprite):
 
         self.function: Callable = function
 
-        self.function_args: tuple = () if function_args is None else function_args
-        if self_reference:
-            self.function_args = self.function_args + (self,)
+        self.function_args: tuple = (*function_args, self) if self_reference else function_args
+        # if self_reference:
+        #     self.function_args = self.function_args + (self,)
 
         self.hover_sound: str = hover_sound
         self.press_sound: str = press_sound

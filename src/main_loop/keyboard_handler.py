@@ -10,14 +10,17 @@ if TYPE_CHECKING:
     from src.ui.ui import UI
     from src.game_mechanics.struct_manager import StructManager
     from src.sound.soundtrack import Soundtrack
+    from src.graphics.zoomer import Zoomer
 
 
 class KeyboardHandler:
-    def __init__(self, cursor: Cursor, ui: UI, struct_manager: StructManager, soundtrack: Soundtrack) -> None:
+    def __init__(self, cursor: Cursor, ui: UI, struct_manager: StructManager, soundtrack: Soundtrack,
+                 zoomer: Zoomer) -> None:
         self.cursor: Cursor = cursor
         self.ui: UI = ui
         self.struct_manager: StructManager = struct_manager
         self.soundtrack: Soundtrack = soundtrack
+        self.zoomer: Zoomer = zoomer
         self.key_class_dict: dict[int, Type[Structure]] = {pg.K_h: House, pg.K_t: Tower, pg.K_u: Road, pg.K_w: Wall,
                                                            pg.K_g: Gate, pg.K_m: Mine, pg.K_f: Farmland, pg.K_b: Bridge}
         self.pressed_keys_time: dict[int, int] = {}
@@ -42,9 +45,14 @@ class KeyboardHandler:
             self.cursor.assign_entity_class(Demolisher)
         elif key == pg.K_v:
             self.ui.build_menu.toggle()
+        elif key == pg.K_MINUS:
+            self.zoomer.change_zoom(0.5)
+        elif key == pg.K_EQUALS:
+            self.zoomer.change_zoom(2)
 
     def key_released(self, key: int) -> None:
-        self.pressed_keys_time.pop(key)
+        if key in self.pressed_keys_time:
+            self.pressed_keys_time.pop(key)
 
     def handle_pressed(self) -> None:
         for key, time in self.pressed_keys_time.items():

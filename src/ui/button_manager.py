@@ -9,14 +9,16 @@ from src.ui.button import Button
 if TYPE_CHECKING:
     from src.core.cursor import Cursor
     from src.sound.sound_manager import SoundManager
+    from src.graphics.scene import Scene
 
 
 class ButtonManager:
-    def __init__(self, cursor: Cursor, sound_manager: SoundManager) -> None:
+    def __init__(self, cursor: Cursor, sound_manager: SoundManager, scene: Scene) -> None:
         Button.manager = self
 
         self.cursor: Cursor = cursor
         self.sound_manager: SoundManager = sound_manager
+        scene.button_manager = self
 
         self.buttons: pg.sprite.Group[Button] = pg.sprite.Group()
 
