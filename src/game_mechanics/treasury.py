@@ -12,10 +12,12 @@ if TYPE_CHECKING:
 class Treasury:
     def __init__(self, config: Config) -> None:
         self.resources: dict[Resource, int] = config.get_starting_resources()
+        self.display_state_changed: bool = False
 
     def pay_for(self, struct: Structure) -> None:
         for resource, amount in struct.cost.items():
             self.resources[resource] -= amount
+            self.display_state_changed = True
 
     def save_to_json(self) -> dict[str, int]:
         return {resource.name: self.resources[resource] for resource, amount in self.resources.items()}

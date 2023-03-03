@@ -20,10 +20,10 @@ if TYPE_CHECKING:
 class SaveManager:
     config: Config
     map_manager: MapManager
+    struct_manager: StructManager
     treasury: Treasury
     scene: Scene
     spritesheet: Spritesheet
-    struct_manager: StructManager
     entities: Entities
     cursor: Cursor
 

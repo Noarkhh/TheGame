@@ -31,8 +31,6 @@ class Toolbar(UIElement):
         }
 
         self.named_buttons: ButtonDict = ButtonDict()
-        # self.build_button: Optional[Button] = None
-        # self.demolish_button: Optional[Button] = None
 
         self.load()
 
@@ -41,10 +39,7 @@ class Toolbar(UIElement):
         for name, (shape, position, scale) in self.button_specs.items():
             new_button = self.create_icon_button(name, shape, position, scale, self.buttons_to_functions[name][0],
                                                  function_args=self.buttons_to_functions[name][1], self_reference=True)
-            # if name == "build":
-            #     self.build_button = new_button
-            # if name == "demolish":
-            #     self.demolish_button = new_button
+
             self.named_buttons[name] = new_button
 
     def toggle_build_menu(self, button: Button) -> None:

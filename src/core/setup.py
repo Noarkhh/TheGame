@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pygame as pg
 
 from src.core.config import Config
@@ -11,6 +9,7 @@ from src.entities.entities import Entities
 from src.entities.save_manager import SaveManager
 from src.game_mechanics.map_manager import MapManager
 from src.game_mechanics.struct_manager import StructManager
+from src.game_mechanics.time_manager import TimeManager
 from src.game_mechanics.treasury import Treasury
 from src.graphics.renderer import Renderer
 from src.graphics.scene import Scene
@@ -24,9 +23,6 @@ from src.sound.soundtrack import Soundtrack
 from src.ui.button_manager import ButtonManager
 from src.ui.ui import UI
 from src.graphics.zoomer import Zoomer
-
-if TYPE_CHECKING:
-    pass
 
 
 class Setup:
@@ -45,6 +41,7 @@ class Setup:
 
         sound_manager: SoundManager = SoundManager(config)
         soundtrack: Soundtrack = Soundtrack()
+        time_manager: TimeManager = TimeManager(config.frame_rate)
 
         cursor: Cursor = Cursor()
         treasury: Treasury = Treasury(config)
@@ -56,14 +53,16 @@ class Setup:
         struct_manager: StructManager = StructManager(config, map_manager, treasury, sound_manager)
         save_manager: SaveManager = SaveManager(config, map_manager, struct_manager, treasury, scene, spritesheet,
                                                 entities, cursor)
-        ui: UI = UI(config, button_manager, spritesheet, map_manager, scene, cursor, save_manager, screen)
+        ui: UI = UI(config, button_manager, spritesheet, map_manager, scene, cursor, save_manager, treasury,
+                    time_manager, screen)
 
         zoomer: Zoomer = Zoomer(entities, scene, map_manager, cursor, ui)
         renderer: Renderer = Renderer(scene, screen, entities, cursor, ui)
-        keyboard_handler: KeyboardHandler = KeyboardHandler(cursor, ui, struct_manager, soundtrack, zoomer)
+        keyboard_handler: KeyboardHandler = KeyboardHandler(cursor, ui, struct_manager, soundtrack, zoomer, scene)
         mouse_handler: MouseHandler = MouseHandler(cursor, ui, struct_manager, scene)
         event_handler: EventHandler = EventHandler(mouse_handler, keyboard_handler, soundtrack)
+
         print("initialization complete.")
 
-        self.main_loop: MainLoop = MainLoop(event_handler, renderer, scene, ui, soundtrack, config.frame_rate)
+        self.main_loop: MainLoop = MainLoop(event_handler, renderer, scene, ui, soundtrack, time_manager)
 

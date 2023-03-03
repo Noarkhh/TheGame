@@ -4,7 +4,7 @@ from typing import Optional, TYPE_CHECKING
 
 import pygame as pg
 
-from src.core.enums import Tile
+from src.core.enums import Tile, Direction
 from src.core.vector import Vector
 
 if TYPE_CHECKING:
@@ -71,36 +71,42 @@ class Scene(pg.sprite.Sprite):
     def move_screen_border(self, curr_mouse_pos: Vector[int]) -> None:
         if self.button_manager.hovered_button is not None:
             return
-        if curr_mouse_pos.x >= self.window_size.x - Tile.size / 2 and \
-                self.rect.right <= self.map_size_px.x - Tile.size / 2:
-            self.rect.move_ip(Tile.size / 2, 0)
-        if curr_mouse_pos.x <= 0 + Tile.size / 2 <= self.rect.left:
-            self.rect.move_ip(-Tile.size / 2, 0)
+        if curr_mouse_pos.x >= self.window_size.x - Tile.size / 2:
+            self.move_direction(Direction.E)
+        if curr_mouse_pos.x <= Tile.size / 2:
+            self.move_direction(Direction.W)
 
-        if curr_mouse_pos.y >= self.window_size.y - Tile.size / 2 and \
-                self.rect.bottom <= self.map_size_px.y - Tile.size / 2:
-            self.rect.move_ip(0, Tile.size / 2)
-        if curr_mouse_pos.y <= 0 + Tile.size / 2 <= self.rect.top:
-            self.rect.move_ip(0, -Tile.size / 2)
+        if curr_mouse_pos.y >= self.window_size.y - Tile.size / 2:
+            self.move_direction(Direction.S)
+        if curr_mouse_pos.y <= Tile.size / 2:
+            self.move_direction(Direction.N)
+
+    def move_by_velocity(self) -> None:
+        self.rect.move_ip(*self.velocity.to_tuple())
+
+        self.rect.left = max(self.rect.left, 0)
+        self.rect.right = min(self.rect.right, self.map_size_px.x)
+        self.rect.top = max(self.rect.top, 0)
+        self.rect.bottom = min(self.rect.bottom, self.map_size_px.y)
 
         self.image = self.map_image.subsurface(self.rect)
 
-    def move_by_velocity(self) -> None:
-        new_rect = self.rect.move(*self.velocity.to_tuple())
+    def move_direction(self, direction: Direction) -> None:
+        if direction == Direction.N:
+            if self.rect.top >= Tile.size / 2:
+                self.rect.move_ip(0, -Tile.size / 2)
 
-        if new_rect.left >= 0 and new_rect.right <= self.map_size_px.x:
-            self.rect.move_ip(self.velocity.x, 0)
-        elif new_rect.left < 0:
-            self.rect.left = 0
-        elif new_rect.right > self.map_size_px.x:
-            self.rect.right = self.map_size_px.x
+        elif direction == Direction.E:
+            if self.rect.right <= self.map_size_px.x - Tile.size / 2:
+                self.rect.move_ip(Tile.size / 2, 0)
 
-        if new_rect.top >= 0 and new_rect.bottom < self.map_size_px.y:
-            self.rect.move_ip(0, self.velocity.y)
-        elif new_rect.top < 0:
-            self.rect.top = 0
-        elif new_rect.bottom > self.map_size_px.y:
-            self.rect.bottom = self.map_size_px.y
+        elif direction == Direction.S:
+            if self.rect.bottom <= self.map_size_px.y - Tile.size / 2:
+                self.rect.move_ip(0, Tile.size / 2)
+
+        elif direction == Direction.W:
+            if self.rect.left >= Tile.size / 2:
+                self.rect.move_ip(-Tile.size / 2, 0)
 
         self.image = self.map_image.subsurface(self.rect)
 

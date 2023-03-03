@@ -65,12 +65,11 @@ class Resource(Enum):
     COAL = auto()
     ORE = auto()
     IRON = auto()
-    CHARCOAL = auto()
     BRICKS = auto()
     STEEL = auto()
-    REINFORCED_WOOD = auto()
+    BEAMS = auto()
     BREAD = auto()
-    METEORITE = auto()
+    ASTRUM = auto()
     GOLD = auto()
 
     def __repr__(self) -> str:

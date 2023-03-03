@@ -38,7 +38,8 @@
       "toolbar":         [0,   139, 27,  75],
       "pause_menu":      [27,  139, 64,  88],
       "map_frame":       [100, 139, 36,  39],
-      "top_bar_segment": [91,  178, 27,  11]
+      "top_bar_segment": [91,  178, 27,  11],
+      "resource_panel":  [136, 139, 46,  75]
     },
     "Icons": {
       "zoom_out":      [0,  300, 10, 10],

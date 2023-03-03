@@ -7,6 +7,7 @@ from src.entities.structures import *
 
 if TYPE_CHECKING:
     from src.core.cursor import Cursor
+    from src.graphics.scene import Scene
     from src.ui.ui import UI
     from src.game_mechanics.struct_manager import StructManager
     from src.sound.soundtrack import Soundtrack
@@ -15,12 +16,13 @@ if TYPE_CHECKING:
 
 class KeyboardHandler:
     def __init__(self, cursor: Cursor, ui: UI, struct_manager: StructManager, soundtrack: Soundtrack,
-                 zoomer: Zoomer) -> None:
+                 zoomer: Zoomer, scene: Scene) -> None:
         self.cursor: Cursor = cursor
         self.ui: UI = ui
         self.struct_manager: StructManager = struct_manager
         self.soundtrack: Soundtrack = soundtrack
         self.zoomer: Zoomer = zoomer
+        self.scene: Scene = scene
         self.key_class_dict: dict[int, Type[Structure]] = {pg.K_h: House, pg.K_t: Tower, pg.K_u: Road, pg.K_w: Wall,
                                                            pg.K_g: Gate, pg.K_m: Mine, pg.K_f: Farmland, pg.K_b: Bridge}
         self.pressed_keys_time: dict[int, int] = {}
@@ -60,5 +62,13 @@ class KeyboardHandler:
                 self.soundtrack.change_volume(-0.005)
             elif key == pg.K_PERIOD and time >= 30:
                 self.soundtrack.change_volume(0.005)
+            elif key == pg.K_UP:
+                self.scene.move_direction(Direction.N)
+            elif key == pg.K_RIGHT:
+                self.scene.move_direction(Direction.E)
+            elif key == pg.K_DOWN:
+                self.scene.move_direction(Direction.S)
+            elif key == pg.K_LEFT:
+                self.scene.move_direction(Direction.W)
 
             self.pressed_keys_time[key] += 1
