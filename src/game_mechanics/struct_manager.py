@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from typing import cast, Type, TYPE_CHECKING
+from typing import cast, Type, TYPE_CHECKING, Any
 
 import pygame as pg
 
-from src.core.enums import Message, Direction
+from src.core.enums import Message, Direction, Orientation
 from src.entities.structure import Structure
 from src.entities.structure_snapper import StructureSnapper
-from src.entities.structures import Gate
+from src.entities.structures import *
+from src.core.vector import Vector
 
 if TYPE_CHECKING:
     from src.core.config import Config
@@ -15,7 +16,6 @@ if TYPE_CHECKING:
     from src.game_mechanics.map_manager import MapManager
     from src.game_mechanics.treasury import Treasury
     from src.sound.sound_manager import SoundManager
-    from src.core.vector import Vector
 
 
 class StructManager:
@@ -84,3 +84,20 @@ class StructManager:
             neighbour = self.map_manager.struct_map[position + direction_to_neighbour.to_vector()]
             cast(StructureSnapper, neighbour).remove_neighbours(direction_to_neighbour.opposite())
         return True
+
+    def save_to_json(self) -> dict[str, dict[str, Any]]:
+        return {f"({pos[0]},{pos[1]})": struct.save_to_json() for pos, struct in
+                self.map_manager.struct_map.elements.items()}
+
+    def load_from_json(self, structures_dict: dict[str, dict[str, Any]]) -> None:
+        for pos_str, struct_dict in structures_dict.items():
+            pos_tuple = pos_str[1:-1].split(",")
+            struct_position = Vector(int(pos_tuple[0]), int(pos_tuple[1]))
+            loaded_struct = globals()[struct_dict["type"]](struct_position,
+                                                           orientation=Orientation[struct_dict["orientation"]],
+                                                           image_variant=struct_dict["image_variant"])
+            assert isinstance(loaded_struct, Structure)
+
+            loaded_struct.load_from_json(struct_dict)
+            for relative_pos in loaded_struct.covered_tiles:
+                self.map_manager.struct_map[loaded_struct.pos + relative_pos] = loaded_struct

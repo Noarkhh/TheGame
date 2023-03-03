@@ -56,7 +56,7 @@ class Scene(pg.sprite.Sprite):
         self.map_image = pg.transform.scale(self.map_image, self.map_size_px.to_tuple())
         self.map_image_raw = pg.transform.scale(self.map_image_raw, self.map_size_px.to_tuple())
 
-        self.rect.center = (self.rect.centerx * factor, self.rect.centery * factor)
+        self.rect.center = (int(self.rect.centerx * factor), int(self.rect.centery * factor))
 
         if self.rect.right > self.map_size_px.x:
             self.rect.right = self.map_size_px.x
@@ -106,3 +106,18 @@ class Scene(pg.sprite.Sprite):
 
     def reset_image(self) -> None:
         self.image.blit(self.map_image_raw.subsurface(self.rect), (0, 0))
+
+    def load_from_savefile(self, config: Config, spritesheet: Spritesheet, map_manager: MapManager) -> None:
+        self.map_image = map_manager.load_terrain(spritesheet)
+        self.map_image_raw = self.map_image.copy()
+        self.rect = pg.Rect(((self.map_image.get_width() - config.window_size.x) // 2,
+                            (self.map_image.get_height() - config.window_size.y) // 2,
+                            config.window_size.x, config.window_size.y))
+        self.image = self.map_image.subsurface(self.rect)
+        self.window_size = config.window_size
+        self.map_size_px = map_manager.map_size_px
+
+        self.velocity = Vector[float](0, 0)
+        self.velocity_decrement = Vector[float](0, 0)
+        self.to_decrement = 0
+        self.retardation_period = 20

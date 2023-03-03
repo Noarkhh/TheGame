@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pygame as pg
 
@@ -39,3 +39,11 @@ class MapManager:
 
     def update_zoom(self, factor: float) -> None:
         self.map_size_px = Vector(int(self.map_size_px.x * factor), int(self.map_size_px.y * factor))
+
+    def load_from_json(self, config: Config) -> None:
+        self.layout = config.get_layout()
+        self.map_size_tiles = Vector[int](*self.layout.get_size())
+        self.map_size_px = self.map_size_tiles * Tile.size
+
+        self.struct_map = Map(self.map_size_tiles)
+        self.tile_map = Map(self.map_size_tiles)

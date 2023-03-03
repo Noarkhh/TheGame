@@ -77,25 +77,25 @@ class Structure(TileEntity, metaclass=ABCMeta):
             new_copy.add_neighbours(neighbours)
         return new_copy
 
-    def to_json(self) -> dict:
+    def save_to_json(self) -> dict:
         return {
             "type": self.__class__.__name__,
             "pos": self.pos.to_tuple(),
-            "orientation": self.orientation,
-            "sprite_variant": self.image_variant,
+            "orientation": self.orientation.name,
+            "image_variant": self.image_variant,
 
             "cost": {resource.name: amount for resource, amount in self.base_cost.items()},
-            "profit": {resource.name: amount for resource, amount in self.base_cost.items()},
+            "profit": {resource.name: amount for resource, amount in self.base_profit.items()},
             "capacity": self.base_capacity,
             "cooldown": self.base_cooldown,
             "cooldown_left": self.cooldown_left,
             "stockpile": {resource.name: amount for resource, amount in self.stockpile.items()}
         }
 
-    def from_json(self, y: dict) -> None:
-        self.cost = {Resource[name]: amount for name, amount in y["cost"]}
-        self.profit = {Resource[name]: amount for name, amount in y["profit"]}
-        self.capacity = y["capacity"]
-        self.cooldown = y["cooldown"]
-        self.cooldown_left = y["cooldown_left"]
-        self.stockpile = {Resource[name]: amount for name, amount in y["stockpile"]}
+    def load_from_json(self, struct_dict: dict) -> None:
+        self.cost = {Resource[name]: amount for name, amount in struct_dict["cost"].items()}
+        self.profit = {Resource[name]: amount for name, amount in struct_dict["profit"].items()}
+        self.capacity = struct_dict["capacity"]
+        self.cooldown = struct_dict["cooldown"]
+        self.cooldown_left = struct_dict["cooldown_left"]
+        self.stockpile = {Resource[name]: amount for name, amount in struct_dict["stockpile"].items()}

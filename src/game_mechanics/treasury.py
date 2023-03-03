@@ -16,3 +16,10 @@ class Treasury:
     def pay_for(self, struct: Structure) -> None:
         for resource, amount in struct.cost.items():
             self.resources[resource] -= amount
+
+    def save_to_json(self) -> dict[str, int]:
+        return {resource.name: self.resources[resource] for resource, amount in self.resources.items()}
+
+    def load_from_json(self, treasury_dict: dict[str, int]) -> None:
+        for resource, amount in treasury_dict.items():
+            self.resources[Resource[resource]] = amount

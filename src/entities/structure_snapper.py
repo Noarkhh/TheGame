@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Type, TYPE_CHECKING
 
-from src.core.enums import Message, DirectionSet
+from src.core.enums import Message, Direction
 from src.entities.snapper import Snapper
 from src.entities.structure import Structure
 
@@ -36,12 +36,12 @@ class StructureSnapper(Structure, Snapper):
 
         return Message.SNAPPED
 
-    def to_json(self) -> dict:
+    def save_to_json(self) -> dict:
         return {
-            **super().to_json(),
-            "neighbours": tuple(self.neighbours)
+            **super().save_to_json(),
+            "neighbours": [direction.name for direction in self.neighbours]
         }
 
-    def from_json(self, y: dict) -> None:
-        super().from_json(y)
-        self.add_neighbours(DirectionSet(y["neighbours"]))
+    def load_from_json(self, struct_dict: dict) -> None:
+        super().load_from_json(struct_dict)
+        self.add_neighbours({Direction[direction_name] for direction_name in struct_dict["neighbours"]})

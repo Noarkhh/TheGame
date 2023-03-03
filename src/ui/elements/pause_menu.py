@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import time
+import os
 from typing import TYPE_CHECKING, Callable, Optional
 
 import pygame as pg
@@ -10,6 +12,7 @@ from src.core.user_events import ALL_KEYS_AND_BUTTONS_UP
 
 if TYPE_CHECKING:
     from src.ui.button_manager import ButtonManager
+    from src.entities.save_manager import SaveManager
     from src.ui.button import Button
     from src.graphics.spritesheet import Spritesheet
 
@@ -17,7 +20,9 @@ if TYPE_CHECKING:
 
 
 class PauseMenu(UIElement):
-    def __init__(self, spritesheet: Spritesheet, button_manager: ButtonManager, button_specs: dict[str, list]) -> None:
+    def __init__(self, spritesheet: Spritesheet, button_manager: ButtonManager, save_manager: SaveManager,
+                 button_specs: dict[str, list]) -> None:
+        self.save_manager: SaveManager = save_manager
         self.image: pg.Surface = spritesheet.get_ui_image("Decorative", "pause_menu")
         self.rect: pg.Rect = self.image.get_rect(center=(self.ui.window_size / 2).to_tuple())
 
@@ -36,7 +41,7 @@ class PauseMenu(UIElement):
             "load": None,
             "back": None
         }
-        with open("../saves/save_dates.json", "r") as f:
+        with open("../saves2/save_dates.json", "r") as f:
             self.save_names = json.load(f)
             assert isinstance(self.save_names, list) and all(isinstance(name, str) for name in self.save_names)
 
@@ -126,13 +131,25 @@ class PauseMenu(UIElement):
                                                                 function_args=(save_id,)))
 
     def savefile_save(self, save_id: int) -> None:
-        pass
+        self.save_names[save_id] = time.strftime("%H:%M %d-%m-%y")
+        with open("../saves2/save_dates.json", "w+") as f:
+            json.dump(self.save_names, f)
+        self.save_manager.save_to_savefile(save_id)
+        self.load_savefiles_view()
 
     def savefile_delete(self, save_id: int) -> None:
-        pass
+        self.save_names[save_id] = "Empty Slot"
+        with open("../saves2/save_dates.json", "w+") as f:
+            json.dump(self.save_names, f)
+        os.remove(f"../saves2/savefile{save_id}.json")
+        self.load_savefiles_view()
 
     def savefile_load(self, save_id: int) -> None:
-        pass
+        if self.save_names[save_id] == "Empty Slot":
+            self.load_savefiles_view()
+            return
+        self.save_manager.load_from_savefile(save_id)
+        self.unload()
 
     def quit(self) -> None:
         pg.quit()

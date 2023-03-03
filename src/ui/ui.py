@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import pygame as pg
 
+from src.entities.save_manager import SaveManager
 from src.ui.elements.build_menu import BuildMenu
 from src.ui.elements.minimap import Minimap
 from src.ui.elements.pause_menu import PauseMenu
@@ -29,11 +30,13 @@ class UI:
     pause_menu: PauseMenu
 
     def __init__(self, config: Config, button_manager: ButtonManager, spritesheet: Spritesheet,
-                 map_manager: MapManager, scene: Scene, cursor: Cursor, screen: pg.Surface) -> None:
+                 map_manager: MapManager, scene: Scene, cursor: Cursor, save_manager: SaveManager,
+                 screen: pg.Surface) -> None:
         UIElement.ui = self
         self.button_manager: ButtonManager = button_manager
         self.spritesheet: Spritesheet = spritesheet
         self.cursor: Cursor = cursor
+        self.save_manager: SaveManager = save_manager
         self.screen: pg.Surface = screen
 
         self.cursor.ui = self
@@ -47,7 +50,7 @@ class UI:
         self.build_menu = BuildMenu(config, spritesheet, button_manager, self.button_specs["BuildMenu"])
         self.minimap = Minimap(map_manager, spritesheet, scene, button_manager, {})
         self.top_bar = TopBar(spritesheet, button_manager, {})
-        self.pause_menu = PauseMenu(spritesheet, button_manager, self.button_specs["PauseMenu"])
+        self.pause_menu = PauseMenu(spritesheet, button_manager, save_manager, self.button_specs["PauseMenu"])
 
     def draw_elements(self) -> None:
         for element in self.elements:

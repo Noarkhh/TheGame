@@ -1,0 +1,4402 @@
+{
+  "layout_path": "../assets/maps/river_L.png",
+  "structures": {
+    "(49,61)": {
+      "type": "Wall",
+      "pos": [
+        49,
+        61
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "S"
+      ]
+    },
+    "(49,62)": {
+      "type": "Wall",
+      "pos": [
+        49,
+        62
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(49,63)": {
+      "type": "Wall",
+      "pos": [
+        49,
+        63
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(49,64)": {
+      "type": "Wall",
+      "pos": [
+        49,
+        64
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(49,65)": {
+      "type": "Wall",
+      "pos": [
+        49,
+        65
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(49,66)": {
+      "type": "Wall",
+      "pos": [
+        49,
+        66
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(49,67)": {
+      "type": "Wall",
+      "pos": [
+        49,
+        67
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(49,68)": {
+      "type": "Wall",
+      "pos": [
+        49,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "E"
+      ]
+    },
+    "(50,68)": {
+      "type": "Wall",
+      "pos": [
+        50,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(51,68)": {
+      "type": "Wall",
+      "pos": [
+        51,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(52,68)": {
+      "type": "Wall",
+      "pos": [
+        52,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(53,68)": {
+      "type": "Wall",
+      "pos": [
+        53,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(54,68)": {
+      "type": "Wall",
+      "pos": [
+        54,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(55,68)": {
+      "type": "Wall",
+      "pos": [
+        55,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(56,68)": {
+      "type": "Gate",
+      "pos": [
+        56,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "GOLD": 100,
+        "WOOD": 50,
+        "STONE": 50
+      },
+      "profit": {
+        "GOLD": -10
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(57,68)": {
+      "type": "Wall",
+      "pos": [
+        57,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(58,68)": {
+      "type": "Wall",
+      "pos": [
+        58,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "W"
+      ]
+    },
+    "(58,67)": {
+      "type": "Wall",
+      "pos": [
+        58,
+        67
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(58,66)": {
+      "type": "Wall",
+      "pos": [
+        58,
+        66
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(58,65)": {
+      "type": "Wall",
+      "pos": [
+        58,
+        65
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(58,64)": {
+      "type": "Wall",
+      "pos": [
+        58,
+        64
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(58,63)": {
+      "type": "Wall",
+      "pos": [
+        58,
+        63
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(58,62)": {
+      "type": "Wall",
+      "pos": [
+        58,
+        62
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(58,61)": {
+      "type": "Wall",
+      "pos": [
+        58,
+        61
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "S",
+        "W"
+      ]
+    },
+    "(57,61)": {
+      "type": "Wall",
+      "pos": [
+        57,
+        61
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(56,61)": {
+      "type": "Gate",
+      "pos": [
+        56,
+        61
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "GOLD": 100,
+        "WOOD": 50,
+        "STONE": 50
+      },
+      "profit": {
+        "GOLD": -10
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(55,61)": {
+      "type": "Wall",
+      "pos": [
+        55,
+        61
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(54,61)": {
+      "type": "Wall",
+      "pos": [
+        54,
+        61
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(53,61)": {
+      "type": "Wall",
+      "pos": [
+        53,
+        61
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(52,61)": {
+      "type": "Wall",
+      "pos": [
+        52,
+        61
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(51,61)": {
+      "type": "Wall",
+      "pos": [
+        51,
+        61
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(50,61)": {
+      "type": "Wall",
+      "pos": [
+        50,
+        61
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "WOOD": 1,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": -2
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      },
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(50,64)": {
+      "type": "House",
+      "pos": [
+        50,
+        64
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "GOLD": 10,
+        "WOOD": 5,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": 10
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      }
+    },
+    "(57,63)": {
+      "type": "House",
+      "pos": [
+        57,
+        63
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "GOLD": 10,
+        "WOOD": 5,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": 10
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      }
+    },
+    "(54,66)": {
+      "type": "House",
+      "pos": [
+        54,
+        66
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "GOLD": 10,
+        "WOOD": 5,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": 10
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      }
+    },
+    "(51,65)": {
+      "type": "House",
+      "pos": [
+        51,
+        65
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "GOLD": 10,
+        "WOOD": 5,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": 10
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      }
+    },
+    "(53,67)": {
+      "type": "House",
+      "pos": [
+        53,
+        67
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {
+        "GOLD": 10,
+        "WOOD": 5,
+        "STONE": 5
+      },
+      "profit": {
+        "GOLD": 10
+      },
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {
+        "GOLD": 0
+      }
+    },
+    "(56,59)": {
+      "type": "Road",
+      "pos": [
+        56,
+        59
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "S"
+      ]
+    },
+    "(56,60)": {
+      "type": "Road",
+      "pos": [
+        56,
+        60
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(56,62)": {
+      "type": "Road",
+      "pos": [
+        56,
+        62
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(56,63)": {
+      "type": "Road",
+      "pos": [
+        56,
+        63
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(56,64)": {
+      "type": "Road",
+      "pos": [
+        56,
+        64
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(56,65)": {
+      "type": "Road",
+      "pos": [
+        56,
+        65
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(56,66)": {
+      "type": "Road",
+      "pos": [
+        56,
+        66
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(56,67)": {
+      "type": "Road",
+      "pos": [
+        56,
+        67
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(56,69)": {
+      "type": "Road",
+      "pos": [
+        56,
+        69
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(56,70)": {
+      "type": "Road",
+      "pos": [
+        56,
+        70
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S"
+      ]
+    },
+    "(56,71)": {
+      "type": "Road",
+      "pos": [
+        56,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E"
+      ]
+    },
+    "(57,71)": {
+      "type": "Road",
+      "pos": [
+        57,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(58,71)": {
+      "type": "Road",
+      "pos": [
+        58,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(59,71)": {
+      "type": "Road",
+      "pos": [
+        59,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(60,71)": {
+      "type": "Road",
+      "pos": [
+        60,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(61,71)": {
+      "type": "Road",
+      "pos": [
+        61,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(62,71)": {
+      "type": "Road",
+      "pos": [
+        62,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "W"
+      ]
+    },
+    "(63,71)": {
+      "type": "Road",
+      "pos": [
+        63,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "W"
+      ]
+    },
+    "(60,67)": {
+      "type": "Farmland",
+      "pos": [
+        60,
+        67
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S"
+      ]
+    },
+    "(60,68)": {
+      "type": "Farmland",
+      "pos": [
+        60,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S"
+      ]
+    },
+    "(60,69)": {
+      "type": "Farmland",
+      "pos": [
+        60,
+        69
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S"
+      ]
+    },
+    "(60,70)": {
+      "type": "Farmland",
+      "pos": [
+        60,
+        70
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E"
+      ]
+    },
+    "(61,70)": {
+      "type": "Farmland",
+      "pos": [
+        61,
+        70
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(62,70)": {
+      "type": "Farmland",
+      "pos": [
+        62,
+        70
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(63,70)": {
+      "type": "Farmland",
+      "pos": [
+        63,
+        70
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "W"
+      ]
+    },
+    "(63,69)": {
+      "type": "Farmland",
+      "pos": [
+        63,
+        69
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S",
+        "W"
+      ]
+    },
+    "(62,69)": {
+      "type": "Farmland",
+      "pos": [
+        62,
+        69
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(61,69)": {
+      "type": "Farmland",
+      "pos": [
+        61,
+        69
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(61,68)": {
+      "type": "Farmland",
+      "pos": [
+        61,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(62,68)": {
+      "type": "Farmland",
+      "pos": [
+        62,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(63,68)": {
+      "type": "Farmland",
+      "pos": [
+        63,
+        68
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S",
+        "W"
+      ]
+    },
+    "(63,67)": {
+      "type": "Farmland",
+      "pos": [
+        63,
+        67
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "S",
+        "W"
+      ]
+    },
+    "(62,67)": {
+      "type": "Farmland",
+      "pos": [
+        62,
+        67
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(61,67)": {
+      "type": "Farmland",
+      "pos": [
+        61,
+        67
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(60,72)": {
+      "type": "Farmland",
+      "pos": [
+        60,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S"
+      ]
+    },
+    "(60,73)": {
+      "type": "Farmland",
+      "pos": [
+        60,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(60,74)": {
+      "type": "Farmland",
+      "pos": [
+        60,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(60,75)": {
+      "type": "Farmland",
+      "pos": [
+        60,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(60,76)": {
+      "type": "Farmland",
+      "pos": [
+        60,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(61,76)": {
+      "type": "Farmland",
+      "pos": [
+        61,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(62,76)": {
+      "type": "Farmland",
+      "pos": [
+        62,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(63,76)": {
+      "type": "Farmland",
+      "pos": [
+        63,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(64,76)": {
+      "type": "Farmland",
+      "pos": [
+        64,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(65,76)": {
+      "type": "Farmland",
+      "pos": [
+        65,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(66,76)": {
+      "type": "Farmland",
+      "pos": [
+        66,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(67,76)": {
+      "type": "Farmland",
+      "pos": [
+        67,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(68,76)": {
+      "type": "Farmland",
+      "pos": [
+        68,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "W"
+      ]
+    },
+    "(68,75)": {
+      "type": "Farmland",
+      "pos": [
+        68,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S",
+        "W"
+      ]
+    },
+    "(67,75)": {
+      "type": "Farmland",
+      "pos": [
+        67,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(66,75)": {
+      "type": "Farmland",
+      "pos": [
+        66,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(65,75)": {
+      "type": "Farmland",
+      "pos": [
+        65,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(64,75)": {
+      "type": "Farmland",
+      "pos": [
+        64,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(63,75)": {
+      "type": "Farmland",
+      "pos": [
+        63,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(62,75)": {
+      "type": "Farmland",
+      "pos": [
+        62,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(61,75)": {
+      "type": "Farmland",
+      "pos": [
+        61,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(61,74)": {
+      "type": "Farmland",
+      "pos": [
+        61,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(62,74)": {
+      "type": "Farmland",
+      "pos": [
+        62,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(63,74)": {
+      "type": "Farmland",
+      "pos": [
+        63,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(64,74)": {
+      "type": "Farmland",
+      "pos": [
+        64,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(65,74)": {
+      "type": "Farmland",
+      "pos": [
+        65,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(66,74)": {
+      "type": "Farmland",
+      "pos": [
+        66,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(67,74)": {
+      "type": "Farmland",
+      "pos": [
+        67,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(68,74)": {
+      "type": "Farmland",
+      "pos": [
+        68,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S",
+        "W"
+      ]
+    },
+    "(68,73)": {
+      "type": "Farmland",
+      "pos": [
+        68,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S",
+        "W"
+      ]
+    },
+    "(67,73)": {
+      "type": "Farmland",
+      "pos": [
+        67,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(66,73)": {
+      "type": "Farmland",
+      "pos": [
+        66,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(65,73)": {
+      "type": "Farmland",
+      "pos": [
+        65,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(64,73)": {
+      "type": "Farmland",
+      "pos": [
+        64,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(63,73)": {
+      "type": "Farmland",
+      "pos": [
+        63,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(62,73)": {
+      "type": "Farmland",
+      "pos": [
+        62,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(61,73)": {
+      "type": "Farmland",
+      "pos": [
+        61,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(61,72)": {
+      "type": "Farmland",
+      "pos": [
+        61,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(62,72)": {
+      "type": "Farmland",
+      "pos": [
+        62,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(63,72)": {
+      "type": "Farmland",
+      "pos": [
+        63,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(64,72)": {
+      "type": "Farmland",
+      "pos": [
+        64,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(65,72)": {
+      "type": "Farmland",
+      "pos": [
+        65,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(66,72)": {
+      "type": "Farmland",
+      "pos": [
+        66,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(67,72)": {
+      "type": "Farmland",
+      "pos": [
+        67,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(68,72)": {
+      "type": "Farmland",
+      "pos": [
+        68,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "S",
+        "W"
+      ]
+    },
+    "(67,71)": {
+      "type": "Farmland",
+      "pos": [
+        67,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "S",
+        "W"
+      ]
+    },
+    "(66,71)": {
+      "type": "Farmland",
+      "pos": [
+        66,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(65,71)": {
+      "type": "Farmland",
+      "pos": [
+        65,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(64,71)": {
+      "type": "Farmland",
+      "pos": [
+        64,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S"
+      ]
+    },
+    "(58,72)": {
+      "type": "Farmland",
+      "pos": [
+        58,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "S",
+        "W"
+      ]
+    },
+    "(57,72)": {
+      "type": "Farmland",
+      "pos": [
+        57,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(56,72)": {
+      "type": "Farmland",
+      "pos": [
+        56,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(55,72)": {
+      "type": "Farmland",
+      "pos": [
+        55,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(54,72)": {
+      "type": "Farmland",
+      "pos": [
+        54,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(53,72)": {
+      "type": "Farmland",
+      "pos": [
+        53,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(52,72)": {
+      "type": "Farmland",
+      "pos": [
+        52,
+        72
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S"
+      ]
+    },
+    "(52,73)": {
+      "type": "Farmland",
+      "pos": [
+        52,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S"
+      ]
+    },
+    "(52,74)": {
+      "type": "Farmland",
+      "pos": [
+        52,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S"
+      ]
+    },
+    "(52,75)": {
+      "type": "Farmland",
+      "pos": [
+        52,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S"
+      ]
+    },
+    "(52,76)": {
+      "type": "Farmland",
+      "pos": [
+        52,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S"
+      ]
+    },
+    "(52,77)": {
+      "type": "Farmland",
+      "pos": [
+        52,
+        77
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S"
+      ]
+    },
+    "(53,77)": {
+      "type": "Farmland",
+      "pos": [
+        53,
+        77
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(54,77)": {
+      "type": "Farmland",
+      "pos": [
+        54,
+        77
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(55,77)": {
+      "type": "Farmland",
+      "pos": [
+        55,
+        77
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(56,77)": {
+      "type": "Farmland",
+      "pos": [
+        56,
+        77
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(57,77)": {
+      "type": "Farmland",
+      "pos": [
+        57,
+        77
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(58,77)": {
+      "type": "Farmland",
+      "pos": [
+        58,
+        77
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(58,76)": {
+      "type": "Farmland",
+      "pos": [
+        58,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(57,76)": {
+      "type": "Farmland",
+      "pos": [
+        57,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(56,76)": {
+      "type": "Farmland",
+      "pos": [
+        56,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(55,76)": {
+      "type": "Farmland",
+      "pos": [
+        55,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(54,76)": {
+      "type": "Farmland",
+      "pos": [
+        54,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(53,76)": {
+      "type": "Farmland",
+      "pos": [
+        53,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(53,75)": {
+      "type": "Farmland",
+      "pos": [
+        53,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(54,75)": {
+      "type": "Farmland",
+      "pos": [
+        54,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(55,75)": {
+      "type": "Farmland",
+      "pos": [
+        55,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(56,75)": {
+      "type": "Farmland",
+      "pos": [
+        56,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(57,75)": {
+      "type": "Farmland",
+      "pos": [
+        57,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(58,75)": {
+      "type": "Farmland",
+      "pos": [
+        58,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(58,74)": {
+      "type": "Farmland",
+      "pos": [
+        58,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(57,74)": {
+      "type": "Farmland",
+      "pos": [
+        57,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(56,74)": {
+      "type": "Farmland",
+      "pos": [
+        56,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(55,74)": {
+      "type": "Farmland",
+      "pos": [
+        55,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(54,74)": {
+      "type": "Farmland",
+      "pos": [
+        54,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(53,74)": {
+      "type": "Farmland",
+      "pos": [
+        53,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(53,73)": {
+      "type": "Farmland",
+      "pos": [
+        53,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(54,73)": {
+      "type": "Farmland",
+      "pos": [
+        54,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(55,73)": {
+      "type": "Farmland",
+      "pos": [
+        55,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(56,73)": {
+      "type": "Farmland",
+      "pos": [
+        56,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(57,73)": {
+      "type": "Farmland",
+      "pos": [
+        57,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(58,73)": {
+      "type": "Farmland",
+      "pos": [
+        58,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(52,71)": {
+      "type": "Farmland",
+      "pos": [
+        52,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S"
+      ]
+    },
+    "(53,71)": {
+      "type": "Farmland",
+      "pos": [
+        53,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(54,71)": {
+      "type": "Farmland",
+      "pos": [
+        54,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(55,71)": {
+      "type": "Farmland",
+      "pos": [
+        55,
+        71
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S",
+        "W"
+      ]
+    },
+    "(57,69)": {
+      "type": "Farmland",
+      "pos": [
+        57,
+        69
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "S"
+      ]
+    },
+    "(57,70)": {
+      "type": "Farmland",
+      "pos": [
+        57,
+        70
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N"
+      ]
+    },
+    "(55,69)": {
+      "type": "Farmland",
+      "pos": [
+        55,
+        69
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "S",
+        "W"
+      ]
+    },
+    "(54,69)": {
+      "type": "Farmland",
+      "pos": [
+        54,
+        69
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(53,69)": {
+      "type": "Farmland",
+      "pos": [
+        53,
+        69
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(52,69)": {
+      "type": "Farmland",
+      "pos": [
+        52,
+        69
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S"
+      ]
+    },
+    "(52,70)": {
+      "type": "Farmland",
+      "pos": [
+        52,
+        70
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S"
+      ]
+    },
+    "(55,70)": {
+      "type": "Farmland",
+      "pos": [
+        55,
+        70
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S",
+        "W"
+      ]
+    },
+    "(54,70)": {
+      "type": "Farmland",
+      "pos": [
+        54,
+        70
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(53,70)": {
+      "type": "Farmland",
+      "pos": [
+        53,
+        70
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(59,73)": {
+      "type": "Farmland",
+      "pos": [
+        59,
+        73
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(52,78)": {
+      "type": "Farmland",
+      "pos": [
+        52,
+        78
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S"
+      ]
+    },
+    "(52,79)": {
+      "type": "Farmland",
+      "pos": [
+        52,
+        79
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E"
+      ]
+    },
+    "(53,79)": {
+      "type": "Farmland",
+      "pos": [
+        53,
+        79
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(54,79)": {
+      "type": "Farmland",
+      "pos": [
+        54,
+        79
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(55,79)": {
+      "type": "Farmland",
+      "pos": [
+        55,
+        79
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(56,79)": {
+      "type": "Farmland",
+      "pos": [
+        56,
+        79
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(57,79)": {
+      "type": "Farmland",
+      "pos": [
+        57,
+        79
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(58,79)": {
+      "type": "Farmland",
+      "pos": [
+        58,
+        79
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(59,79)": {
+      "type": "Farmland",
+      "pos": [
+        59,
+        79
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(60,79)": {
+      "type": "Farmland",
+      "pos": [
+        60,
+        79
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(61,79)": {
+      "type": "Farmland",
+      "pos": [
+        61,
+        79
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "W"
+      ]
+    },
+    "(62,79)": {
+      "type": "Farmland",
+      "pos": [
+        62,
+        79
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "W"
+      ]
+    },
+    "(62,78)": {
+      "type": "Farmland",
+      "pos": [
+        62,
+        78
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S",
+        "W"
+      ]
+    },
+    "(61,78)": {
+      "type": "Farmland",
+      "pos": [
+        61,
+        78
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(60,78)": {
+      "type": "Farmland",
+      "pos": [
+        60,
+        78
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(59,78)": {
+      "type": "Farmland",
+      "pos": [
+        59,
+        78
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(58,78)": {
+      "type": "Farmland",
+      "pos": [
+        58,
+        78
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(57,78)": {
+      "type": "Farmland",
+      "pos": [
+        57,
+        78
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(56,78)": {
+      "type": "Farmland",
+      "pos": [
+        56,
+        78
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(55,78)": {
+      "type": "Farmland",
+      "pos": [
+        55,
+        78
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(54,78)": {
+      "type": "Farmland",
+      "pos": [
+        54,
+        78
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(53,78)": {
+      "type": "Farmland",
+      "pos": [
+        53,
+        78
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(59,77)": {
+      "type": "Farmland",
+      "pos": [
+        59,
+        77
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(60,77)": {
+      "type": "Farmland",
+      "pos": [
+        60,
+        77
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(61,77)": {
+      "type": "Farmland",
+      "pos": [
+        61,
+        77
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(62,77)": {
+      "type": "Farmland",
+      "pos": [
+        62,
+        77
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "S",
+        "W"
+      ]
+    },
+    "(59,76)": {
+      "type": "Farmland",
+      "pos": [
+        59,
+        76
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(59,75)": {
+      "type": "Farmland",
+      "pos": [
+        59,
+        75
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    },
+    "(59,74)": {
+      "type": "Farmland",
+      "pos": [
+        59,
+        74
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "cost": {},
+      "profit": {},
+      "capacity": 100,
+      "cooldown": 5,
+      "cooldown_left": 5,
+      "stockpile": {},
+      "neighbours": [
+        "N",
+        "E",
+        "S",
+        "W"
+      ]
+    }
+  },
+  "treasury": {
+    "GOLD": 499750,
+    "WOOD": 49843,
+    "STONE": 49715,
+    "WHEAT": 50000,
+    "COAL": 25,
+    "ORE": 25,
+    "IRON": 0,
+    "CHARCOAL": 0,
+    "BRICKS": 0,
+    "STEEL": 0,
+    "BREAD": 0,
+    "METEORITE": 0,
+    "REINFORCED_WOOD": 0
+  }
+}
