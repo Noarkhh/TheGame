@@ -18,6 +18,7 @@
     "Demolisher": [[100, 15, 15]],
     "Bridge":     [[120, 15, 15]]
   },
+  "Cursor": [0, 0, 15, 15],
   "UI": {
     "Buttons": {
       "long_wide":            [0,  0,  44, 14],

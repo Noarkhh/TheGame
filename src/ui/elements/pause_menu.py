@@ -41,7 +41,7 @@ class PauseMenu(UIElement):
             "load": None,
             "back": None
         }
-        with open("saves2/save_dates.json", "r") as f:
+        with open("saves/save_dates.json", "r") as f:
             self.save_names = json.load(f)
             assert isinstance(self.save_names, list) and all(isinstance(name, str) for name in self.save_names)
 
@@ -132,16 +132,16 @@ class PauseMenu(UIElement):
 
     def savefile_save(self, save_id: int) -> None:
         self.save_names[save_id] = time.strftime("%H:%M %d-%m-%y")
-        with open("saves2/save_dates.json", "w+") as f:
+        with open("saves/save_dates.json", "w+") as f:
             json.dump(self.save_names, f)
         self.save_manager.save_to_savefile(save_id)
         self.load_savefiles_view()
 
     def savefile_delete(self, save_id: int) -> None:
         self.save_names[save_id] = "Empty Slot"
-        with open("saves2/save_dates.json", "w+") as f:
+        with open("saves/save_dates.json", "w+") as f:
             json.dump(self.save_names, f)
-        os.remove(f"saves2/savefile{save_id}.json")
+        os.remove(f"saves/savefile{save_id}.json")
         self.load_savefiles_view()
 
     def savefile_load(self, save_id: int) -> None:

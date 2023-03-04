@@ -20,7 +20,7 @@ class Spritesheet:
         self.sheet: pg.Surface = pg.image.load("assets/spritesheet.png")
         self.ui_sheet: pg.Surface = pg.image.load("assets/ui_sheet.png")
         self.snapper_sheet: pg.Surface = pg.image.load("assets/snapper_sheet.png")
-        self.coords: dict[str, dict[str, Any]] = config.get_spritesheet_coords()
+        self.coords: dict[str, Any] = config.get_spritesheet_coords()
 
     def get_image(self, obj: Entity | Type[Entity] | Terrain, scale: Optional[int] = None) -> pg.Surface:
         if isinstance(obj, Snapper):
@@ -37,9 +37,9 @@ class Spritesheet:
             sheet = self.sheet
             aspect_ratio = Vector[float](1, 1)
         elif isinstance(obj, Cursor):
-            image = pg.transform.scale(pg.image.load("assets/cursor2.png").convert(), (Tile.size, Tile.size))
-            image.set_colorkey("white", pg.RLEACCEL)
-            return image
+            target_rect = pg.Rect(self.coords["Cursor"])
+            sheet = self.sheet
+            aspect_ratio = Vector[float](1, 1)
         elif isinstance(obj, type):
             if issubclass(obj, Snapper):
                 target_rect = pg.Rect([150] + self.coords["Snappers"][obj.__name__][0])

@@ -68,7 +68,8 @@ class BuildMenu(UIElement):
             contents_height = 120 - icon_image.get_height()
             new_button: Button = self.create_image_button(icon_image, shape, [button_pos_x, 0],
                                                           self.ui.cursor.assign_entity_class,
-                                                          function_args=(struct_class,), contents_height=contents_height)
+                                                          function_args=(struct_class,),
+                                                          contents_height=contents_height)
             self.current_category_structs_buttons.add(new_button)
 
             button_pos_x += new_button.rect.width - 4
