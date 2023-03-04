@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.main_loop.event_handler import EventHandler
-    from src.game_mechanics.time_manager import TimeManager
+    from src.game_management.event_handler import EventHandler
+    from src.game_management.time_manager import TimeManager
     from src.graphics.renderer import Renderer
     from src.graphics.scene import Scene
     from src.ui.ui import UI

@@ -3,11 +3,7 @@ from __future__ import annotations
 import json
 from typing import Type
 
-import pygame as pg
-
 from src.core.enums import Resource, Tile
-from src.core.vector import Vector
-from src.entities.structure import Structure
 from src.entities.structures import *
 from src.ui.elements.build_menu import Category
 
@@ -18,13 +14,13 @@ class Config:
         self.frame_rate: int = 60
         self.window_size: Vector[int] = Vector(1440, 900)
         self.fullscreen: bool = False
-        self.layout_path: str = "../assets/maps/river_L.png"
-        self.spritesheet_coords_path: str = "../config/spritesheet_coords.json"
-        self.structures_config_path: str = "../config/structures_config.json"
-        self.starting_resources_path: str = "../config/starting_resources.json"
-        self.button_specs_path: str = "../config/button_specs.json"
-        self.fx_config_path: str = "../config/fx_config.json"
-        self.structure_categories_path: str = "../config/structure_categories.json"
+        self.layout_path: str = "assets/maps/river_L.png"
+        self.spritesheet_coords_path: str = "config/spritesheet_coords.json"
+        self.structures_config_path: str = "config/structures_config.json"
+        self.starting_resources_path: str = "config/starting_resources.json"
+        self.button_specs_path: str = "config/button_specs.json"
+        self.fx_config_path: str = "config/fx_config.json"
+        self.structure_categories_path: str = "config/structure_categories.json"
 
         Tile.size = self.tile_size
 

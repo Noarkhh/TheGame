@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional
 
-from src.area_actions.area_action_factory import area_action_factory
 from src.entities.snapper import Snapper
 from src.entities.structures import Structure
+from src.game_management.area_actions.area_action_factory import area_action_factory
 
 if TYPE_CHECKING:
     from src.core.cursor import Cursor
     from src.ui.ui import UI
     from src.game_mechanics.struct_manager import StructManager
     from src.graphics.scene import Scene
-    from src.area_actions.area_action import AreaAction
+    from src.game_management.area_actions.area_action import AreaAction
 
 
 class MouseHandler:
@@ -66,15 +66,18 @@ class MouseHandler:
             self.lmb_release()
 
     def rmb_release(self) -> None:
+        self.scene.set_decrement()
         self.is_rmb_pressed = False
 
     def rmb_pressed(self) -> None:
+        self.scene.update_velocity(-self.cursor.pos_px_difference.to_float(), slow_down=False)
         self.was_rmb_pressed_last_tick = True
 
     def mmb_press(self) -> None:
         selected_struct = self.struct_manager.map_manager.struct_map[self.cursor.pos]
         if selected_struct is not None:
-            self.cursor.held_entity = selected_struct.copy()
+            self.cursor.unassign()
+            self.cursor.assign_entity_class(selected_struct.__class__)
 
     def handle_pressed(self) -> None:
         if self.is_lmb_pressed:

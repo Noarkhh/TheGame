@@ -1,7 +1,7 @@
 {
   "HOUSING":       ["House"],
   "MILITARY":      ["Wall", "Gate", "Tower"],
-  "TRANSPORT":     ["Road"],
+  "TRANSPORT":     ["Road", "Bridge"],
   "MANUFACTURING": ["Sawmill", "Mine"],
   "AGRICULTURE":   ["Farmland"],
   "RELIGION":      []

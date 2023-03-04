@@ -34,12 +34,12 @@ class SoundManager:
             if variants > 1:
                 sound_list = []
                 for v in range(1, variants + 1):
-                    sound = pg.mixer.Sound(f"../assets/fx/{sound_name}{v}.wav")
+                    sound = pg.mixer.Sound(f"assets/fx/{sound_name}{v}.wav")
                     sound.set_volume(volume)
                     sound_list.append(sound)
                 self.sounds[sound_name] = sound_list
             else:
-                sound = pg.mixer.Sound(f"../assets/fx/{sound_name}.wav")
+                sound = pg.mixer.Sound(f"assets/fx/{sound_name}.wav")
                 sound.set_volume(volume)
                 self.sounds[sound_name] = sound
 

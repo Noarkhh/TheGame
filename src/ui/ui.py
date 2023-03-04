@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING
 
 import pygame as pg
 
-from src.entities.save_manager import SaveManager
-from src.game_mechanics.time_manager import TimeManager
+from src.game_management.save_manager import SaveManager
+from src.game_management.time_manager import TimeManager
 from src.ui.elements.build_menu import BuildMenu
 from src.ui.elements.minimap import Minimap
 from src.ui.elements.pause_menu import PauseMenu
+from src.ui.elements.resource_panel import ResourcePanel
 from src.ui.elements.toolbar import Toolbar
 from src.ui.elements.top_bar import TopBar
-from src.ui.elements.resource_panel import ResourcePanel
 from src.ui.elements.ui_element import UIElement
 
 if TYPE_CHECKING:

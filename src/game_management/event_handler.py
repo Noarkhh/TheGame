@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from src.sound.soundtrack import Soundtrack
 from src.core.user_events import *
+from src.sound.soundtrack import Soundtrack
 
 if TYPE_CHECKING:
-    from src.main_loop.mouse_handler import MouseHandler
-    from src.main_loop.keyboard_handler import KeyboardHandler
+    from src.game_management.mouse_handler import MouseHandler
+    from src.game_management.keyboard_handler import KeyboardHandler
 
 
 class EventHandler:

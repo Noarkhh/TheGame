@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from abc import ABCMeta
 
-from src.area_actions.area_action import AreaAction, T
 from src.core.vector import Vector
+from src.game_management.area_actions.area_action import AreaAction, T
 
 
 class RectangleAreaAction(AreaAction[T], metaclass=ABCMeta):

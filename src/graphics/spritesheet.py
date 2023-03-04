@@ -4,11 +4,11 @@ from typing import Any, Type, TYPE_CHECKING, Optional
 
 import pygame as pg
 
+from src.core.cursor import Cursor
 from src.core.enums import Terrain, Tile
 from src.core.vector import Vector
 from src.entities.snapper import Snapper
 from src.entities.structures import Structure
-from src.core.cursor import Cursor
 
 if TYPE_CHECKING:
     from src.entities.entities import Entity
@@ -17,9 +17,9 @@ if TYPE_CHECKING:
 
 class Spritesheet:
     def __init__(self, config: Config) -> None:
-        self.sheet: pg.Surface = pg.image.load("../assets/spritesheet.png")
-        self.ui_sheet: pg.Surface = pg.image.load("../assets/ui_sheet.png")
-        self.snapper_sheet: pg.Surface = pg.image.load("../assets/snapper_sheet.png")
+        self.sheet: pg.Surface = pg.image.load("assets/spritesheet.png")
+        self.ui_sheet: pg.Surface = pg.image.load("assets/ui_sheet.png")
+        self.snapper_sheet: pg.Surface = pg.image.load("assets/snapper_sheet.png")
         self.coords: dict[str, dict[str, Any]] = config.get_spritesheet_coords()
 
     def get_image(self, obj: Entity | Type[Entity] | Terrain, scale: Optional[int] = None) -> pg.Surface:
@@ -37,7 +37,7 @@ class Spritesheet:
             sheet = self.sheet
             aspect_ratio = Vector[float](1, 1)
         elif isinstance(obj, Cursor):
-            image = pg.transform.scale(pg.image.load("../assets/cursor2.png").convert(), (Tile.size, Tile.size))
+            image = pg.transform.scale(pg.image.load("assets/cursor2.png").convert(), (Tile.size, Tile.size))
             image.set_colorkey("white", pg.RLEACCEL)
             return image
         elif isinstance(obj, type):

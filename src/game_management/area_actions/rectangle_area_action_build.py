@@ -3,9 +3,9 @@ from __future__ import annotations
 from collections import deque
 from typing import TypeVar
 
-from src.area_actions.rectangle_area_action import RectangleAreaAction
 from src.core.enums import Message
 from src.entities.structure_snapper import StructureSnapper
+from src.game_management.area_actions.rectangle_area_action import RectangleAreaAction
 
 S = TypeVar("S", bound=StructureSnapper)
 

@@ -1,14 +1,9 @@
 from __future__ import annotations
 
-from typing import cast, Type, TYPE_CHECKING, Any
+from typing import cast, Type
 
-import pygame as pg
-
-from src.core.enums import Message, Direction, Orientation
-from src.entities.structure import Structure
-from src.entities.structure_snapper import StructureSnapper
-from src.entities.structures import *
 from src.core.vector import Vector
+from src.entities.structures import *
 
 if TYPE_CHECKING:
     from src.core.config import Config

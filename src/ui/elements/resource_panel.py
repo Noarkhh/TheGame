@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
 import pygame as pg
 
 from src.ui.elements.ui_element import UIElement
@@ -22,7 +23,7 @@ class ResourcePanel(UIElement):
         super().__init__(self.image, self.rect, spritesheet, button_manager, button_specs)
 
         self.treasury = treasury
-        self.font = pg.font.Font('../assets/Minecraft.otf', 20)
+        self.font = pg.font.Font('assets/Minecraft.otf', 20)
         for i, resource in enumerate(self.treasury.resources):
             text_string = resource.name.title() + ": "
             text = self.font.render(text_string, False, (62, 61, 58), "black")

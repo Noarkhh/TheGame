@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import json
-import time
 import os
+import time
 from typing import TYPE_CHECKING, Callable, Optional
 
 import pygame as pg
 
-from src.ui.elements.ui_element import UIElement
 from src.core.user_events import ALL_KEYS_AND_BUTTONS_UP
+from src.ui.elements.ui_element import UIElement
 
 if TYPE_CHECKING:
     from src.ui.button_manager import ButtonManager
-    from src.entities.save_manager import SaveManager
+    from src.game_management.save_manager import SaveManager
     from src.ui.button import Button
     from src.graphics.spritesheet import Spritesheet
 
@@ -41,7 +41,7 @@ class PauseMenu(UIElement):
             "load": None,
             "back": None
         }
-        with open("../saves2/save_dates.json", "r") as f:
+        with open("saves2/save_dates.json", "r") as f:
             self.save_names = json.load(f)
             assert isinstance(self.save_names, list) and all(isinstance(name, str) for name in self.save_names)
 
@@ -132,16 +132,16 @@ class PauseMenu(UIElement):
 
     def savefile_save(self, save_id: int) -> None:
         self.save_names[save_id] = time.strftime("%H:%M %d-%m-%y")
-        with open("../saves2/save_dates.json", "w+") as f:
+        with open("saves2/save_dates.json", "w+") as f:
             json.dump(self.save_names, f)
         self.save_manager.save_to_savefile(save_id)
         self.load_savefiles_view()
 
     def savefile_delete(self, save_id: int) -> None:
         self.save_names[save_id] = "Empty Slot"
-        with open("../saves2/save_dates.json", "w+") as f:
+        with open("saves2/save_dates.json", "w+") as f:
             json.dump(self.save_names, f)
-        os.remove(f"../saves2/savefile{save_id}.json")
+        os.remove(f"saves2/savefile{save_id}.json")
         self.load_savefiles_view()
 
     def savefile_load(self, save_id: int) -> None:

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pygame as pg
 
-from src.game_mechanics.time_manager import TimeManager
+from src.game_management.time_manager import TimeManager
 from src.ui.elements.ui_element import UIElement
 
 if TYPE_CHECKING:
@@ -13,12 +13,13 @@ if TYPE_CHECKING:
 
 
 class TopBar(UIElement):
-    def __init__(self, spritesheet: Spritesheet, button_manager: ButtonManager, time_manager: TimeManager, button_specs: dict[str, list]):
+    def __init__(self, spritesheet: Spritesheet, button_manager: ButtonManager, time_manager: TimeManager,
+                 button_specs: dict[str, list]) -> None:
         self.image: pg.Surface = pg.Surface((self.ui.window_size.x, 44))
         self.rect: pg.Rect = self.image.get_rect()
 
         self.time_manager: TimeManager = time_manager
-        self.font = pg.font.Font('../assets/Minecraft.otf', 20)
+        self.font = pg.font.Font('assets/Minecraft.otf', 20)
 
         bar_segment: pg.Surface = spritesheet.get_ui_image("Decorative", "top_bar_segment")
         next_bar_segment_x = 0

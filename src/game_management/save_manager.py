@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from src.core.cursor import Cursor
 from src.entities.entities import Entities
-from src.graphics.scene import Scene
 from src.game_mechanics.struct_manager import StructManager
 from src.game_mechanics.treasury import Treasury
+from src.graphics.scene import Scene
 from src.graphics.spritesheet import Spritesheet
 
 if TYPE_CHECKING:
@@ -33,11 +33,11 @@ class SaveManager:
             "structures": self.struct_manager.save_to_json(),
             "treasury": self.treasury.save_to_json()
         }
-        with open(f"../saves2/savefile{save_id}.json", "w+") as f:
+        with open(f"saves2/savefile{save_id}.json", "w+") as f:
             json.dump(data_dict, f, indent=2)
 
     def load_from_savefile(self, save_id: int) -> None:
-        with open(f"../saves2/savefile{save_id}.json", "r") as f:
+        with open(f"saves2/savefile{save_id}.json", "r") as f:
             data_dict: dict = json.load(f)
             self.cursor.unassign()
             self.entities.empty()

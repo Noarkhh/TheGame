@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from collections import deque
-import pygame as pg
 import time
+from collections import deque
+
+import pygame as pg
 
 from src.game_mechanics.game_time_clock import GameTimeClock
 
@@ -20,8 +21,8 @@ class TimeManager:
         self.tick_start: float = time.perf_counter()
         self.tick_start_no_delay: float = time.perf_counter()
         self.tick_end: float = time.perf_counter()
-        self.tick_duration_record: deque[float] = deque([0] * 15)
-        self.tick_duration_record_no_delay: deque[float] = deque([0] * 15)
+        self.tick_duration_record: deque[float] = deque([0] * 60)
+        self.tick_duration_record_no_delay: deque[float] = deque([0] * 60)
 
     def tick(self) -> None:
         self.game_time_clock.tick()
@@ -36,11 +37,11 @@ class TimeManager:
     def update_tick_statistics(self) -> None:
         self.tick_duration_record.pop()
         self.tick_duration_record.appendleft(self.tick_end - self.tick_start)
-        self.tps = round(15 / sum(self.tick_duration_record), 2)
+        self.tps = 60 / sum(self.tick_duration_record)
 
         self.tick_duration_record_no_delay.pop()
         self.tick_duration_record_no_delay.appendleft(self.tick_end - self.tick_start_no_delay)
-        self.mspt = round(sum(self.tick_duration_record_no_delay) * 1000 / 15, 2)
+        self.mspt = sum(self.tick_duration_record_no_delay) * 1000 / 60
 
     def get_tick_statistics_string(self) -> str:
-        return f"TPS: {self.tps:<5} MSPT: {self.mspt:<5}"
+        return f"TPS: {self.tps:0.2f} MSPT: {self.mspt:0.2f}"

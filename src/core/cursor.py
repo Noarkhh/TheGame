@@ -6,11 +6,11 @@ from typing import Type, TYPE_CHECKING, Optional
 
 import pygame as pg
 
+from src.core.enums import Tile
 from src.core.vector import Vector
 from src.entities.demolisher import Demolisher
-from src.ui.button import Button
-from src.core.enums import Tile
 from src.entities.tile_entity import TileEntity
+from src.ui.button import Button
 
 if TYPE_CHECKING:
     from src.graphics.scene import Scene
@@ -78,5 +78,5 @@ class Cursor(TileEntity):
             self.show_image = True
 
     def draw(self, surf: pg.Surface) -> None:
-        if self.show_image:
+        if self.held_entity is None or not self.held_entity.is_draggable:
             surf.blit(self.image, self.rect)

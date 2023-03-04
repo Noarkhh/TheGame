@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Callable, Optional
 import pygame as pg
 
 from src.entities.demolisher import Demolisher
-from src.ui.elements.ui_element import UIElement
 from src.ui.button_dict import ButtonDict
+from src.ui.elements.ui_element import UIElement
 
 if TYPE_CHECKING:
     from src.ui.button_manager import ButtonManager

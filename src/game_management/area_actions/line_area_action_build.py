@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar, Optional
 
-from src.area_actions.line_area_action import LineAreaAction
 from src.core.enums import Message
 from src.core.vector import Vector
 from src.entities.structure_snapper import StructureSnapper
+from src.game_management.area_actions.line_area_action import LineAreaAction
 
 if TYPE_CHECKING:
     pass
