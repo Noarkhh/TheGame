@@ -1,0 +1,41 @@
+{
+  "House": {
+    "cost": {
+      "GOLD":  10,
+      "WOOD":  5,
+      "STONE": 5
+    },
+    "profit": {
+      "GOLD": 10
+    }
+  },
+  "Wall": {
+    "cost": {
+      "WOOD":  1,
+      "STONE": 5
+    },
+    "profit": {
+      "GOLD": -2
+    }
+  },
+  "Mine": {
+    "cost": {},
+    "profit": {},
+    "capacity": 100
+  },
+  "Gate": {
+    "cost": {
+      "GOLD":  100,
+      "WOOD":  50,
+      "STONE": 50
+    },
+    "profit": {
+      "GOLD": -10
+    }
+  },
+  "Road": {},
+  "Bridge": {},
+  "Tower": {},
+  "Sawmill": {},
+  "Farmland": {}
+}

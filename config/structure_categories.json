@@ -1,0 +1,8 @@
+{
+  "HOUSING":       ["House"],
+  "MILITARY":      ["Wall", "Gate", "Tower"],
+  "TRANSPORT":     ["Road", "Bridge"],
+  "MANUFACTURING": ["Sawmill", "Mine"],
+  "AGRICULTURE":   ["Farmland"],
+  "RELIGION":      []
+}

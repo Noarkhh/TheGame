@@ -1,0 +1,4 @@
+import pygame as pg
+
+END_TRACK = pg.USEREVENT + 1
+ALL_KEYS_AND_BUTTONS_UP = pg.USEREVENT + 2

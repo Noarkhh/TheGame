@@ -1,0 +1,35 @@
+{
+  "Toolbar": {
+    "zoom_in":   ["small_round", [32, 4  ], 2],
+    "zoom_out":  ["small_round", [72, 4  ], 2],
+    "drag_mode": ["small_round", [32, 44 ], 2],
+    "debug":     ["small_round", [72, 44 ], 2],
+    "build":     ["round",       [40, 88 ], 4],
+    "demolish":  ["round",       [40, 154], 4],
+    "pause":     ["round",       [40, 220], 4]
+  },
+  "BuildMenu": {
+    "housing":       ["small_round", [52, 4 ], 2],
+    "military":      ["small_round", [88, 4 ], 2],
+    "transport":     ["small_round", [52, 40], 2],
+    "manufacturing": ["small_round", [88, 40], 2],
+    "agriculture":   ["small_round", [52, 76], 2],
+    "religion":      ["small_round", [88, 76], 2]
+  },
+  "PauseMenu": {
+    "Resume":    ["long_wide", [40 , 28 ], 40],
+    "Save":      ["long_wide", [40 , 88 ], 40],
+    "Load":      ["long_wide", [40 , 148], 40],
+    "Options":   ["long_wide", [40 , 208], 40],
+    "Quit":      ["long_wide", [40 , 268], 40],
+    "delete":    ["round",     [40 , 268], 4 ],
+    "save":      ["round",     [100, 268], 4 ],
+    "load":      ["round",     [100, 268], 4 ],
+    "back":      ["round",     [160, 268], 4 ],
+    "savefile0": ["long_thin", [40 , 28 ], 20],
+    "savefile1": ["long_thin", [40 , 64 ], 20],
+    "savefile2": ["long_thin", [40 , 100], 20],
+    "savefile3": ["long_thin", [40 , 136], 20],
+    "savefile4": ["long_thin", [40 , 172], 20]
+  }
+}
