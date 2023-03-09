@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import time
+import sys
 from typing import TYPE_CHECKING, Callable, Optional
 
 import pygame as pg
@@ -120,8 +121,7 @@ class PauseMenu(UIElement):
             self.action_buttons.add(self.create_icon_button("save", *self.button_specs["save"],
                                                             function=self.savefile_save,
                                                             function_args=(save_id,)))
-
-        if self.save_names[save_id] != "Empty slot":
+        if self.save_names[save_id] != "Empty Slot":
             self.action_buttons.add(self.create_icon_button("delete", *self.button_specs["delete"],
                                                             function=self.savefile_delete,
                                                             function_args=(save_id,)))
@@ -153,4 +153,4 @@ class PauseMenu(UIElement):
 
     def quit(self) -> None:
         pg.quit()
-        quit(0)
+        sys.exit()

@@ -33,11 +33,11 @@ class SaveManager:
             "structures": self.struct_manager.save_to_json(),
             "treasury": self.treasury.save_to_json()
         }
-        with open(f"saves2/savefile{save_id}.json", "w+") as f:
+        with open(f"saves/savefile{save_id}.json", "w+") as f:
             json.dump(data_dict, f, indent=2)
 
     def load_from_savefile(self, save_id: int) -> None:
-        with open(f"saves2/savefile{save_id}.json", "r") as f:
+        with open(f"saves/savefile{save_id}.json", "r") as f:
             data_dict: dict = json.load(f)
             self.cursor.unassign()
             self.entities.empty()
