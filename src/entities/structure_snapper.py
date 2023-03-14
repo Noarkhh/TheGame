@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class StructureSnapper(Structure, Snapper):
     def can_be_snapped(self, other_pos: Vector[int], connector: Type[Structure]) -> Message:
         snap_direction = (self.pos - other_pos).to_dir()
-        struct_map = self.manager.map_manager.struct_map
+        struct_map = self.manager.map_container.struct_map
         other_struct = struct_map[other_pos]
 
         if not issubclass(self.__class__, connector) and not issubclass(other_struct.__class__, connector):

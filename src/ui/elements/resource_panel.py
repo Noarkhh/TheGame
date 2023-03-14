@@ -28,7 +28,7 @@ class ResourcePanel(UIElement):
             text_string = resource.name.title() + ": "
             text = self.font.render(text_string, False, (62, 61, 58), "black")
             text.set_colorkey("black")
-            self.image.blit(text, text.get_rect(topright=(85, 10 + 22 * i)))
+            self.image.blit(text, text.get_rect(topright=(97, 22 * i)))
 
         self.image_raw: pg.Surface = self.image.copy()
         self.load()
@@ -38,7 +38,7 @@ class ResourcePanel(UIElement):
         for i, amount in enumerate(self.treasury.resources.values()):
             text = self.font.render(str(amount), False, (62, 61, 58), "black")
             text.set_colorkey("black")
-            self.image.blit(text, text.get_rect(topleft=(85, 10 + 22 * i)))
+            self.image.blit(text, text.get_rect(topleft=(97, 22 * i)))
 
     def draw(self, image: pg.Surface) -> None:
         if self.treasury.display_state_changed:

@@ -7,7 +7,7 @@ import pygame as pg
 from src.ui.elements.ui_element import UIElement
 
 if TYPE_CHECKING:
-    from src.game_mechanics.map_manager import MapManager
+    from src.game_mechanics.map_container import MapContainer
     from src.graphics.spritesheet import Spritesheet
     from src.graphics.scene import Scene
     from src.ui.button_manager import ButtonManager
@@ -16,12 +16,12 @@ if TYPE_CHECKING:
 class Minimap(UIElement):
     visible_rectangle: pg.Surface
 
-    def __init__(self, map_manager: MapManager, spritesheet: Spritesheet, scene: Scene,
+    def __init__(self, map_container: MapContainer, spritesheet: Spritesheet, scene: Scene,
                  button_manager: ButtonManager, button_specs: dict[str, list]) -> None:
-        self.map_manager: MapManager = map_manager
+        self.map_container: MapContainer = map_container
         self.scene: Scene = scene
 
-        self.map_image: pg.Surface = pg.transform.scale(map_manager.layout, (128, 128))
+        self.map_image: pg.Surface = pg.transform.scale(map_container.layout, (128, 128))
         self.map_image_raw: pg.Surface = self.map_image.copy()
         self.frame: pg.Surface = spritesheet.get_ui_image("Decorative", "map_frame")
 

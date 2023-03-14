@@ -7,7 +7,7 @@ from src.core.enums import Tile
 if TYPE_CHECKING:
     from src.entities.entities import Entities
     from src.graphics.scene import Scene
-    from src.game_mechanics.map_manager import MapManager
+    from src.game_mechanics.map_container import MapContainer
     from src.core.cursor import Cursor
     from src.ui.elements.minimap import Minimap
     from src.ui.ui import UI
@@ -17,14 +17,14 @@ if TYPE_CHECKING:
 class Zoomer:
     entities: Entities
     scene: Scene
-    map_manager: MapManager
+    map_container: MapContainer
     cursor: Cursor
     minimap: Minimap
 
-    def __init__(self, entities: Entities, scene: Scene, map_manager: MapManager, cursor: Cursor, ui: UI) -> None:
+    def __init__(self, entities: Entities, scene: Scene, map_container: MapContainer, cursor: Cursor, ui: UI) -> None:
         self.entities = entities
         self.scene = scene
-        self.map_manager = map_manager
+        self.map_container = map_container
         self.cursor = cursor
         self.minimap = ui.minimap
 
@@ -38,6 +38,6 @@ class Zoomer:
 
         self.entities.update_zoom()
         self.scene.update_zoom(factor)
-        self.map_manager.update_zoom(factor)
+        self.map_container.update_zoom(factor)
         self.minimap.update_zoom()
 

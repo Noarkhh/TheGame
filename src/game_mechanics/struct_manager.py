@@ -8,25 +8,25 @@ from src.entities.structures import *
 if TYPE_CHECKING:
     from src.core.config import Config
     from src.game_mechanics.map import Map
-    from src.game_mechanics.map_manager import MapManager
+    from src.game_mechanics.map_container import MapContainer
     from src.game_mechanics.treasury import Treasury
-    from src.sound.sound_manager import SoundManager
+    from src.sound.sound_player import SoundPlayer
 
 
 class StructManager:
-    def __init__(self, config: Config, map_manager: MapManager,
-                 treasury: Treasury, sound_manager: SoundManager) -> None:
+    def __init__(self, config: Config, map_container: MapContainer,
+                 treasury: Treasury, sound_player: SoundPlayer) -> None:
         Structure.manager = self
         config.set_structures_parameters()
 
-        self.map_manager: MapManager = map_manager
+        self.map_container: MapContainer = map_container
         self.treasury: Treasury = treasury
-        self.sound_manager: SoundManager = sound_manager
+        self.sound_player: SoundPlayer = sound_player
 
         self.structs: pg.sprite.Group[Structure] = pg.sprite.Group()
 
     def build(self, new_struct: Structure, failure_sound: bool = False, success_sound: bool = True) -> Message:
-        struct_map: Map[Structure] = self.map_manager.struct_map
+        struct_map: Map[Structure] = self.map_container.struct_map
 
         build_message: Message = new_struct.can_be_placed()
 
@@ -43,14 +43,14 @@ class StructManager:
 
             self.treasury.pay_for(new_struct)
 
-        self.sound_manager.handle_placement_sounds(failure_sound, success_sound, build_message)
+        self.sound_player.handle_placement_sounds(failure_sound, success_sound, build_message)
 
         return build_message
 
     def snap(self, position1: Vector[int], position2: Vector[int], connector: Type[Structure],
              failure_sound: bool = False, success_sound: bool = True) -> Message:
-        struct1 = self.map_manager.struct_map[position1]
-        struct2 = self.map_manager.struct_map[position2]
+        struct1 = self.map_container.struct_map[position1]
+        struct2 = self.map_container.struct_map[position2]
 
         if struct1 is None:
             return Message.NOT_A_SNAPPER
@@ -62,29 +62,30 @@ class StructManager:
             cast(StructureSnapper, struct1).add_neighbours(snap_direction.opposite())
             cast(StructureSnapper, struct2).add_neighbours(snap_direction)
 
-        self.sound_manager.handle_snapping_sounds(failure_sound, success_sound, snap_message)
+        self.sound_player.handle_snapping_sounds(failure_sound, success_sound, snap_message)
 
         return snap_message
 
     def demolish(self, position: Vector[int], demolish_sound: bool = False) -> bool:
-        struct_to_demolish = self.map_manager.struct_map.pop(position)
+        struct_to_demolish = self.map_container.struct_map.pop(position)
         if struct_to_demolish is None:
             return False
-        struct_to_demolish.kill()
+        struct_to_demolish.demolish()
         if demolish_sound:
-            self.sound_manager.play_fx("buildingwreck")
+            self.sound_player.play_fx("buildingwreck")
         if not isinstance(struct_to_demolish, StructureSnapper):
             return True
         for direction_to_neighbour in struct_to_demolish.neighbours:
-            neighbour = self.map_manager.struct_map[position + direction_to_neighbour.to_vector()]
+            neighbour = self.map_container.struct_map[position + direction_to_neighbour.to_vector()]
             cast(StructureSnapper, neighbour).remove_neighbours(direction_to_neighbour.opposite())
         return True
 
     def save_to_json(self) -> dict[str, dict[str, Any]]:
-        return {f"({pos[0]},{pos[1]})": struct.save_to_json() for pos, struct in
-                self.map_manager.struct_map.elements.items()}
+        return {f"({struct.pos.x},{struct.pos.y})": struct.save_to_json() for struct in self.structs}
 
     def load_from_json(self, structures_dict: dict[str, dict[str, Any]]) -> None:
+        for struct in self.structs:
+            struct.kill()
         for pos_str, struct_dict in structures_dict.items():
             pos_tuple = pos_str[1:-1].split(",")
             struct_position = Vector(int(pos_tuple[0]), int(pos_tuple[1]))
@@ -95,4 +96,4 @@ class StructManager:
 
             loaded_struct.load_from_json(struct_dict)
             for relative_pos in loaded_struct.covered_tiles:
-                self.map_manager.struct_map[loaded_struct.pos + relative_pos] = loaded_struct
+                self.map_container.struct_map[loaded_struct.pos + relative_pos] = loaded_struct

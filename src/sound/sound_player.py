@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from src.core.config import Config
 
 
-class SoundManager:
+class SoundPlayer:
     def __init__(self, config: Config) -> None:
         self.fx_config = config.get_fx_config()
         pg.mixer.set_num_channels(5)

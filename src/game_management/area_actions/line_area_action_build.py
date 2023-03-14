@@ -52,6 +52,6 @@ class LineAreaActionBuild(LineAreaAction[S]):
             previous_segment_position = segment_position
 
         build_message = Message.BUILT if success_sound else build_message
-        self.struct_manager.sound_manager.handle_placement_sounds(not success_sound, success_sound, build_message)
+        self.struct_manager.sound_player.handle_placement_sounds(not success_sound, success_sound, build_message)
 
         self.kill_segments()

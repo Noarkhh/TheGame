@@ -13,13 +13,13 @@ from src.graphics.spritesheet import Spritesheet
 
 if TYPE_CHECKING:
     from src.core.config import Config
-    from src.game_mechanics.map_manager import MapManager
+    from src.game_mechanics.map_container import MapContainer
 
 
 @dataclass
 class SaveManager:
     config: Config
-    map_manager: MapManager
+    map_container: MapContainer
     struct_manager: StructManager
     treasury: Treasury
     scene: Scene
@@ -41,7 +41,8 @@ class SaveManager:
             data_dict: dict = json.load(f)
             self.cursor.unassign()
             self.entities.empty()
+            self.treasury.load_from_json(data_dict["treasury"])
             self.config.layout_path = data_dict["layout_path"]
-            self.map_manager.load_from_json(self.config)
-            self.scene.load_from_savefile(self.config, self.spritesheet, self.map_manager)
+            self.map_container.load_from_json(self.config)
+            self.scene.load_from_savefile(self.config, self.spritesheet, self.map_container)
             self.struct_manager.load_from_json(data_dict["structures"])

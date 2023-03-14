@@ -14,6 +14,9 @@ class Treasury:
         self.resources: dict[Resource, int] = config.get_starting_resources()
         self.display_state_changed: bool = False
 
+    def can_afford(self, struct: Structure) -> bool:
+        return all(amount <= self.resources[resource] for resource, amount in struct.base_cost.items())
+
     def pay_for(self, struct: Structure) -> None:
         for resource, amount in struct.cost.items():
             self.resources[resource] -= amount
@@ -25,3 +28,4 @@ class Treasury:
     def load_from_json(self, treasury_dict: dict[str, int]) -> None:
         for resource, amount in treasury_dict.items():
             self.resources[Resource[resource]] = amount
+        self.display_state_changed = True

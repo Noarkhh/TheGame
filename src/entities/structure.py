@@ -6,6 +6,7 @@ from typing import Type, ClassVar, cast, Self, TYPE_CHECKING, Optional
 from src.core.enums import Terrain, Resource, Message, Orientation, DirectionSet, Tile
 from src.entities.snapper import Snapper
 from src.entities.tile_entity import TileEntity
+from src.resources.resource_manager import ResourceManager
 
 if TYPE_CHECKING:
     from src.game_mechanics.struct_manager import StructManager
@@ -44,18 +45,21 @@ class Structure(TileEntity, metaclass=ABCMeta):
         return f'{self.__class__.__name__}(pos: {self.pos})'
 
     def can_be_placed(self) -> Message:
-        tile_map = self.manager.map_manager.tile_map
-        struct_map = self.manager.map_manager.struct_map
+        tile_map = self.manager.map_container.tile_map
+        struct_map = self.manager.map_container.struct_map
+
+        if any(amount > self.manager.treasury.resources[resource] for resource, amount in self.base_cost.items()):
+            return Message.NO_RESOURCES
 
         if any(isinstance(struct_map[self.pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
             return Message.BAD_LOCATION_STRUCT
 
-        if any(cast(Tile, tile_map[self.pos + rel_pos]).terrain in
-               self.unsuitable_terrain for rel_pos in self.covered_tiles):
-            return Message.BAD_LOCATION_TERRAIN
+        for rel_pos in self.covered_tiles:
+            if tile_map[self.pos + rel_pos] is None or cast(Tile, tile_map[self.pos + rel_pos]).terrain in self.unsuitable_terrain:
+                return Message.BAD_LOCATION_TERRAIN
 
-        if any(amount > self.manager.treasury.resources[resource] for resource, amount in self.base_cost.items()):
-            return Message.NO_RESOURCES
+        if any(cast(Tile, tile_map[self.pos + rel_pos]).terrain in self.unsuitable_terrain for rel_pos in self.covered_tiles):
+            return Message.BAD_LOCATION_TERRAIN
 
         return Message.BUILT
 
@@ -69,6 +73,10 @@ class Structure(TileEntity, metaclass=ABCMeta):
                 for resource, amount in self.base_profit.items():
                     self.stockpile[resource] += amount
             self.cooldown_left = self.base_cooldown
+
+    def demolish(self) -> None:
+        self.kill()
+
 
     def copy(self: Self, neighbours: Optional[DirectionSet] = None) -> Self:
         new_copy = self.__class__(self.pos, image_variant=self.image_variant, orientation=self.orientation)

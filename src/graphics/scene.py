@@ -9,7 +9,7 @@ from src.core.vector import Vector
 
 if TYPE_CHECKING:
     from src.core.config import Config
-    from src.game_mechanics.map_manager import MapManager
+    from src.game_mechanics.map_container import MapContainer
     from src.graphics.spritesheet import Spritesheet
     from src.ui.button_manager import ButtonManager
 
@@ -17,16 +17,16 @@ if TYPE_CHECKING:
 class Scene(pg.sprite.Sprite):
     button_manager: ButtonManager
 
-    def __init__(self, config: Config, spritesheet: Spritesheet, map_manager: MapManager) -> None:
+    def __init__(self, config: Config, spritesheet: Spritesheet, map_container: MapContainer) -> None:
         super().__init__()
-        self.map_image: pg.Surface = map_manager.load_terrain(spritesheet)
+        self.map_image: pg.Surface = map_container.load_terrain(spritesheet)
         self.map_image_raw: pg.Surface = self.map_image.copy()
         self.rect: pg.Rect = pg.Rect(((self.map_image.get_width() - config.window_size.x) // 2,
                                       (self.map_image.get_height() - config.window_size.y) // 2,
                                       config.window_size.x, config.window_size.y))
         self.image: pg.Surface = self.map_image.subsurface(self.rect)
         self.window_size: Vector[int] = config.window_size
-        self.map_size_px: Vector[int] = map_manager.map_size_px
+        self.map_size_px: Vector[int] = map_container.map_size_px
 
         self.velocity: Vector[float] = Vector[float](0, 0)
         self.velocity_decrement: Vector[float] = Vector[float](0, 0)
@@ -113,15 +113,15 @@ class Scene(pg.sprite.Sprite):
     def reset_image(self) -> None:
         self.image.blit(self.map_image_raw.subsurface(self.rect), (0, 0))
 
-    def load_from_savefile(self, config: Config, spritesheet: Spritesheet, map_manager: MapManager) -> None:
-        self.map_image = map_manager.load_terrain(spritesheet)
+    def load_from_savefile(self, config: Config, spritesheet: Spritesheet, map_container: MapContainer) -> None:
+        self.map_image = map_container.load_terrain(spritesheet)
         self.map_image_raw = self.map_image.copy()
         self.rect = pg.Rect(((self.map_image.get_width() - config.window_size.x) // 2,
                             (self.map_image.get_height() - config.window_size.y) // 2,
                             config.window_size.x, config.window_size.y))
         self.image = self.map_image.subsurface(self.rect)
         self.window_size = config.window_size
-        self.map_size_px = map_manager.map_size_px
+        self.map_size_px = map_container.map_size_px
 
         self.velocity = Vector[float](0, 0)
         self.velocity_decrement = Vector[float](0, 0)

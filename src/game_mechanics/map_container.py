@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from src.graphics.spritesheet import Spritesheet
 
 
-class MapManager:
+class MapContainer:
     def __init__(self, config: Config) -> None:
         self.layout: pg.Surface = config.get_layout()
         self.map_size_tiles: Vector[int] = Vector[int](*self.layout.get_size())

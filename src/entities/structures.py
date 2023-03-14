@@ -49,9 +49,12 @@ class Farmland(StructureSnapper):
 
 class Bridge(Road):
     unsuitable_terrain = [Terrain.GRASSLAND, Terrain.DESERT]
+    da_dict: list = []
 
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
+        self.da_dict.append("a")
+        print(self.da_dict)
         self.snaps_to = {direction: Road for direction in Direction}
 
 
@@ -72,7 +75,7 @@ class Gate(Wall, Road):
         self.directions_to_connect_to: DirectionSet = DirectionSet()
 
     def can_override(self) -> bool:
-        struct_map = self.manager.map_manager.struct_map
+        struct_map = self.manager.map_container.struct_map
         self.directions_to_connect_to.clear()
 
         if not type(struct_map[self.pos]) in (Wall, Road):

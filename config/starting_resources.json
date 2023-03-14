@@ -1,14 +1,15 @@
 {
-  "GOLD":   50000,
-  "WOOD":   50000,
-  "STONE":  50000,
-  "WHEAT":  50000,
-  "COAL":   25,
-  "ORE":    25,
-  "IRON":   0,
-  "BRICKS": 0,
-  "BREAD":  0,
-  "STEEL":  0,
-  "BEAMS":  0,
-  "ASTRUM": 0
+  "WORKERS": 100,
+  "GOLD":    50000,
+  "WOOD":    50000,
+  "STONE":   50000,
+  "WHEAT":   50000,
+  "COAL":    25,
+  "ORE":     25,
+  "IRON":    0,
+  "BRICKS":  0,
+  "BREAD":   0,
+  "STEEL":   0,
+  "BEAMS":   0,
+  "ASTRUM":  0
 }

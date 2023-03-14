@@ -71,6 +71,7 @@ class Resource(Enum):
     BREAD = auto()
     ASTRUM = auto()
     GOLD = auto()
+    WORKERS = auto()
 
     def __repr__(self) -> str:
         return self.name

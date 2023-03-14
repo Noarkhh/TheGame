@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from src.core.enums import Vector
     from src.core.config import Config
     from src.core.cursor import Cursor
-    from src.game_mechanics.map_manager import MapManager
+    from src.game_mechanics.map_container import MapContainer
 
 
 class UI:
@@ -34,7 +34,7 @@ class UI:
     resource_panel: ResourcePanel
 
     def __init__(self, config: Config, button_manager: ButtonManager, spritesheet: Spritesheet,
-                 map_manager: MapManager, scene: Scene, cursor: Cursor, save_manager: SaveManager,
+                 map_container: MapContainer, scene: Scene, cursor: Cursor, save_manager: SaveManager,
                  treasury: Treasury, time_manager: TimeManager, screen: pg.Surface) -> None:
         UIElement.ui = self
         self.button_manager: ButtonManager = button_manager
@@ -52,7 +52,7 @@ class UI:
 
         self.toolbar = Toolbar(spritesheet, button_manager, self.button_specs["Toolbar"])
         self.build_menu = BuildMenu(config, spritesheet, button_manager, self.button_specs["BuildMenu"])
-        self.minimap = Minimap(map_manager, spritesheet, scene, button_manager, {})
+        self.minimap = Minimap(map_container, spritesheet, scene, button_manager, {})
         self.top_bar = TopBar(spritesheet, button_manager, time_manager, {})
         self.pause_menu = PauseMenu(spritesheet, button_manager, save_manager, self.button_specs["PauseMenu"])
         self.resource_panel = ResourcePanel(spritesheet, button_manager, treasury, {})

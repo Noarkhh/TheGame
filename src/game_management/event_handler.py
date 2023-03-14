@@ -36,7 +36,8 @@ class EventHandler:
                 elif event.button == 3:
                     self.mouse_handler.rmb_release()
             elif event.type == pg.KEYDOWN:
-                self.keyboard_handler.key_pressed(event.key)
+                if not self.mouse_handler.is_lmb_pressed and not self.mouse_handler.is_rmb_pressed:
+                    self.keyboard_handler.key_pressed(event.key)
             elif event.type == pg.KEYUP:
                 self.keyboard_handler.key_released(event.key)
             elif event.type == ALL_KEYS_AND_BUTTONS_UP:

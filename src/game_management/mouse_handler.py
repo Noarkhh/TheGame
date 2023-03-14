@@ -74,7 +74,7 @@ class MouseHandler:
         self.was_rmb_pressed_last_tick = True
 
     def mmb_press(self) -> None:
-        selected_struct = self.struct_manager.map_manager.struct_map[self.cursor.pos]
+        selected_struct = self.struct_manager.map_container.struct_map[self.cursor.pos]
         if selected_struct is not None:
             self.cursor.unassign()
             self.cursor.assign_entity_class(selected_struct.__class__)
