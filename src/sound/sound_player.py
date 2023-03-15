@@ -18,8 +18,8 @@ class SoundPlayer:
 
         self.speech_channel = pg.mixer.Channel(0)
         self.fx_channels = [pg.mixer.Channel(i) for i in range(1, 5)]
+        self.curr_fx_channel: int = 1
         pg.mixer.set_num_channels(len(self.fx_channels) + 1)
-        pg.mixer.set_reserved(1)
         for channel in self.fx_channels:
             channel.set_volume(0.5)
         self.speech_channel.set_volume(0.5)
@@ -59,7 +59,9 @@ class SoundPlayer:
         self.play_sound(sound_name, self.speech_channel)
 
     def play_fx(self, sound_name: str) -> None:
-        self.play_sound(sound_name, pg.mixer.find_channel(force=True))
+        print(self.curr_fx_channel)
+        self.play_sound(sound_name, self.fx_channels[self.curr_fx_channel])
+        self.curr_fx_channel = (self.curr_fx_channel + 1) % 4
 
     def handle_placement_sounds(self, play_failure_sounds: bool, play_success_sound: bool,
                                 build_message: Message) -> None:
