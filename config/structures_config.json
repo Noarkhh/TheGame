@@ -1,5 +1,6 @@
 {
   "House": {
+    "workers": 10,
     "cost": {
       "GOLD":  10,
       "WOOD":  5,
@@ -11,17 +12,32 @@
   },
   "Wall": {
     "cost": {
-      "WOOD":  1,
+      "WOOD":  2,
       "STONE": 5
     },
-    "profit": {
-      "GOLD": -2
-    }
+    "upkeep": {
+      "GOLD":  10,
+      "WOOD":  1,
+      "STONE": 1
+    },
+    "cooldown": 6000
   },
   "Mine": {
-    "cost": {},
-    "profit": {},
-    "capacity": 100
+    "workers": -150,
+    "cost": {
+      "GOLD":    100,
+      "STONE":   50,
+      "WOOD":    50
+    },
+    "profit": {
+      "ORE": 15
+    },
+    "upkeep": {
+      "WORKERS": 1,
+      "GOLD":    50
+    },
+    "capacity": 100,
+    "cooldown": 900
   },
   "Gate": {
     "cost": {
@@ -29,13 +45,51 @@
       "WOOD":  50,
       "STONE": 50
     },
-    "profit": {
-      "GOLD": -10
-    }
+    "upkeep": {
+      "GOLD":  1,
+      "WOOD":  5,
+      "STONE": 5
+    },
+    "cooldown": 1500
   },
-  "Road": {},
-  "Bridge": {},
+  "Road": {
+    "cost": {
+      "GOLD":  2,
+      "WOOD":  1,
+      "STONE": 1
+    },
+    "upkeep": {
+      "GOLD": 1
+    },
+    "cooldown": 6000
+  },
+  "Bridge": {
+    "cost": {
+      "GOLD":    20,
+      "WOOD":    10,
+      "STONE":   10,
+      "WORKERS": 1
+    },
+    "upkeep": {
+      "GOLD":  5,
+      "WOOD":  2,
+      "STONE": 2
+    },
+    "cooldown": 3000
+  },
   "Tower": {},
-  "Sawmill": {},
+  "Sawmill": {
+    "workers": -20,
+    "cost": {
+      "GOLD":    10
+    },
+    "profit": {
+      "WOOD": 5
+    },
+    "upkeep": {
+      "GOLD": 20
+    },
+    "cooldown": 300
+  },
   "Farmland": {}
 }

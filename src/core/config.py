@@ -29,10 +29,13 @@ class Config:
             for name, params in json.load(f).items():
                 setattr(globals()[name], "base_cost",
                         {Resource[name]: amount for name, amount in params.get("cost", {}).items()})
+                setattr(globals()[name], "base_upkeep",
+                        {Resource[name]: amount for name, amount in params.get("upkeep", {}).items()})
                 setattr(globals()[name], "base_profit",
                         {Resource[name]: amount for name, amount in params.get("profit", {}).items()})
                 setattr(globals()[name], "base_capacity", params.get("capacity", 100))
-                setattr(globals()[name], "base_cooldown", params.get("cooldown", 5))
+                setattr(globals()[name], "base_cooldown", params.get("cooldown", 300))
+                setattr(globals()[name], "base_workers", params.get("workers", 0))
 
     def get_starting_resources(self) -> dict[Resource, int]:
         with open(self.starting_resources_path, "r") as f:

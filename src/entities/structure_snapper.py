@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Type, TYPE_CHECKING
+from typing import Type, TYPE_CHECKING, cast
 
 from src.core.enums import Message, Direction
 from src.entities.snapper import Snapper
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class StructureSnapper(Structure, Snapper):
     def can_be_snapped(self, other_pos: Vector[int], connector: Type[Structure]) -> Message:
         snap_direction = (self.pos - other_pos).to_dir()
-        struct_map = self.manager.map_manager.struct_map
+        struct_map = self.manager.map_container.struct_map
         other_struct = struct_map[other_pos]
 
         if not issubclass(self.__class__, connector) and not issubclass(other_struct.__class__, connector):
@@ -35,6 +35,12 @@ class StructureSnapper(Structure, Snapper):
             return Message.ALREADY_SNAPPED
 
         return Message.SNAPPED
+
+    def demolish(self) -> None:
+        super().demolish()
+        for direction_to_neighbour in self.neighbours:
+            neighbour = self.manager.map_container.struct_map[self.pos + direction_to_neighbour.to_vector()]
+            cast(StructureSnapper, neighbour).remove_neighbours(direction_to_neighbour.opposite())
 
     def save_to_json(self) -> dict:
         return {

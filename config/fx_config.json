@@ -32,5 +32,8 @@
   },
   "Placement_Warning" : {
     "volume": 20
+  },
+  "Worker_Warning": {
+    "volume": 20
   }
 }

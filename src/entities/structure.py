@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from abc import ABCMeta
-from typing import Type, ClassVar, cast, Self, TYPE_CHECKING, Optional
+from typing import Type, ClassVar, cast, Self, TYPE_CHECKING, Optional, Any
 
 from src.core.enums import Terrain, Resource, Message, Orientation, DirectionSet, Tile
 from src.entities.snapper import Snapper
 from src.entities.tile_entity import TileEntity
+from src.resources.resource_manager import ResourceManager
 
 if TYPE_CHECKING:
     from src.game_mechanics.struct_manager import StructManager
@@ -16,12 +17,17 @@ class Structure(TileEntity, metaclass=ABCMeta):
     unsuitable_terrain: ClassVar[list[Terrain]] = [Terrain.WATER]
     overrider: ClassVar[bool] = False
 
+    base_workers: int
     base_cost: ClassVar[dict[Resource, int]]
+    base_upkeep: ClassVar[dict[Resource, int]]
     base_profit: ClassVar[dict[Resource, int]]
     base_capacity: ClassVar[int]
     base_cooldown: ClassVar[int]
 
     manager: ClassVar[StructManager]
+
+    resource_manager: ResourceManager
+    efficiency: float
 
     def __init__(self, pos: Vector[int], image_variant: int = 0, orientation: Orientation = Orientation.VERTICAL,
                  is_ghost: bool = False) -> None:
@@ -31,44 +37,49 @@ class Structure(TileEntity, metaclass=ABCMeta):
 
         if not self.is_ghost:
             self.manager.structs.add(self)
+            self.resource_manager = ResourceManager(self, self.manager.treasury)
 
-        self.cost: dict[Resource, int] = self.base_cost.copy()
-        self.profit: dict[Resource, int] = self.base_profit.copy()
-        self.capacity: int = self.base_capacity
-        self.cooldown: int = self.base_cooldown
-
-        self.cooldown_left: int = self.cooldown
-        self.stockpile: dict[Resource, int] = {resource: 0 for resource in self.base_profit.keys()}
+        self.efficiency = 1.0
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}(pos: {self.pos})'
+        return f"{self.__class__.__name__}(pos: {self.pos}, efficiency: {self.efficiency}, stockpile: {self.resource_manager.stockpile})"
 
     def can_be_placed(self) -> Message:
-        tile_map = self.manager.map_manager.tile_map
-        struct_map = self.manager.map_manager.struct_map
+        tile_map = self.manager.map_container.tile_map
+        struct_map = self.manager.map_container.struct_map
+
+        if not self.manager.treasury.can_afford(self.base_cost):
+            return Message.NO_RESOURCES
+
+        if self.manager.treasury.resources[Resource.WORKERS] < -self.base_workers:
+            return Message.NO_WORKERS
 
         if any(isinstance(struct_map[self.pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
             return Message.BAD_LOCATION_STRUCT
 
-        if any(cast(Tile, tile_map[self.pos + rel_pos]).terrain in
-               self.unsuitable_terrain for rel_pos in self.covered_tiles):
-            return Message.BAD_LOCATION_TERRAIN
+        for rel_pos in self.covered_tiles:
+            if tile_map[self.pos + rel_pos] is None or \
+                    cast(Tile, tile_map[self.pos + rel_pos]).terrain in self.unsuitable_terrain:
+                return Message.BAD_LOCATION_TERRAIN
 
-        if any(amount > self.manager.treasury.resources[resource] for resource, amount in self.base_cost.items()):
-            return Message.NO_RESOURCES
+        if any(cast(Tile, tile_map[self.pos + rel_pos]).terrain in self.unsuitable_terrain for rel_pos in
+               self.covered_tiles):
+            return Message.BAD_LOCATION_TERRAIN
 
         return Message.BUILT
 
     def can_be_snapped(self, prev_pos: Vector[int], connector: Type[Structure]) -> Message:
         return Message.NOT_A_SNAPPER
 
-    def produce(self) -> None:
-        self.cooldown_left -= 1
-        if self.cooldown_left == 0:
-            if sum(self.stockpile.values()) < self.base_capacity:
-                for resource, amount in self.base_profit.items():
-                    self.stockpile[resource] += amount
-            self.cooldown_left = self.base_cooldown
+    def update(self, *args: Any, **kwargs: Any) -> None:
+        self.resource_manager.update_cooldown()
+
+    def build(self) -> None:
+        self.resource_manager.pay()
+
+    def demolish(self) -> None:
+        self.kill()
+        self.resource_manager.refund()
 
     def copy(self: Self, neighbours: Optional[DirectionSet] = None) -> Self:
         new_copy = self.__class__(self.pos, image_variant=self.image_variant, orientation=self.orientation)
@@ -83,19 +94,8 @@ class Structure(TileEntity, metaclass=ABCMeta):
             "pos": self.pos.to_tuple(),
             "orientation": self.orientation.name,
             "image_variant": self.image_variant,
-
-            "cost": {resource.name: amount for resource, amount in self.base_cost.items()},
-            "profit": {resource.name: amount for resource, amount in self.base_profit.items()},
-            "capacity": self.base_capacity,
-            "cooldown": self.base_cooldown,
-            "cooldown_left": self.cooldown_left,
-            "stockpile": {resource.name: amount for resource, amount in self.stockpile.items()}
+            "resource_manager": self.resource_manager.save_to_json()
         }
 
     def load_from_json(self, struct_dict: dict) -> None:
-        self.cost = {Resource[name]: amount for name, amount in struct_dict["cost"].items()}
-        self.profit = {Resource[name]: amount for name, amount in struct_dict["profit"].items()}
-        self.capacity = struct_dict["capacity"]
-        self.cooldown = struct_dict["cooldown"]
-        self.cooldown_left = struct_dict["cooldown_left"]
-        self.stockpile = {Resource[name]: amount for name, amount in struct_dict["stockpile"].items()}
+        self.resource_manager.load_from_json(struct_dict["resource_manager"])

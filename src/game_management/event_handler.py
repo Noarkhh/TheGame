@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import sys
+
 from typing import TYPE_CHECKING
 
 from src.core.user_events import *
@@ -20,7 +22,7 @@ class EventHandler:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
-                quit()
+                sys.exit()
             elif event.type == pg.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     self.mouse_handler.lmb_press()
@@ -34,7 +36,8 @@ class EventHandler:
                 elif event.button == 3:
                     self.mouse_handler.rmb_release()
             elif event.type == pg.KEYDOWN:
-                self.keyboard_handler.key_pressed(event.key)
+                if not self.mouse_handler.is_lmb_pressed and not self.mouse_handler.is_rmb_pressed:
+                    self.keyboard_handler.key_pressed(event.key)
             elif event.type == pg.KEYUP:
                 self.keyboard_handler.key_released(event.key)
             elif event.type == ALL_KEYS_AND_BUTTONS_UP:
