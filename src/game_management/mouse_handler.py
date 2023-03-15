@@ -33,6 +33,10 @@ class MouseHandler:
         if isinstance(self.cursor.held_entity, Snapper) and self.cursor.held_entity.is_draggable and \
                 self.ui.button_manager.held_button is None:
             self.area_action = area_action_factory(self.struct_manager, self.cursor, self.cursor.held_entity.__class__)
+        elif self.cursor.held_entity is None:
+            selected_struct = self.struct_manager.map_container.struct_map[self.cursor.pos]
+            if selected_struct is not None:
+                print(selected_struct)
 
     def lmb_release(self) -> None:
         self.scene.set_decrement()

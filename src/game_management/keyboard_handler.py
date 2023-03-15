@@ -51,6 +51,11 @@ class KeyboardHandler:
             self.zoomer.change_zoom(0.5)
         elif key == pg.K_EQUALS:
             self.zoomer.change_zoom(2)
+        elif key == pg.K_z:
+            print("strucures:")
+            for struct in self.struct_manager.structs:
+                print(struct)
+            print()
 
     def key_released(self, key: int) -> None:
         if key in self.pressed_keys_time:

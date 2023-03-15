@@ -14,13 +14,18 @@ class Treasury:
         self.resources: dict[Resource, int] = config.get_starting_resources()
         self.display_state_changed: bool = False
 
-    def can_afford(self, struct: Structure) -> bool:
-        return all(amount <= self.resources[resource] for resource, amount in struct.base_cost.items())
+    def can_afford(self, resources: dict[Resource, int]) -> bool:
+        return all(amount <= self.resources[resource] for resource, amount in resources.items())
 
-    def pay_for(self, struct: Structure) -> None:
-        for resource, amount in struct.cost.items():
+    def subtract(self, resources: dict[Resource, int]) -> None:
+        for resource, amount in resources.items():
             self.resources[resource] -= amount
-            self.display_state_changed = True
+        self.display_state_changed = True
+
+    def add(self, resources: dict[Resource, int]) -> None:
+        for resource, amount in resources.items():
+            self.resources[resource] += amount
+        self.display_state_changed = True
 
     def save_to_json(self) -> dict[str, int]:
         return {resource.name: self.resources[resource] for resource, amount in self.resources.items()}

@@ -25,6 +25,9 @@ class StructManager:
 
         self.structs: pg.sprite.Group[Structure] = pg.sprite.Group()
 
+    def update(self) -> None:
+        self.structs.update()
+
     def build(self, new_struct: Structure, failure_sound: bool = False, success_sound: bool = True) -> Message:
         struct_map: Map[Structure] = self.map_container.struct_map
 
@@ -33,6 +36,7 @@ class StructManager:
         if build_message.success():
             if build_message == Message.BUILT:
                 new_struct = new_struct.copy()
+                new_struct.build()
                 for relative_pos in new_struct.covered_tiles:
                     struct_map[new_struct.pos + relative_pos] = new_struct
 
@@ -41,7 +45,7 @@ class StructManager:
                 cast(Structure, struct_map[new_struct.pos]).kill()
                 struct_map[new_struct.pos] = new_struct
 
-            self.treasury.pay_for(new_struct)
+            self.treasury.subtract(new_struct.base_cost)
 
         self.sound_player.handle_placement_sounds(failure_sound, success_sound, build_message)
 
@@ -67,17 +71,14 @@ class StructManager:
         return snap_message
 
     def demolish(self, position: Vector[int], demolish_sound: bool = False) -> bool:
-        struct_to_demolish = self.map_container.struct_map.pop(position)
+        struct_to_demolish = self.map_container.struct_map.elements.pop(position.to_tuple(), None)
         if struct_to_demolish is None:
             return False
+        for relative_pos in struct_to_demolish.covered_tiles:
+            self.map_container.struct_map.pop(struct_to_demolish.pos + relative_pos)
         struct_to_demolish.demolish()
         if demolish_sound:
             self.sound_player.play_fx("buildingwreck")
-        if not isinstance(struct_to_demolish, StructureSnapper):
-            return True
-        for direction_to_neighbour in struct_to_demolish.neighbours:
-            neighbour = self.map_container.struct_map[position + direction_to_neighbour.to_vector()]
-            cast(StructureSnapper, neighbour).remove_neighbours(direction_to_neighbour.opposite())
         return True
 
     def save_to_json(self) -> dict[str, dict[str, Any]]:

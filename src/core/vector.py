@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import sqrt
 from typing import Optional, Generic, TypeVar, overload
 
 import src.core.enums as enums
@@ -67,6 +68,9 @@ class Vector(Generic[T]):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.x}, {self.y})"
+
+    def distance_to(self, other: Vector) -> float:
+        return sqrt((self.x - other.x) ** 2 + (self.y - other.y) ** 2)
 
     def to_dir(self: Vector[int]) -> Optional[enums.Direction]:
         return {Vector(0, -1): enums.Direction.N,

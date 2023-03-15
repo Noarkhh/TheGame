@@ -9,17 +9,19 @@ if TYPE_CHECKING:
     from src.graphics.scene import Scene
     from src.ui.ui import UI
     from src.sound.soundtrack import Soundtrack
+    from src.game_mechanics.struct_manager import StructManager
 
 
 class MainLoop:
     def __init__(self, event_handler: EventHandler, renderer: Renderer, scene: Scene, ui: UI, soundtrack: Soundtrack,
-                 time_manager: TimeManager) -> None:
+                 time_manager: TimeManager, struct_manager: StructManager) -> None:
         self.running: bool = True
         self.event_handler: EventHandler = event_handler
         self.renderer: Renderer = renderer
         self.scene: Scene = scene
         self.ui: UI = ui
         self.time_manager: TimeManager = time_manager
+        self.struct_manager: StructManager = struct_manager
 
         soundtrack.start()
 
@@ -29,6 +31,7 @@ class MainLoop:
         while self.running:
             self.ui.button_manager.check_for_hovers()
             self.event_handler.handle_events()
+            self.struct_manager.update()
             self.renderer.render()
             self.scene.update()
             self.time_manager.tick()

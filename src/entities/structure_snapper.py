@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Type, TYPE_CHECKING
+from typing import Type, TYPE_CHECKING, cast
 
 from src.core.enums import Message, Direction
 from src.entities.snapper import Snapper
@@ -35,6 +35,11 @@ class StructureSnapper(Structure, Snapper):
             return Message.ALREADY_SNAPPED
 
         return Message.SNAPPED
+
+    def demolish(self) -> None:
+        for direction_to_neighbour in self.neighbours:
+            neighbour = self.manager.map_container.struct_map[self.pos + direction_to_neighbour.to_vector()]
+            cast(StructureSnapper, neighbour).remove_neighbours(direction_to_neighbour.opposite())
 
     def save_to_json(self) -> dict:
         return {

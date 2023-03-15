@@ -37,6 +37,8 @@ class Setup:
         else:
             screen = pg.display.set_mode(config.window_size.to_tuple())
 
+        pg.display.set_icon(pg.image.load("assets/icon.png"))
+        pg.display.set_caption("Twierdza: Zawodzie")
         sound_player: SoundPlayer = SoundPlayer(config)
         soundtrack: Soundtrack = Soundtrack()
 
@@ -65,5 +67,5 @@ class Setup:
 
         print("initialization complete.")
 
-        self.main_loop: MainLoop = MainLoop(event_handler, renderer, scene, ui, soundtrack, time_manager)
+        self.main_loop: MainLoop = MainLoop(event_handler, renderer, scene, ui, soundtrack, time_manager, struct_manager)
 

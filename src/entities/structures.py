@@ -26,6 +26,23 @@ class Mine(Structure):
 class Sawmill(Structure):
     image_aspect_ratio = Vector[float](2, 1)
     covered_tiles = [Vector[int](0, 0), Vector[int](-1, 0)]
+    personal_radius = 7
+    distance_penalty = 0.3
+
+    def build(self) -> None:
+        for struct in self.manager.structs:
+            if isinstance(struct, Sawmill) and self.pos.distance_to(struct.pos) <= self.personal_radius and \
+                    struct is not self:
+                self.efficiency -= self.distance_penalty
+                struct.efficiency -= struct.distance_penalty
+
+    def demolish(self) -> None:
+        super().demolish()
+        for struct in self.manager.structs:
+            if isinstance(struct, Sawmill) and self.pos.distance_to(struct.pos) <= self.personal_radius and \
+                    struct is not self:
+                self.efficiency += self.distance_penalty
+                struct.efficiency += struct.distance_penalty
 
 
 class Tower(Structure):
@@ -49,12 +66,9 @@ class Farmland(StructureSnapper):
 
 class Bridge(Road):
     unsuitable_terrain = [Terrain.GRASSLAND, Terrain.DESERT]
-    da_dict: list = []
 
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
-        self.da_dict.append("a")
-        print(self.da_dict)
         self.snaps_to = {direction: Road for direction in Direction}
 
 
@@ -67,7 +81,6 @@ class Gate(Wall, Road):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        # print(self.__class__.__mro__)
         if self.orientation == Orientation.VERTICAL:
             self.snaps_to = {Direction.N: Road, Direction.E: Wall, Direction.S: Road, Direction.W: Wall}
         elif self.orientation == Orientation.HORIZONTAL:

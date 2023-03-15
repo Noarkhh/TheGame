@@ -5,6 +5,9 @@
       "WOOD":  5,
       "STONE": 5
     },
+    "instant_profit": {
+      "WORKERS": 10
+    },
     "profit": {
       "GOLD": 10
     }
@@ -14,8 +17,8 @@
       "WOOD":  1,
       "STONE": 5
     },
-    "profit": {
-      "GOLD": -2
+    "upkeep": {
+      "GOLD": 2
     }
   },
   "Mine": {
@@ -29,13 +32,25 @@
       "WOOD":  50,
       "STONE": 50
     },
-    "profit": {
-      "GOLD": -10
+    "upkeep": {
+      "GOLD": 10
     }
   },
   "Road": {},
   "Bridge": {},
   "Tower": {},
-  "Sawmill": {},
+  "Sawmill": {
+    "cost": {
+      "WORKERS": 20,
+      "GOLD":    10
+    },
+    "profit": {
+      "WOOD": 5
+    },
+    "upkeep": {
+      "GOLD": 20
+    },
+    "cooldown": 120
+  },
   "Farmland": {}
 }

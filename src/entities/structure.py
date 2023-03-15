@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta
-from typing import Type, ClassVar, cast, Self, TYPE_CHECKING, Optional
+from typing import Type, ClassVar, cast, Self, TYPE_CHECKING, Optional, Any
 
 from src.core.enums import Terrain, Resource, Message, Orientation, DirectionSet, Tile
 from src.entities.snapper import Snapper
@@ -18,11 +18,16 @@ class Structure(TileEntity, metaclass=ABCMeta):
     overrider: ClassVar[bool] = False
 
     base_cost: ClassVar[dict[Resource, int]]
+    base_instant_profit: ClassVar[dict[Resource, int]]
+    base_upkeep: ClassVar[dict[Resource, int]]
     base_profit: ClassVar[dict[Resource, int]]
     base_capacity: ClassVar[int]
     base_cooldown: ClassVar[int]
 
     manager: ClassVar[StructManager]
+
+    resource_manager: ResourceManager
+    efficiency: float
 
     def __init__(self, pos: Vector[int], image_variant: int = 0, orientation: Orientation = Orientation.VERTICAL,
                  is_ghost: bool = False) -> None:
@@ -32,33 +37,30 @@ class Structure(TileEntity, metaclass=ABCMeta):
 
         if not self.is_ghost:
             self.manager.structs.add(self)
+            self.resource_manager = ResourceManager(self, self.manager.treasury)
 
-        self.cost: dict[Resource, int] = self.base_cost.copy()
-        self.profit: dict[Resource, int] = self.base_profit.copy()
-        self.capacity: int = self.base_capacity
-        self.cooldown: int = self.base_cooldown
-
-        self.cooldown_left: int = self.cooldown
-        self.stockpile: dict[Resource, int] = {resource: 0 for resource in self.base_profit.keys()}
+        self.efficiency = 1.0
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}(pos: {self.pos})'
+        return f"{self.__class__.__name__}(pos: {self.pos}, efficiency: {self.efficiency}, stockpile: {self.resource_manager.stockpile})"
 
     def can_be_placed(self) -> Message:
         tile_map = self.manager.map_container.tile_map
         struct_map = self.manager.map_container.struct_map
 
-        if any(amount > self.manager.treasury.resources[resource] for resource, amount in self.base_cost.items()):
+        if not self.manager.treasury.can_afford(self.base_cost):
             return Message.NO_RESOURCES
 
         if any(isinstance(struct_map[self.pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
             return Message.BAD_LOCATION_STRUCT
 
         for rel_pos in self.covered_tiles:
-            if tile_map[self.pos + rel_pos] is None or cast(Tile, tile_map[self.pos + rel_pos]).terrain in self.unsuitable_terrain:
+            if tile_map[self.pos + rel_pos] is None or \
+                    cast(Tile, tile_map[self.pos + rel_pos]).terrain in self.unsuitable_terrain:
                 return Message.BAD_LOCATION_TERRAIN
 
-        if any(cast(Tile, tile_map[self.pos + rel_pos]).terrain in self.unsuitable_terrain for rel_pos in self.covered_tiles):
+        if any(cast(Tile, tile_map[self.pos + rel_pos]).terrain in self.unsuitable_terrain for rel_pos in
+               self.covered_tiles):
             return Message.BAD_LOCATION_TERRAIN
 
         return Message.BUILT
@@ -66,17 +68,15 @@ class Structure(TileEntity, metaclass=ABCMeta):
     def can_be_snapped(self, prev_pos: Vector[int], connector: Type[Structure]) -> Message:
         return Message.NOT_A_SNAPPER
 
-    def produce(self) -> None:
-        self.cooldown_left -= 1
-        if self.cooldown_left == 0:
-            if sum(self.stockpile.values()) < self.base_capacity:
-                for resource, amount in self.base_profit.items():
-                    self.stockpile[resource] += amount
-            self.cooldown_left = self.base_cooldown
+    def update(self, *args: Any, **kwargs: Any) -> None:
+        self.resource_manager.update_cooldown()
+
+    def build(self) -> None:
+        pass
 
     def demolish(self) -> None:
         self.kill()
-
+        self.resource_manager.refund()
 
     def copy(self: Self, neighbours: Optional[DirectionSet] = None) -> Self:
         new_copy = self.__class__(self.pos, image_variant=self.image_variant, orientation=self.orientation)
