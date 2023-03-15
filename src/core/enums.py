@@ -85,6 +85,7 @@ class Message(Enum):
     BAD_LOCATION_TERRAIN = auto()
     BAD_LOCATION_STRUCT = auto()
     NO_RESOURCES = auto()
+    NO_WORKERS = auto()
 
     NOT_A_SNAPPER = auto()
     BAD_CONNECTOR = auto()

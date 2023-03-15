@@ -17,8 +17,8 @@ class Structure(TileEntity, metaclass=ABCMeta):
     unsuitable_terrain: ClassVar[list[Terrain]] = [Terrain.WATER]
     overrider: ClassVar[bool] = False
 
+    base_workers: int
     base_cost: ClassVar[dict[Resource, int]]
-    base_instant_profit: ClassVar[dict[Resource, int]]
     base_upkeep: ClassVar[dict[Resource, int]]
     base_profit: ClassVar[dict[Resource, int]]
     base_capacity: ClassVar[int]
@@ -50,6 +50,9 @@ class Structure(TileEntity, metaclass=ABCMeta):
 
         if not self.manager.treasury.can_afford(self.base_cost):
             return Message.NO_RESOURCES
+
+        if self.manager.treasury.resources[Resource.WORKERS] < -self.base_workers:
+            return Message.NO_WORKERS
 
         if any(isinstance(struct_map[self.pos + rel_pos], Structure) for rel_pos in self.covered_tiles):
             return Message.BAD_LOCATION_STRUCT

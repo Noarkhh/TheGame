@@ -68,7 +68,9 @@ class SoundPlayer:
         if play_failure_sounds and not build_message.success():
             if build_message == Message.NO_RESOURCES:
                 self.play_speech("Resource_Need")
-            if build_message in (Message.BAD_LOCATION_STRUCT, Message.BAD_LOCATION_TERRAIN):
+            elif build_message == Message.NO_WORKERS:
+                self.play_speech("Worker_Warning")
+            elif build_message in (Message.BAD_LOCATION_STRUCT, Message.BAD_LOCATION_TERRAIN):
                 self.play_speech("Placement_Warning")
 
     def handle_snapping_sounds(self, play_failure_sounds: bool, play_success_sound: bool,

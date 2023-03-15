@@ -23,8 +23,8 @@ class ResourceManager:
         self.treasury = treasury
         self.structure = structure
 
+        self.workers = structure.base_workers
         self.cost = structure.base_cost.copy()
-        self.instant_profit = structure.base_instant_profit.copy()
         self.profit = structure.base_profit.copy()
         self.upkeep = structure.base_upkeep.copy()
         self.capacity = structure.base_capacity
@@ -33,7 +33,7 @@ class ResourceManager:
         self.cooldown_left = self.cooldown
         self.stockpile = {resource: 0 for resource in self.profit}
 
-        self.treasury.add(self.structure.base_instant_profit)
+        self.treasury.add({Resource.WORKERS: self.workers})
 
     def update_cooldown(self) -> None:
         self.cooldown_left -= 1
@@ -51,9 +51,6 @@ class ResourceManager:
                 # self.stockpile[resource] += int(amount * real_efficiency)
                 self.treasury.add({resource: round(amount * real_efficiency)})
 
-
     def refund(self) -> None:
-        if Resource.WORKERS in self.cost:
-            self.treasury.add({Resource.WORKERS: self.cost[Resource.WORKERS]})
-        self.treasury.subtract(self.instant_profit)
+        self.treasury.subtract({Resource.WORKERS: self.workers})
 

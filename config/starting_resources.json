@@ -1,9 +1,9 @@
 {
   "WORKERS": 100,
-  "GOLD":    50000,
-  "WOOD":    50000,
-  "STONE":   50000,
-  "WHEAT":   50000,
+  "GOLD":    500,
+  "WOOD":    50,
+  "STONE":   50,
+  "WHEAT":   50,
   "COAL":    25,
   "ORE":     25,
   "IRON":    0,
