@@ -45,8 +45,6 @@ class StructManager:
                 cast(Structure, struct_map[new_struct.pos]).kill()
                 struct_map[new_struct.pos] = new_struct
 
-            self.treasury.subtract(new_struct.base_cost)
-
         self.sound_player.handle_placement_sounds(failure_sound, success_sound, build_message)
 
         return build_message

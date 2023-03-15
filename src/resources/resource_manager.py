@@ -33,8 +33,6 @@ class ResourceManager:
         self.cooldown_left = self.cooldown
         self.stockpile = {resource: 0 for resource in self.profit}
 
-        self.treasury.add({Resource.WORKERS: self.workers})
-
     def update_cooldown(self) -> None:
         self.cooldown_left -= 1
         if self.cooldown_left == 0:
@@ -51,6 +49,29 @@ class ResourceManager:
                 # self.stockpile[resource] += int(amount * real_efficiency)
                 self.treasury.add({resource: round(amount * real_efficiency)})
 
+    def pay(self) -> None:
+        self.treasury.subtract(self.cost)
+        self.treasury.add({Resource.WORKERS: self.workers})
+
     def refund(self) -> None:
         self.treasury.subtract({Resource.WORKERS: self.workers})
 
+    def save_to_json(self) -> dict:
+        return {
+            "workers": self.workers,
+            "cost": {resource.name: amount for resource, amount in self.cost.items()},
+            "profit": {resource.name: amount for resource, amount in self.profit.items()},
+            "capacity": self.capacity,
+            "cooldown": self.cooldown,
+            "cooldown_left": self.cooldown_left,
+            "stockpile": {resource.name: amount for resource, amount in self.stockpile.items()}
+        }
+
+    def load_from_json(self, resource_dict: dict) -> None:
+        self.workers = resource_dict["workers"]
+        self.cost = {Resource[name]: amount for name, amount in resource_dict["cost"].items()}
+        self.profit = {Resource[name]: amount for name, amount in resource_dict["profit"].items()}
+        self.capacity = resource_dict["capacity"]
+        self.cooldown = resource_dict["cooldown"]
+        self.cooldown_left = resource_dict["cooldown_left"]
+        self.stockpile = {Resource[name]: amount for name, amount in resource_dict["stockpile"].items()}

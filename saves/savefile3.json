@@ -1,0 +1,124 @@
+{
+  "layout_path": "assets/maps/river_L.png",
+  "structures": {
+    "(55,62)": {
+      "type": "House",
+      "pos": [
+        55,
+        62
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "resource_manager": {
+        "workers": 10,
+        "cost": {
+          "GOLD": 10,
+          "WOOD": 5,
+          "STONE": 5
+        },
+        "profit": {
+          "GOLD": 10
+        },
+        "capacity": 100,
+        "cooldown": 300,
+        "cooldown_left": 217,
+        "stockpile": {
+          "GOLD": 0
+        }
+      }
+    },
+    "(57,64)": {
+      "type": "House",
+      "pos": [
+        57,
+        64
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "resource_manager": {
+        "workers": 10,
+        "cost": {
+          "GOLD": 10,
+          "WOOD": 5,
+          "STONE": 5
+        },
+        "profit": {
+          "GOLD": 10
+        },
+        "capacity": 100,
+        "cooldown": 300,
+        "cooldown_left": 237,
+        "stockpile": {
+          "GOLD": 0
+        }
+      }
+    },
+    "(54,60)": {
+      "type": "House",
+      "pos": [
+        54,
+        60
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "resource_manager": {
+        "workers": 10,
+        "cost": {
+          "GOLD": 10,
+          "WOOD": 5,
+          "STONE": 5
+        },
+        "profit": {
+          "GOLD": 10
+        },
+        "capacity": 100,
+        "cooldown": 300,
+        "cooldown_left": 255,
+        "stockpile": {
+          "GOLD": 0
+        }
+      }
+    },
+    "(59,65)": {
+      "type": "House",
+      "pos": [
+        59,
+        65
+      ],
+      "orientation": "VERTICAL",
+      "image_variant": 0,
+      "resource_manager": {
+        "workers": 10,
+        "cost": {
+          "GOLD": 10,
+          "WOOD": 5,
+          "STONE": 5
+        },
+        "profit": {
+          "GOLD": 10
+        },
+        "capacity": 100,
+        "cooldown": 300,
+        "cooldown_left": 279,
+        "stockpile": {
+          "GOLD": 0
+        }
+      }
+    }
+  },
+  "treasury": {
+    "WORKERS": 140,
+    "GOLD": 460,
+    "WOOD": 30,
+    "STONE": 30,
+    "WHEAT": 50,
+    "COAL": 25,
+    "ORE": 25,
+    "IRON": 0,
+    "BRICKS": 0,
+    "BREAD": 0,
+    "STEEL": 0,
+    "BEAMS": 0,
+    "ASTRUM": 0
+  }
+}

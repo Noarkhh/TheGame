@@ -75,7 +75,7 @@ class Structure(TileEntity, metaclass=ABCMeta):
         self.resource_manager.update_cooldown()
 
     def build(self) -> None:
-        pass
+        self.resource_manager.pay()
 
     def demolish(self) -> None:
         self.kill()
@@ -94,19 +94,8 @@ class Structure(TileEntity, metaclass=ABCMeta):
             "pos": self.pos.to_tuple(),
             "orientation": self.orientation.name,
             "image_variant": self.image_variant,
-
-            "cost": {resource.name: amount for resource, amount in self.base_cost.items()},
-            "profit": {resource.name: amount for resource, amount in self.base_profit.items()},
-            "capacity": self.base_capacity,
-            "cooldown": self.base_cooldown,
-            "cooldown_left": self.cooldown_left,
-            "stockpile": {resource.name: amount for resource, amount in self.stockpile.items()}
+            "resource_manager": self.resource_manager.save_to_json()
         }
 
     def load_from_json(self, struct_dict: dict) -> None:
-        self.cost = {Resource[name]: amount for name, amount in struct_dict["cost"].items()}
-        self.profit = {Resource[name]: amount for name, amount in struct_dict["profit"].items()}
-        self.capacity = struct_dict["capacity"]
-        self.cooldown = struct_dict["cooldown"]
-        self.cooldown_left = struct_dict["cooldown_left"]
-        self.stockpile = {Resource[name]: amount for name, amount in struct_dict["stockpile"].items()}
+        self.resource_manager.load_from_json(struct_dict["resource_manager"])
